@@ -1,0 +1,52 @@
+#pragma once
+
+#include <core/utils/string_utils.hpp>
+
+#include <fmt/format.h>
+
+namespace step::video {
+
+/*
+    Pixel format (Colorspace)
+*/
+enum class PixFmt : int
+{
+    Undefined = 0,
+    GRAY,
+    RGB,
+    RGBA,
+    BGR,
+    BGRA,
+
+    /*
+        Non-supported formats used only for reading from cameras.
+        Requires colorspace convertion for further usage.
+    */
+    BayerGR,
+    BayerGB,
+    BayerRG,
+    BayerBG,
+
+    // ATTENTION always should be the last one
+    EndOf
+};
+
+}  // namespace step::video
+
+namespace step::video::utils {
+
+size_t get_bpp(PixFmt fmt);
+size_t get_channels_count(PixFmt fmt);
+bool has_alpha(PixFmt fmt);
+
+}  // namespace step::video::utils
+
+template <>
+struct fmt::formatter<step::video::PixFmt> : formatter<string_view>
+{
+    template <typename FormatContext>
+    auto format(const step::video::PixFmt& pix_fmt, FormatContext& ctx)
+    {
+        return format_to(ctx.out(), "{}", step::utils::to_string(pix_fmt));
+    }
+};
