@@ -22,7 +22,6 @@ conan_cmake_run(
         fmt/9.1.0
         spdlog/1.11.0
         eigen/3.4.0
-        robin-hood-hashing/3.11.1
         jasper/2.0.32        # opencv
         jsoncpp/1.9.5        # opencv
         libjpeg/9e           # opencv
@@ -109,13 +108,27 @@ find_package(spdlog REQUIRED)
 find_package(fmt REQUIRED)
 find_package(robin_hood REQUIRED)
 find_package(Poco REQUIRED)
-#find_package(gtest REQUIRED)
+find_package(gtest REQUIRED)
 #find_package(easy_profiler REQUIRED)
 
 find_package(OpenCV REQUIRED)
 include_directories ("/usr/include/opencv4/")
 
+include_directories(thirdparty)
+include_directories(src)
+
+add_subdirectory(thirdparty)
 add_subdirectory(src)
+
+option(ENABLE_TESTS "Build tests" ON)
+
+if(ENABLE_TESTS)
+    # ensure failed tests produce visible output out of the box
+    set(CMAKE_CTEST_ARGUMENTS "${CMAKE_CTEST_ARGUMENTS};--output-on-failure")
+    enable_testing()
+    include(GoogleTest)
+    add_subdirectory(tests)
+endif()
 
 install(DIRECTORY ${STEPKIT_INSTALL_LIB_DIR}
     DESTINATION ${STEPKIT_INSTALL_DIR})

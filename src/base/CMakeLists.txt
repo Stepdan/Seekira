@@ -28,13 +28,13 @@ target_sources(${PROJECT_NAME}
     FILE_SET headers_utils TYPE HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/utils FILES "${HEADERS_UTILS}"
 )
 
-find_package(Boost REQUIRED COMPONENTS exception stacktrace_backtrace)
+find_package(Boost REQUIRED COMPONENTS exception stacktrace)
 find_package(Poco REQUIRED COMPONENTS Data Net Util)
 find_package(Eigen3 3.3 REQUIRED)
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    Boost::stacktrace_backtrace
+    Boost::stacktrace
     Boost::exception
     Poco::Data
     Poco::Net
@@ -45,7 +45,7 @@ target_link_libraries(${PROJECT_NAME}
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    RVISION_MODULE_NAME="RVISION_CORE"
+    STEPKIT_MODULE_NAME="STEPKIT_BASE"
     PUBLIC
     BUILD_WITH_EASY_PROFILER
 )
