@@ -8,6 +8,6 @@ mark_as_advanced(BUILD_GMOCK BUILD_GTEST BUILD_SHARED_LIBS
 
 # test suites:
 #add_subdirectory(core)
-#add_subdirectory(video)
+add_subdirectory(video)
 #add_subdirectory(serializable)
 #add_subdirectory(easy_profiler)

@@ -22,10 +22,8 @@ conan_cmake_run(
         fmt/9.1.0
         spdlog/1.11.0
         eigen/3.4.0
-        jasper/2.0.32        # opencv
         jsoncpp/1.9.5        # opencv
         libjpeg/9e           # opencv
-        libpng/1.6.37        # opencv
         opencv/4.5.5
         boost/1.81.0
         poco/1.12.4
@@ -34,7 +32,7 @@ conan_cmake_run(
     CMAKE_TARGETS
     UPDATE
     OPTIONS
-        spdlog:header_only=True
+        spdlog:header_only=False
         #-----------------------------
         opencv/*:shared=True
         #opencv/*:fPIC=True
@@ -98,6 +96,7 @@ conan_cmake_run(
         cmake_paths
         cmake_find_package
     IMPORTS
+        IMPORTS "*.lib, *.dll -> ./${CMAKE_CURRENT_BINARY_DIR}"
     )
 
 include(${CMAKE_CURRENT_BINARY_DIR}/conan_paths.cmake)
@@ -106,7 +105,7 @@ find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(fmt REQUIRED)
-find_package(robin_hood REQUIRED)
+#find_package(robin_hood REQUIRED)
 find_package(Poco REQUIRED)
 find_package(gtest REQUIRED)
 #find_package(easy_profiler REQUIRED)
@@ -129,6 +128,3 @@ if(ENABLE_TESTS)
     include(GoogleTest)
     add_subdirectory(tests)
 endif()
-
-install(DIRECTORY ${STEPKIT_INSTALL_LIB_DIR}
-    DESTINATION ${STEPKIT_INSTALL_DIR})

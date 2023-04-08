@@ -33,7 +33,7 @@ target_link_libraries(${PROJECT_NAME}
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    RVISION_MODULE_NAME="FRAME_UTILS"
+    STEPKIT_MODULE_NAME="FRAME_UTILS"
     PUBLIC
     BUILD_WITH_EASY_PROFILER
 )

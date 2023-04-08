@@ -1,8 +1,8 @@
 #include "frame_utils_opencv.hpp"
 
-#include <core/utils/find_pair.hpp>
-#include <core/utils/string_utils.hpp>
-#include <core/utils/throw_utils.hpp>
+#include <base/utils/find_pair.hpp>
+#include <base/utils/string_utils.hpp>
+#include <base/utils/exception/throw_utils.hpp>
 
 #include <opencv2/core/hal/interface.h>
 #include <opencv2/imgproc.hpp>
@@ -38,31 +38,6 @@ const std::pair<std::pair<step::video::PixFmt, step::video::PixFmt>, int> colors
     { {step::video::PixFmt::BGRA , step::video::PixFmt::RGB   }   , cv::COLOR_BGRA2RGB    },
     { {step::video::PixFmt::BGRA , step::video::PixFmt::RGBA  }   , cv::COLOR_BGRA2RGBA   },
 
-    // BayerRG<->BayerBG (RGGB), BayerBG<->BayerRG (BGGR), BayerGB<->BayerGR (GBRG), BayerGR<->BayerGB (GRBG)
-    // because of OpenCV naming inconsistency in Bayer pattern
-    // https://github.com/opencv/opencv/issues/19629
-    // https://docs.opencv.org/master/de/d25/imgproc_color_conversions.html (see Bayer → RGB example)
-    { {step::video::PixFmt::BayerGR , step::video::PixFmt::BGR   }   , cv::COLOR_BayerGB2BGR_EA   },
-    { {step::video::PixFmt::BayerGB , step::video::PixFmt::BGR   }   , cv::COLOR_BayerGR2BGR_EA   },
-    { {step::video::PixFmt::BayerRG , step::video::PixFmt::BGR   }   , cv::COLOR_BayerBG2BGR_EA   },
-    { {step::video::PixFmt::BayerBG , step::video::PixFmt::BGR   }   , cv::COLOR_BayerRG2BGR_EA   },
-
-    { {step::video::PixFmt::BayerGR , step::video::PixFmt::RGB   }   , cv::COLOR_BayerGB2RGB_EA   },
-    { {step::video::PixFmt::BayerGB , step::video::PixFmt::RGB   }   , cv::COLOR_BayerGR2RGB_EA   },
-    { {step::video::PixFmt::BayerRG , step::video::PixFmt::RGB   }   , cv::COLOR_BayerBG2RGB_EA   },
-    { {step::video::PixFmt::BayerBG , step::video::PixFmt::RGB   }   , cv::COLOR_BayerRG2RGB_EA   },
-
-    // Note: even those these are here, they may be very wrong
-    { {step::video::PixFmt::BayerGR , step::video::PixFmt::BGRA   }   , cv::COLOR_BayerGB2BGRA   },
-    { {step::video::PixFmt::BayerGB , step::video::PixFmt::BGRA   }   , cv::COLOR_BayerGR2BGRA   },
-    { {step::video::PixFmt::BayerRG , step::video::PixFmt::BGRA   }   , cv::COLOR_BayerBG2BGRA   },
-    { {step::video::PixFmt::BayerBG , step::video::PixFmt::BGRA   }   , cv::COLOR_BayerRG2BGRA   },
-
-    { {step::video::PixFmt::BayerGR , step::video::PixFmt::RGBA   }   , cv::COLOR_BayerGB2RGBA   },
-    { {step::video::PixFmt::BayerGB , step::video::PixFmt::RGBA   }   , cv::COLOR_BayerGR2RGBA   },
-    { {step::video::PixFmt::BayerRG , step::video::PixFmt::RGBA   }   , cv::COLOR_BayerBG2RGBA   },
-    { {step::video::PixFmt::BayerBG , step::video::PixFmt::RGBA   }   , cv::COLOR_BayerRG2RGBA   },
-
 };
 
 const std::pair<step::video::PixFmt, int> cv_data_types[] = {
@@ -71,11 +46,6 @@ const std::pair<step::video::PixFmt, int> cv_data_types[] = {
     { step::video::PixFmt::BGRA  , CV_8UC4 },
     { step::video::PixFmt::RGB   , CV_8UC3 },
     { step::video::PixFmt::RGBA  , CV_8UC4 },
-
-    { step::video::PixFmt::BayerGR, CV_8UC1 },
-    { step::video::PixFmt::BayerGB, CV_8UC1 },
-    { step::video::PixFmt::BayerRG, CV_8UC1 },
-    { step::video::PixFmt::BayerBG, CV_8UC1 },
 };
 
 /* clang-format on */

@@ -1,7 +1,7 @@
 #include "frame_utils.hpp"
 #include "frame_utils_opencv.hpp"
 
-#include <core/utils/throw_utils.hpp>
+#include <base/utils/exception/throw_utils.hpp>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -51,7 +51,7 @@ Frame open_file(const std::string& path, PixFmt fmt /*= PixFmt::BGR*/)
 void save_to_file(Frame& frame, const std::filesystem::path& path)
 {
     auto mat = to_mat(frame);
-    cv::imwrite(path, mat);
+    cv::imwrite(path.string(), mat);
 }
 
 }  // namespace step::video::utils

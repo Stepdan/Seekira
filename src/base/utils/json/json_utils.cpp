@@ -1,6 +1,6 @@
 #include "json_utils.hpp"
-#include "string_utils.hpp"
-#include "throw_utils.hpp"
+#include "base/utils/string_utils.hpp"
+#include "base/utils/exception/assert.hpp"
 
 #include <Poco/JSON/Parser.h>
 #include <Poco/Net/HTTPStreamFactory.h>
@@ -19,30 +19,30 @@ ArrayPtrJSON make_array_json_ptr() { return Poco::makeShared<ArrayJSON>(); }
 
 ObjectPtrJSON opt_object(const ObjectPtrJSON& container, const std::string& key)
 {
-    rv_assert(container);
+    step_assert(container);
     return container->getObject(key);
 }
 
 ArrayPtrJSON opt_array(const ObjectPtrJSON& container, const std::string& key)
 {
-    rv_assert(container);
+    step_assert(container);
     return container->getArray(key);
 }
 
 ObjectPtrJSON get_object(const ObjectPtrJSON& container, const std::string& key)
 {
-    rv_assert(container);
+    step_assert(container);
     auto object = opt_object(container, key);
-    rv_assert(object, "Container passed doesn't have an object for key '{}'", key);
+    step_assert(object, "Container passed doesn't have an object for key '{}'", key);
     return object;
 }
 
 ArrayPtrJSON get_array(const ObjectPtrJSON& container, const std::string& key)
 {
-    rv_assert(container);
+    step_assert(container);
     ArrayPtrJSON array;
     array = opt_array(container, key);
-    rv_assert(array, "Container passed doesn't have an array for key '{}'", key);
+    step_assert(array, "Container passed doesn't have an array for key '{}'", key);
     return array;
 }
 
@@ -158,7 +158,7 @@ std::optional<std::string> read_file(const std::string& path)
 
 std::ostream& operator<<(std::ostream& os, const ObjectPtrJSON& j)
 {
-    static constexpr uint INDENT = 2;
+    static constexpr unsigned int INDENT = 2;
     j->stringify(os, INDENT);
     return os;
 }

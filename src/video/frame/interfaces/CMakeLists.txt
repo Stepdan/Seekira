@@ -28,12 +28,12 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    step::core
+    step::base
 )
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    RVISION_MODULE_NAME="FRAME_INTERFACE"
+    STEPKIT_MODULE_NAME="FRAME_INTERFACE"
     PUBLIC
     BUILD_WITH_EASY_PROFILER
 )

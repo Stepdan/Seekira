@@ -3,7 +3,7 @@
 #include "pixel_format.hpp"
 #include "frame_size.hpp"
 
-#include <core/utils/time_utils.hpp>
+#include <base/utils/time_utils.hpp>
 
 #include <fmt/format.h>
 

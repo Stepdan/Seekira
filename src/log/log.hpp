@@ -3,7 +3,9 @@
 #include "log_settings.hpp"
 
 #include <thread>
+#include <string>
 #include <string_view>
+
 #include <fmt/format.h>
 
 namespace step::log {
@@ -47,16 +49,16 @@ private:
 }  // namespace step::log
 
 // {:>16.16s}; - STEPKIT_MODULE_NAME
-#define STEP_LOG(level, format, ...)                                                                                \
-    step::log::Logger::instance().log(level, "{:>16.16s}; thread {}; msg=" format " ({}:{}, {})",                   \
-                                         STEPKIT_MODULE_NAME, std::this_thread::get_id(), ##__VA_ARGS__, __FILE__,     \
+#define STEP_LOG(level, format, ...)                                                     \
+    step::log::Logger::instance().log(level, "{:>16.16s}; msg=" format " ({}:{}, {})",   \
+                                         STEPKIT_MODULE_NAME, ##__VA_ARGS__, __FILE__,   \
                                          __LINE__, __FUNCTION__)
 
-#define STEP_LOG_TO_DEFAULT_NO_SOURCE(level, format, ...)                                                           \
-    step::log::Logger::instance().log_to_default(level, "{:>16.16s}; thread {}; msg=" format, STEPKIT_MODULE_NAME,  \
-                                                    std::this_thread::get_id(), ##__VA_ARGS__)
+#define STEP_LOG_TO_DEFAULT_NO_SOURCE(level, format, ...)                                                \
+    step::log::Logger::instance().log_to_default(level, "{:>16.16s}; msg=" format, STEPKIT_MODULE_NAME,  \
+                                                     ##__VA_ARGS__)
 
-#define STEP_LOG_TO_DEFAULT(level, format, ...)                                                                     \
-    step::log::Logger::instance().log_to_default(level, "{:>16.16s}; thread {}; msg=" format " ({}:{}, {})",        \
-                                                    STEPKIT_MODULE_NAME, std::this_thread::get_id(), ##__VA_ARGS__,    \
+#define STEP_LOG_TO_DEFAULT(level, format, ...)                                                     \
+    step::log::Logger::instance().log_to_default(level, "{:>16.16s}; msg=" format " ({}:{}, {})",   \
+                                                    STEPKIT_MODULE_NAME, ##__VA_ARGS__,             \
                                                     __FILE__, __LINE__, __FUNCTION__)

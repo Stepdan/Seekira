@@ -1,6 +1,6 @@
 #include "time.hpp"
 
-namespace rvision {
+namespace step {
 
 bool is_invalid_timestamp(const Timestamp& ts) { return is_invalid_time<Timestamp>(ts); }
 

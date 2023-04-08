@@ -9,7 +9,7 @@ constexpr const char* LOGGER_NAME = "stepkit_logger";
 
 // Message example
 // 2019-07-02 15:56:12.333333;   INFO;              D2R; msg=Diagnostic message
-constexpr const char* LOG_PATTERN = "%Y-%m-%d %H:%M:%S.%f; %^%8l%$; %v";
+constexpr const char* LOG_PATTERN = "%Y-%m-%d %H:%M:%S.%f; %^%8l%$; thread %t; %v";
 
 spdlog::sink_ptr CreateStderrSink(step::log::LoggingSettings::SyncMode syncMode, step::log::LOG_LEVEL level)
 {

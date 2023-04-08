@@ -5,7 +5,7 @@
 #include <chrono>
 #include <limits>
 
-#define RVISION_ALL_TIME_TYPES_MACRO(MACRO, ...)                                                                       \
+#define STEP_ALL_TIME_TYPES_MACRO(MACRO, ...)                                                                       \
     MACRO(step::Nanoseconds, ##__VA_ARGS__)                                                                         \
     MACRO(step::Microseconds, ##__VA_ARGS__)                                                                        \
     MACRO(step::Milliseconds, ##__VA_ARGS__)                                                                        \
@@ -13,7 +13,7 @@
     MACRO(step::Minutes, ##__VA_ARGS__)                                                                             \
     MACRO(step::Hours, ##__VA_ARGS__)
 
-namespace rvision {
+namespace step {
 
 using Nanoseconds = std::chrono::nanoseconds;
 using Microseconds = std::chrono::microseconds;
@@ -56,7 +56,7 @@ bool is_invalid_timestamp(const Timestamp& ts);
 bool is_infinite_timestamp(const Timestamp& ts);
 Timestamp get_current_timestamp();
 
-}  // namespace rvision
+}  // namespace step
 
 #define TIME_FORMATTER(TIME_TYPE)                                                                                      \
     template <>                                                                                                        \
@@ -69,4 +69,4 @@ Timestamp get_current_timestamp();
         }                                                                                                              \
     };
 
-RVISION_ALL_TIME_TYPES_MACRO(TIME_FORMATTER)
+STEP_ALL_TIME_TYPES_MACRO(TIME_FORMATTER)

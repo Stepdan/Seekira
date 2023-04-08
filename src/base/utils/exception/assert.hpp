@@ -1,12 +1,13 @@
 #pragma once
 
-#include <core/utils/throw_utils.hpp>
+#include "base/utils/exception/throw_utils.hpp"
 
 #include <fmt/format.h>
 
 #include <sstream>
 
 namespace step::utils::detail {
+
 [[noreturn]] inline void handle_failed_assertion(const char* expr_msg)
 {
     std::stringstream what;
@@ -27,6 +28,7 @@ template <typename... Args>
 
     step::utils::throw_with_trace(std::runtime_error(what.str()));
 }
+
 }  // namespace step::utils::detail
 
 /*! @brief Asserts (in the form of an exception being thrown) if an expression
@@ -38,6 +40,6 @@ template <typename... Args>
     after the expression to assert on. The message would be added to the error
     in case of the assertion.
 */
-#define rv_assert(expr, ...)                                                                                           \
-    if (!(expr))                                                                                                       \
+#define step_assert(expr, ...)                                                                                           \
+    if (!(expr))                                                                                                         \
     step::utils::detail::handle_failed_assertion(#expr, ##__VA_ARGS__)

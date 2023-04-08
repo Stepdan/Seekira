@@ -17,7 +17,7 @@ namespace step::utils {
         time = TIME_TYPE(std::stoi(str));                                                                              \
     }
 
-RVISION_ALL_TIME_TYPES_MACRO(TIME_TO_STRING)
-RVISION_ALL_TIME_TYPES_MACRO(TIME_FROM_STRING)
+STEP_ALL_TIME_TYPES_MACRO(TIME_TO_STRING)
+STEP_ALL_TIME_TYPES_MACRO(TIME_FROM_STRING)
 
 }  // namespace step::utils

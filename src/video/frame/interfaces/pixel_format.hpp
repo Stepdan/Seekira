@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/utils/string_utils.hpp>
+#include <base/utils/string_utils.hpp>
 
 #include <fmt/format.h>
 
@@ -17,15 +17,6 @@ enum class PixFmt : int
     RGBA,
     BGR,
     BGRA,
-
-    /*
-        Non-supported formats used only for reading from cameras.
-        Requires colorspace convertion for further usage.
-    */
-    BayerGR,
-    BayerGB,
-    BayerRG,
-    BayerBG,
 
     // ATTENTION always should be the last one
     EndOf
