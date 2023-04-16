@@ -5,13 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF) # the flag used to set the language standard (e.g. -std=c++11 rather than -std=gnu++11).
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_GENERATOR_TOOLSET "v143")
-
-set(STEPKIT_INSTALL_DIR .)
-set(STEPKIT_INSTALL_BIN_DIR bin)
-set(STEPKIT_INSTALL_LIB_DIR lib)
-set(STEPKIT_BUILD_BIN_DIR ${CMAKE_BINARY_DIR}/bin)
-set(STEPKIT_BUILD_LIB_DIR ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_GENERATOR "Ninja") 
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -21,13 +15,9 @@ conan_cmake_run(
     REQUIRES
         fmt/9.1.0
         spdlog/1.11.0
-        eigen/3.4.0
-        jsoncpp/1.9.5        # opencv
-        libjpeg/9e           # opencv
         opencv/4.5.5
-        boost/1.81.0
         poco/1.12.4
-        libbacktrace/cci.20210118
+        boost/1.81.0
     BASIC_SETUP
     CMAKE_TARGETS
     UPDATE
@@ -96,22 +86,22 @@ conan_cmake_run(
         cmake_paths
         cmake_find_package
     IMPORTS
-        IMPORTS "*.lib, *.dll -> ./${CMAKE_CURRENT_BINARY_DIR}"
+        "*.lib, *.dll -> ./${CMAKE_CURRENT_BINARY_DIR}"
     )
 
 include(${CMAKE_CURRENT_BINARY_DIR}/conan_paths.cmake)
 
-find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(fmt REQUIRED)
-#find_package(robin_hood REQUIRED)
 find_package(Poco REQUIRED)
 find_package(gtest REQUIRED)
-#find_package(easy_profiler REQUIRED)
 
 find_package(OpenCV REQUIRED)
 include_directories ("/usr/include/opencv4/")
+
+set(INSTALL_TARGET_NAME "stepkit-targets")
 
 include_directories(thirdparty)
 include_directories(src)
@@ -128,3 +118,6 @@ if(ENABLE_TESTS)
     include(GoogleTest)
     add_subdirectory(tests)
 endif()
+
+install(DIRECTORY ${CMAKE_CURRENT_LIBRARY_DIR}
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

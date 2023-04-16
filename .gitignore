@@ -32,3 +32,5 @@ cmake-build*
 *.cmd
 *.code-workspace
 tags
+.vs/*
+tests/googletest/*

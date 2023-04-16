@@ -250,7 +250,7 @@ macro(_conan_detect_compiler)
         set(_CONAN_SETTING_COMPILER_RUNTIME ${_vs_runtime})
 
         if (CMAKE_GENERATOR_TOOLSET)
-            set(_CONAN_SETTING_COMPILER_TOOLSET ${CMAKE_GENERATOR_TOOLSET})
+            set(_CONAN_SETTING_COMPILER_TOOLSET ${CMAKE_VS_PLATFORM_TOOLSET})
         elseif(CMAKE_VS_PLATFORM_TOOLSET AND (CMAKE_GENERATOR STREQUAL "Ninja"))
             set(_CONAN_SETTING_COMPILER_TOOLSET ${CMAKE_VS_PLATFORM_TOOLSET})
         endif()
@@ -305,7 +305,7 @@ function(conan_cmake_settings result)
 
     if(NOT _SETTINGS OR ARGUMENTS_PROFILE_AUTO STREQUAL "ALL")
         set(ARGUMENTS_PROFILE_AUTO arch build_type compiler compiler.version
-                                   compiler.runtime compiler.libcxx compiler.toolset compiler.cppstd)
+                                   compiler.runtime compiler.libcxx compiler.toolset)
     endif()
 
     # remove any manually specified settings from the autodetected settings
