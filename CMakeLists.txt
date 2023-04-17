@@ -9,6 +9,16 @@ set(CMAKE_GENERATOR "Ninja")
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+set(STEPKIT_INSTALL_DIR .)
+set(STEPKIT_INSTALL_BIN_DIR bin)
+set(STEPKIT_INSTALL_LIB_DIR lib)
+set(STEPKIT_BUILD_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/bin)
+set(STEPKIT_BUILD_LIB_DIR ${CMAKE_CURRENT_BINARY_DIR}/lib)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${STEPKIT_BUILD_BIN_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${STEPKIT_BUILD_LIB_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${STEPKIT_BUILD_BIN_DIR})
+
 include(conan)
 
 conan_cmake_run(
@@ -86,7 +96,7 @@ conan_cmake_run(
         cmake_paths
         cmake_find_package
     IMPORTS
-        "*.lib, *.dll -> ./${CMAKE_CURRENT_BINARY_DIR}"
+        "bin, *.dll -> ${STEPKIT_BUILD_BIN_DIR}"
     )
 
 include(${CMAKE_CURRENT_BINARY_DIR}/conan_paths.cmake)
@@ -118,6 +128,3 @@ if(ENABLE_TESTS)
     include(GoogleTest)
     add_subdirectory(tests)
 endif()
-
-install(DIRECTORY ${CMAKE_CURRENT_LIBRARY_DIR}
-    DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
