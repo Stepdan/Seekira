@@ -35,18 +35,21 @@ conan_cmake_run(
         spdlog:header_only=False
         #-----------------------------
         opencv/*:shared=True
-        #opencv/*:fPIC=True
-        opencv/*:contrib=True
         opencv/*:with_eigen=True
+        opencv/*:contrib=False
         opencv/*:parallel=False
         opencv/*:with_tiff=False
         opencv/*:with_webp=False
         opencv/*:with_ffmpeg=False
         opencv/*:with_ade=False
-        #opencv/*:with_imath=False
         opencv/*:with_openexr=False
         opencv/*:with_webp=False
         opencv/*:with_quirc=False
+        opencv/*:with_cuda=False
+        opencv/*:with_cublas=False
+        opencv/*:with_cufft=False
+        opencv/*:with_cudnn=False
+        opencv/*:with_ffmpeg=False
         #-----------------------------
         boost:shared=False
         boost:zlib=False

@@ -5,12 +5,12 @@
 #include <chrono>
 #include <limits>
 
-#define STEP_ALL_TIME_TYPES_MACRO(MACRO, ...)                                                                       \
-    MACRO(step::Nanoseconds, ##__VA_ARGS__)                                                                         \
-    MACRO(step::Microseconds, ##__VA_ARGS__)                                                                        \
-    MACRO(step::Milliseconds, ##__VA_ARGS__)                                                                        \
-    MACRO(step::Seconds, ##__VA_ARGS__)                                                                             \
-    MACRO(step::Minutes, ##__VA_ARGS__)                                                                             \
+#define STEP_ALL_TIME_TYPES_MACRO(MACRO, ...)                                                                          \
+    MACRO(step::Nanoseconds, ##__VA_ARGS__)                                                                            \
+    MACRO(step::Microseconds, ##__VA_ARGS__)                                                                           \
+    MACRO(step::Milliseconds, ##__VA_ARGS__)                                                                           \
+    MACRO(step::Seconds, ##__VA_ARGS__)                                                                                \
+    MACRO(step::Minutes, ##__VA_ARGS__)                                                                                \
     MACRO(step::Hours, ##__VA_ARGS__)
 
 namespace step {
@@ -23,13 +23,9 @@ using Minutes = std::chrono::minutes;
 using Hours = std::chrono::hours;
 
 using TimeType = std::chrono::microseconds::rep;
-// TODO: these has to be templated, otherwise we cannot compare them to arbitrary time!
+
 constexpr TimeType INVALID_TIME = std::numeric_limits<TimeType>::min();
 constexpr TimeType INFINITE_TIME = std::numeric_limits<TimeType>::max();
-
-// Default timestamp in ARRIVAL is microseconds.
-using Timestamp = Microseconds;
-constexpr Timestamp INVALID_TIMESTAMP = Timestamp(INVALID_TIME);
 
 template <typename TTime>
 bool is_invalid_time(const TTime& time)
@@ -51,7 +47,9 @@ TTime get_current_time()
     return std::chrono::duration_cast<TTime>(std::chrono::system_clock::now().time_since_epoch());
 }
 
-// TODO: delete these 3, they do practically nothing
+// StepKit's default type of timestamp is microseconds
+using Timestamp = Microseconds;
+
 bool is_invalid_timestamp(const Timestamp& ts);
 bool is_infinite_timestamp(const Timestamp& ts);
 Timestamp get_current_timestamp();

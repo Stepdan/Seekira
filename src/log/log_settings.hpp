@@ -23,7 +23,6 @@ public:
 private:
     size_t m_backtrace_size{1000};
     SyncMode m_sync_mode{SyncMode::Async};
-    std::string m_pattern;
 };
 
 }  // namespace step::log

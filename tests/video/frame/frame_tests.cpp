@@ -26,7 +26,7 @@ struct TestDataProvider
     // hardcoded image.png data for tests usage
     static std::string frame_path() { return test_data_dir().append("lena.jpg").string(); }
     static PixFmt pixel_format() { return PixFmt::BGR; }
-    static FrameSize frame_size() { return FrameSize(726, 536); }
+    static FrameSize frame_size() { return FrameSize(384, 384); }
     static size_t frame_bytesize()
     {
         return frame_size().width * frame_size().height * get_channels_count(pixel_format());

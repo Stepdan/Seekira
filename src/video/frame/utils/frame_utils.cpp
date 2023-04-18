@@ -19,18 +19,4 @@ void convert_colorspace(Frame& frame, PixFmt dst_format)
                                dst.data);
 }
 
-void covert_or_clone(Frame& frame, PixFmt dst_format)
-{
-    // clone if format is the same
-    if (dst_format == frame.pix_fmt)
-    {
-        // dummy exchange to ensure we've cloned the memory
-        Frame clone(frame);
-        frame = std::move(clone);
-        return;
-    }
-    // convert the color space otherwise
-    convert_colorspace(frame, dst_format);
-}
-
 }  // namespace step::video::utils

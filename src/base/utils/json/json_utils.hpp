@@ -69,8 +69,7 @@ T get(const ObjectPtrJSON& container, const std::string& key) noexcept(false)
     }
     catch (const Poco::Exception& e)
     {
-        step::utils::throw_runtime_with_log(
-            fmt::format("POCO's getValue failed with '{}' for key: {}", e.what(), key));
+        step::utils::throw_runtime_with_log(fmt::format("POCO's getValue failed with '{}' for key: {}", e.what(), key));
     }
 }
 

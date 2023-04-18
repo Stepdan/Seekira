@@ -15,10 +15,10 @@ constexpr auto kOFF = "OFF"sv;
 }  // namespace detail
 
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
-#define SPDLOG_LEVEL_NAMES                                                                         \
-    {                                                                                              \
-        detail::kTRACE, detail::kDEBUG, detail::kINFO, detail::kWARNING, detail::kERROR,           \
-            detail::kCRITICAL, detail::kOFF                                                        \
+#define SPDLOG_LEVEL_NAMES                                                                                             \
+    {                                                                                                                  \
+        detail::kTRACE, detail::kDEBUG, detail::kINFO, detail::kWARNING, detail::kERROR, detail::kCRITICAL,            \
+            detail::kOFF                                                                                               \
     }
 
 #include <spdlog/spdlog.h>
@@ -37,7 +37,7 @@ using LOG_LEVEL = ::spdlog::level::level_enum;
 #define L_ERROR ::spdlog::level::err
 #define L_CRITICAL ::spdlog::level::critical
 #define L_OFF ::spdlog::level::off
-}
+}  // namespace step::log
 
 #ifndef STEPKIT_MODULE_NAME
 #warning STEPKIT_MODULE_NAME undefined, will be skipped

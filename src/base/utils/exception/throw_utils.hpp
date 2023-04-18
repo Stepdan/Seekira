@@ -16,8 +16,8 @@ constexpr size_t STACK_LIMIT_MAX = std::numeric_limits<size_t>::max();
 using TraceInfo = boost::error_info<struct stactrace_tag, StackTrace>;
 
 template <class E>
-[[noreturn]] BOOST_FORCEINLINE void throw_with_trace(const E& e,
-                                                     size_t stack_limit = STACK_LIMIT_MAX) {
+[[noreturn]] BOOST_FORCEINLINE void throw_with_trace(const E& e, size_t stack_limit = STACK_LIMIT_MAX)
+{
     throw boost::enable_error_info(e) << TraceInfo(StackTrace(0, stack_limit));
 }
 

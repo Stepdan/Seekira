@@ -40,6 +40,6 @@ template <typename... Args>
     after the expression to assert on. The message would be added to the error
     in case of the assertion.
 */
-#define step_assert(expr, ...)                                                                                           \
-    if (!(expr))                                                                                                         \
+#define step_assert(expr, ...)                                                                                         \
+    if (!(expr))                                                                                                       \
     step::utils::detail::handle_failed_assertion(#expr, ##__VA_ARGS__)

@@ -14,8 +14,10 @@ source_group("Sources" FILES ${SOURCES})
 add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(${PROJECT_NAME} PRIVATE
+    #gmock
+    gtest
+    gtest_main
     step::frame_utils
-    gtest gmock gtest_main
 )
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     FRAME_TESTS_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/"

@@ -7,10 +7,10 @@
 namespace step::video::utils {
 
 // Non-owned Mat
-cv::Mat to_mat(Frame& frame);  // TODO: rename to create_mat_view()
+cv::Mat to_mat(Frame& frame);
 
 // Owned Mat
-cv::Mat to_mat_deep(Frame& frame);  // TODO: rename to create_mat()
+cv::Mat to_mat_deep(Frame& frame);
 
 int get_colorspace_convert_id(PixFmt from, PixFmt to);
 

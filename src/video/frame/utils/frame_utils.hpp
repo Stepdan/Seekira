@@ -23,6 +23,5 @@ void save_to_file(Frame& frame, const std::filesystem::path& path);
 namespace step::video::utils {
 
 void convert_colorspace(Frame& frame, PixFmt dst_format);
-void covert_or_clone(Frame& frame, PixFmt dst_format);
 
 }  // namespace step::video::utils

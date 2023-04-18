@@ -32,8 +32,6 @@ public:
         }
     };
 
-    // TODO: rename to create_view() - aligns to C++ std lib
-
     /*! @brief Returns a frame view over the specified data.
     */
     static Frame create(const FrameSize& size, size_t stride, PixFmt fmt, DataTypePtr data,
@@ -48,8 +46,6 @@ public:
 
         return frame;
     }
-
-    // TODO: rename to just create()
 
     /*! @brief Returns a new frame that holds a copy of the data.
     */
@@ -105,9 +101,15 @@ public:
 
     bool operator==(const Frame& lhs) const
     {
-        return bytesize() == lhs.bytesize() && size == lhs.size &&
-               pix_fmt == lhs.pix_fmt && stride  == lhs.stride &&
-               std::memcmp(m_data, lhs.m_data, bytesize()) == 0;
+        /* clang-format off */
+        return true
+            && bytesize() == lhs.bytesize()
+            && size == lhs.size
+            && pix_fmt == lhs.pix_fmt
+            && stride == lhs.stride
+            && std::memcmp(m_data, lhs.m_data, bytesize()) == 0
+        ;
+        /* clang-format on */
     }
 
     friend void swap(Frame& lhs, Frame& rhs) noexcept
@@ -121,8 +123,14 @@ public:
 
     bool is_valid() const noexcept
     {
-        return m_data && pix_fmt != PixFmt::Undefined &&
-               size != FrameSize() && stride != 0;
+        /* clang-format off */
+        return true 
+            && m_data
+            && pix_fmt != PixFmt::Undefined
+            && size != FrameSize()
+            && stride != 0
+            ;
+        /* clang-format on */
     }
 
 public:
@@ -194,5 +202,15 @@ struct fmt::formatter<step::video::Frame> : formatter<string_view>
     {
         return format_to(ctx.out(), "size: [{}], stride: {}, bpp: {}, pix_fmt: {}, ptr: {}", frame.size, frame.stride,
                          frame.bpp(), frame.pix_fmt, (void*)frame.data());
+    }
+};
+
+template <>
+struct fmt::formatter<step::video::CameraFrame> : formatter<string_view>
+{
+    template <typename FormatContext>
+    auto format(const step::video::CameraFrame& frame, FormatContext& ctx)
+    {
+        return format_to(ctx.out(), "ts: {}, {}", frame.ts, frame.frame);
     }
 };
