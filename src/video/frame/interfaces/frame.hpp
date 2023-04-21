@@ -192,6 +192,12 @@ struct CameraFrame
     Timestamp ts{step::get_current_timestamp()};
 };
 
+using Frames = std::vector<Frame>;
+using FramePtr = std::shared_ptr<Frame>;
+using FramesPtrs = std::vector<FramePtr>;
+
+using CameraFrames = std::vector<CameraFrame>;
+
 }  // namespace step::video
 
 template <>

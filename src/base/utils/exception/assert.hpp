@@ -12,7 +12,7 @@ namespace step::utils::detail {
 {
     std::stringstream what;
     what << "Assertion `" << expr_msg << "` failed.";
-    step::utils::throw_with_trace(std::runtime_error(what.str()));
+    step::utils::throw_runtime_with_log(what.str());
 }
 
 template <typename... Args>
@@ -26,7 +26,7 @@ template <typename... Args>
         what << " Explanation: " << extra;
     }
 
-    step::utils::throw_with_trace(std::runtime_error(what.str()));
+    step::utils::throw_runtime_with_log(what.str());
 }
 
 }  // namespace step::utils::detail
@@ -40,6 +40,6 @@ template <typename... Args>
     after the expression to assert on. The message would be added to the error
     in case of the assertion.
 */
-#define step_assert(expr, ...)                                                                                         \
+#define STEP_ASSERT(expr, ...)                                                                                         \
     if (!(expr))                                                                                                       \
     step::utils::detail::handle_failed_assertion(#expr, ##__VA_ARGS__)

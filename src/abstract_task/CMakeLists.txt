@@ -1,12 +1,16 @@
-project(log)
+project(abstract_task)
 set(PROJECT_ALIAS ${PROJECT_NAME})
 
 if(NOT DEFINED HEADERS)
-    file(GLOB HEADERS *.hpp)
+    file(GLOB HEADERS
+        *.hpp
+    )
 endif()
 
 if(NOT DEFINED SOURCES)
-    file(GLOB SOURCES *.cpp)
+    file(GLOB SOURCES
+        *.cpp
+    )
 endif()
 
 source_group("Headers" FILES ${HEADERS})
@@ -22,23 +26,20 @@ target_sources(${PROJECT_NAME}
     FILE_SET headers TYPE HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} FILES "${HEADERS}"
 )
 
-find_package(fmt REQUIRED)
-find_package(spdlog REQUIRED)
-
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    fmt::fmt
-    spdlog::spdlog
+    step::base
 )
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    STEPKIT_MODULE_NAME="STEPKIT_LOG"
-    GIT_INFO="${GIT_INFO}"
+    STEPKIT_MODULE_NAME="ABSTRACT_TASK"
+    PUBLIC
+    BUILD_WITH_EASY_PROFILER
 )
 
-# install(TARGETS ${PROJECT_NAME} EXPORT ${INSTALL_TARGET_NAME}
-#     COMPONENT ${PROJECT_NAME}
-#     FILE_SET headers DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_ALIAS}
-#     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-# )
+install(TARGETS ${PROJECT_NAME} EXPORT ${INSTALL_TARGET_NAME}
+    COMPONENT ${PROJECT_NAME}
+    FILE_SET headers DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_ALIAS}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)

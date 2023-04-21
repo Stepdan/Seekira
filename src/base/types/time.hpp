@@ -5,13 +5,13 @@
 #include <chrono>
 #include <limits>
 
-#define STEP_ALL_TIME_TYPES_MACRO(MACRO, ...)                                                                          \
-    MACRO(step::Nanoseconds, ##__VA_ARGS__)                                                                            \
-    MACRO(step::Microseconds, ##__VA_ARGS__)                                                                           \
-    MACRO(step::Milliseconds, ##__VA_ARGS__)                                                                           \
-    MACRO(step::Seconds, ##__VA_ARGS__)                                                                                \
-    MACRO(step::Minutes, ##__VA_ARGS__)                                                                                \
-    MACRO(step::Hours, ##__VA_ARGS__)
+#define STEP_ALL_TIME_TYPES_MACRO(MACRO)                                                                               \
+    MACRO(step::Nanoseconds)                                                                                           \
+    MACRO(step::Microseconds)                                                                                          \
+    MACRO(step::Milliseconds)                                                                                          \
+    MACRO(step::Seconds)                                                                                               \
+    MACRO(step::Minutes)                                                                                               \
+    MACRO(step::Hours)
 
 namespace step {
 

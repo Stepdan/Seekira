@@ -31,7 +31,7 @@ ArrayPtrJSON make_array_json_ptr();
 template <typename T>
 void set(ObjectPtrJSON& container, const std::string& key, const T& value)
 {
-    step_assert(container);
+    STEP_ASSERT(container);
     container->set(key, value);
 }
 
@@ -41,7 +41,7 @@ void set(ObjectPtrJSON& container, const std::string& key, const T& value)
 template <typename T>
 void set_opt(ObjectPtrJSON& container, const std::string& key, const std::optional<T>& optional)
 {
-    step_assert(container);
+    STEP_ASSERT(container);
     if (!optional.has_value())
         return;
     set(container, key, optional.value());
@@ -50,7 +50,7 @@ void set_opt(ObjectPtrJSON& container, const std::string& key, const std::option
 template <typename T>
 void add(ArrayPtrJSON& container, T&& value)
 {
-    step_assert(container);
+    STEP_ASSERT(container);
     container->add(std::forward<T>(value));
 }
 
@@ -60,8 +60,8 @@ void add(ArrayPtrJSON& container, T&& value)
 template <typename T>
 T get(const ObjectPtrJSON& container, const std::string& key) noexcept(false)
 {
-    step_assert(container);
-    step_assert(container->has(key), "Key '{}' doesn't exist", key);
+    STEP_ASSERT(container);
+    STEP_ASSERT(container->has(key), "Key '{}' doesn't exist", key);
 
     try
     {
@@ -79,7 +79,7 @@ T get(const ObjectPtrJSON& container, const std::string& key) noexcept(false)
 template <typename T>
 T get(const ObjectPtrJSON& container, const std::string& key, const T& def) noexcept
 {
-    step_assert(container);
+    STEP_ASSERT(container);
     return container->optValue(key, def);
 }
 
@@ -90,7 +90,7 @@ T get(const ObjectPtrJSON& container, const std::string& key, const T& def) noex
 template <typename T>
 std::optional<T> get_opt(const ObjectPtrJSON& container, const std::string& key)
 {
-    step_assert(container);
+    STEP_ASSERT(container);
     try
     {
         return container->getValue<T>(key);
@@ -123,7 +123,7 @@ ArrayPtrJSON opt_array(const ObjectPtrJSON& container, const std::string& key);
 template <typename T>
 void for_each_in_array(const ArrayPtrJSON& array, std::function<void(T&)> func_over_elem)
 {
-    step_assert(array);
+    STEP_ASSERT(array);
     try
     {
         for (const VarJSON& array_item : *array)
@@ -141,7 +141,7 @@ void for_each_in_array(const ArrayPtrJSON& array, std::function<void(T&)> func_o
 template <typename T>
 void for_first_true_in_array(const ArrayPtrJSON& array, std::function<bool(const T&)> func_over_elem)
 {
-    step_assert(array);
+    STEP_ASSERT(array);
     try
     {
         for (const VarJSON& array_item : *array)

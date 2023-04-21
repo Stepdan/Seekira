@@ -17,32 +17,24 @@ namespace step::json {
 ObjectPtrJSON make_object_json_ptr() { return Poco::makeShared<ObjectJSON>(); }
 ArrayPtrJSON make_array_json_ptr() { return Poco::makeShared<ArrayJSON>(); }
 
-ObjectPtrJSON opt_object(const ObjectPtrJSON& container, const std::string& key)
-{
-    step_assert(container);
-    return container->getObject(key);
-}
+ObjectPtrJSON opt_object(const ObjectPtrJSON& container, const std::string& key) { return container->getObject(key); }
 
-ArrayPtrJSON opt_array(const ObjectPtrJSON& container, const std::string& key)
-{
-    step_assert(container);
-    return container->getArray(key);
-}
+ArrayPtrJSON opt_array(const ObjectPtrJSON& container, const std::string& key) { return container->getArray(key); }
 
 ObjectPtrJSON get_object(const ObjectPtrJSON& container, const std::string& key)
 {
-    step_assert(container);
+    STEP_ASSERT(container);
     auto object = opt_object(container, key);
-    step_assert(object, "Container passed doesn't have an object for key '{}'", key);
+    STEP_ASSERT(object, "Container passed doesn't have an object for key '{}'", key);
     return object;
 }
 
 ArrayPtrJSON get_array(const ObjectPtrJSON& container, const std::string& key)
 {
-    step_assert(container);
+    STEP_ASSERT(container);
     ArrayPtrJSON array;
     array = opt_array(container, key);
-    step_assert(array, "Container passed doesn't have an array for key '{}'", key);
+    STEP_ASSERT(array, "Container passed doesn't have an array for key '{}'", key);
     return array;
 }
 
