@@ -119,6 +119,26 @@ ObjectPtrJSON opt_object(const ObjectPtrJSON& container, const std::string& key)
 */
 ArrayPtrJSON opt_array(const ObjectPtrJSON& container, const std::string& key);
 
+/*! @brief Returns array's value from index 
+*/
+template <typename T>
+T get_array_value(const ArrayPtrJSON& container, size_t index)
+{
+    STEP_ASSERT(container->empty(), "Can't provide elem with index {} of array: array is empty!", index);
+    STEP_ASSERT(container->size() < index, "Can't provide elem with index {} of array: array size is {}!", index,
+                container->size());
+
+    try
+    {
+        return container->getElement<T>(index);
+    }
+    catch (const Poco::Exception& e)
+    {
+        step::utils::throw_runtime_with_log(
+            fmt::format("Can't provide elem with index {} of array: {}!", index, e.what()));
+    }
+}
+
 // TODO: we might want a more general solution around POCO exceptions
 template <typename T>
 void for_each_in_array(const ArrayPtrJSON& array, std::function<void(T&)> func_over_elem)

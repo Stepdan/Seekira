@@ -43,3 +43,5 @@ template <typename... Args>
 #define STEP_ASSERT(expr, ...)                                                                                         \
     if (!(expr))                                                                                                       \
     step::utils::detail::handle_failed_assertion(#expr, ##__VA_ARGS__)
+
+#define STEP_UNDEFINED(...) step::utils::detail::handle_failed_assertion(##__VA_ARGS__)

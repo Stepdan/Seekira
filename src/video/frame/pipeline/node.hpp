@@ -24,9 +24,9 @@ struct FramePipelineDataType
     }
 };
 
-using IFramePipelineNode = task::ITask<FramePipelineDataType>;
+using IFramePipelineNode = task::ITask<FramePipelineDataType&>;
 
 template <typename TSettings>
-using FramePipelineNode = task::BaseTask<FramePipelineDataType, TSettings>;
+using FramePipelineNode = task::BaseTask<FramePipelineDataType&, TSettings>;
 
 }  // namespace step::video::pipeline

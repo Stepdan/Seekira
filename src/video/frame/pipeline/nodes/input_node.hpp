@@ -20,6 +20,9 @@ class InputPipelineNode : public FramePipelineNode<InputNodeSettings>
     using DataType = FramePipelineNode<InputNodeSettings>::DataType;
 
 public:
+    static const std::string INPUT_NODE_ID;
+
+public:
     InputPipelineNode() = default;
 
     void process(DataType) override;

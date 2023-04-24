@@ -1,16 +1,6 @@
 #pragma once
 
-#include "node_graph.hpp"
-
-#include "pipeline_thread.hpp"
-
-#include <mutex>
-
-namespace step::video::pipeline {
-
-constexpr std::string_view PIPELINE_FIELD = "pipeline";
-
-}
+#include "pipeline_thread_pool.hpp"
 
 namespace step::video::pipeline {
 
@@ -23,14 +13,16 @@ public:
     void deserialize(const ObjectPtrJSON& config);
 
 private:
+    void reset();
     void process_thread(const std::string& node_id, FramePipelineDataType&& data);
 
-    void init_with_input_node();
+    bool is_thread_pool_exist() const noexcept { return !!m_thread_pool; }
 
 private:
-    FramePipelineGraphNode::Ptr m_root;
-    PipelineThread m_main_thread;
-    std::vector<PipelineThread> m_branch_threads;
+    std::shared_ptr<FramePipelineSettings> m_settings{nullptr};
+    FramePipelineGraphNode::Ptr m_root{nullptr};
+
+    std::unique_ptr<PipelineThreadPool> m_thread_pool{nullptr};
 };
 
 }  // namespace step::video::pipeline

@@ -47,7 +47,7 @@ void Logger::set_settings(LoggingSettings&& settings)
     reset();
 
     // Create stderr sink with level L_TRACE to grab all messages in backtrace
-    logger_ = std::make_shared<spdlog::logger>(LOGGER_NAME, CreateStderrSink(settings.get_sync_mode(), L_TRACE));
+    logger_ = std::make_shared<spdlog::logger>(LOGGER_NAME, CreateStderrSink(settings.get_sync_policy(), L_TRACE));
     if (settings.get_backtrace_size() != 0)
         logger_->enable_backtrace(settings.get_backtrace_size());
 

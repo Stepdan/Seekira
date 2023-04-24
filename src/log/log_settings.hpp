@@ -18,7 +18,7 @@ public:
     void set_sync_mode(SyncMode value) { m_sync_mode = value; }
 
     size_t get_backtrace_size() const noexcept { return m_backtrace_size; }
-    SyncMode get_sync_mode() const noexcept { return m_sync_mode; }
+    SyncMode get_sync_policy() const noexcept { return m_sync_mode; }
 
 private:
     size_t m_backtrace_size{1000};

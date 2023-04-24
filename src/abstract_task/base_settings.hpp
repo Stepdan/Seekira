@@ -6,7 +6,7 @@
 
 namespace step::task {
 
-constexpr std::string_view TASK_SETTINGS_ID_FIELD = "id";
+constexpr std::string_view CFG_FLD_TASK_SETTINGS_ID = "id";
 
 class BaseSettings : public ISerializable
 {

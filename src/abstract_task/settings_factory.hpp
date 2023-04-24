@@ -31,7 +31,7 @@ public:
 
     BaseSettings create(const ObjectPtrJSON& json_obj)
     {
-        const auto id = json::get<std::string>(json_obj, TASK_SETTINGS_ID_FIELD.data());
+        const auto id = json::get<std::string>(json_obj, CFG_FLD_TASK_SETTINGS_ID.data());
         STEP_ASSERT(!m_creators.contains(id), "Task settings creator with id {} was not registered!", id);
 
         return m_creators[id](json_obj);
