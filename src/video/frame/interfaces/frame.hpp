@@ -35,7 +35,7 @@ public:
     /*! @brief Returns a frame view over the specified data.
     */
     static Frame create(const FrameSize& size, size_t stride, PixFmt fmt, DataTypePtr data,
-                        Deleter deleter = Frame::default_deleter)
+                        Deleter deleter = Frame::default_deleter, Timestamp t = get_current_timestamp())
     {
         Frame frame;
         frame.m_data = data;
@@ -43,13 +43,15 @@ public:
         frame.size = size;
         frame.pix_fmt = fmt;
         frame.stride = stride;
+        frame.ts = t;
 
         return frame;
     }
 
     /*! @brief Returns a new frame that holds a copy of the data.
     */
-    static Frame create_deep(const FrameSize& size, size_t stride, PixFmt fmt, DataTypePtr data)
+    static Frame create_deep(const FrameSize& size, size_t stride, PixFmt fmt, DataTypePtr data,
+                             Timestamp t = get_current_timestamp())
     {
         Frame frame_view = create(size, stride, fmt, data, Frame::empty_deleter);
 
@@ -68,7 +70,7 @@ public:
         m_deleter = Frame::default_deleter;
     }
 
-    Frame(const Frame& rhs) : size(rhs.size), stride(rhs.stride), pix_fmt(rhs.pix_fmt)
+    Frame(const Frame& rhs) : size(rhs.size), stride(rhs.stride), pix_fmt(rhs.pix_fmt), ts(rhs.ts)
     {
         reset();
 
@@ -88,6 +90,7 @@ public:
         , size(std::exchange(rhs.size, FrameSize()))
         , stride(std::exchange(rhs.stride, 0))
         , pix_fmt(std::exchange(rhs.pix_fmt, PixFmt::Undefined))
+        , ts(std::exchange(rhs.ts, get_current_timestamp()))
     {
     }
     Frame& operator=(Frame&& rhs)
@@ -119,6 +122,7 @@ public:
         std::swap(lhs.size, rhs.size);
         std::swap(lhs.pix_fmt, rhs.pix_fmt);
         std::swap(lhs.stride, rhs.stride);
+        std::swap(lhs.ts, rhs.ts);
     }
 
     bool is_valid() const noexcept
@@ -129,7 +133,7 @@ public:
             && pix_fmt != PixFmt::Undefined
             && size != FrameSize()
             && stride != 0
-            ;
+        ;
         /* clang-format on */
     }
 
@@ -171,32 +175,12 @@ public:
     FrameSize size;
     size_t stride{0};
     PixFmt pix_fmt{PixFmt::Undefined};
-};
-
-struct CameraFrame
-{
-    bool is_valid() const noexcept { return frame.is_valid(); }
-    size_t bytesize() const noexcept { return frame.bytesize(); }
-    size_t bpp() const noexcept { return frame.bpp(); }
-    FrameSize size() const noexcept { return frame.size; }
-    size_t stride() const noexcept { return frame.stride; }
-    PixFmt pix_fmt() const noexcept { return frame.pix_fmt; }
-
-    friend void swap(CameraFrame& lhs, CameraFrame& rhs) noexcept
-    {
-        swap(lhs.frame, rhs.frame);
-        std::swap(lhs.ts, rhs.ts);
-    }
-
-    Frame frame{};
     Timestamp ts{step::get_current_timestamp()};
 };
 
 using Frames = std::vector<Frame>;
 using FramePtr = std::shared_ptr<Frame>;
 using FramesPtrs = std::vector<FramePtr>;
-
-using CameraFrames = std::vector<CameraFrame>;
 
 }  // namespace step::video
 
@@ -206,17 +190,7 @@ struct fmt::formatter<step::video::Frame> : formatter<string_view>
     template <typename FormatContext>
     auto format(const step::video::Frame& frame, FormatContext& ctx)
     {
-        return format_to(ctx.out(), "size: [{}], stride: {}, bpp: {}, pix_fmt: {}, ptr: {}", frame.size, frame.stride,
-                         frame.bpp(), frame.pix_fmt, (void*)frame.data());
-    }
-};
-
-template <>
-struct fmt::formatter<step::video::CameraFrame> : formatter<string_view>
-{
-    template <typename FormatContext>
-    auto format(const step::video::CameraFrame& frame, FormatContext& ctx)
-    {
-        return format_to(ctx.out(), "ts: {}, {}", frame.ts, frame.frame);
+        return format_to(ctx.out(), "size: [{}], stride: {}, bpp: {}, pix_fmt: {}, ptr: {}, ts: {}", frame.size,
+                         frame.stride, frame.bpp(), frame.pix_fmt, (void*)frame.data(), frame.ts);
     }
 };

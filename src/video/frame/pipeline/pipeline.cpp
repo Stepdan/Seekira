@@ -2,18 +2,8 @@
 
 #include <video/frame/pipeline/nodes/input_node.hpp>
 
+#include <base/types/config_fields.hpp>
 #include <base/utils/exception/assert.hpp>
-
-namespace {
-
-constexpr std::string_view INPUT_NODE_ID = "input_node";
-
-constexpr std::string_view CFG_FLD_PIPELINE = "pipeline";
-constexpr std::string_view CFG_FLD_PIPELINE_SETTINGS = "settings";
-constexpr std::string_view CFG_FLD_PIPELINE_NODES = "nodes";
-constexpr std::string_view CFG_FLD_PIPELINE_LINKS = "links";
-
-}  // namespace
 
 namespace step::video::pipeline {
 
@@ -21,15 +11,15 @@ FramePipeline::FramePipeline(const ObjectPtrJSON& config) { deserialize(config);
 
 void FramePipeline::deserialize(const ObjectPtrJSON& config)
 {
-    auto pipeline_json = json::get_object(config, CFG_FLD_PIPELINE.data());
+    auto pipeline_json = json::get_object(config, CFG_FLD::PIPELINE);
 
-    auto settings_json = json::get_object(config, CFG_FLD_PIPELINE_SETTINGS.data());
+    auto settings_json = json::get_object(config, CFG_FLD::SETTINGS);
     m_settings = std::make_shared<FramePipelineSettings>(settings_json);
     const auto& pipeline_name = m_settings->get_pipeline_name();
 
     /* clang-format off */
     std::unordered_map<std::string, FramePipelineGraphNode::Ptr> nodes;
-    auto nodes_collection = json::get_array(pipeline_json, CFG_FLD_PIPELINE_NODES.data());
+    auto nodes_collection = json::get_array(pipeline_json, CFG_FLD::NODES);
     json::for_each_in_array<ObjectPtrJSON>(nodes_collection, [&pipeline_name, &nodes](const ObjectPtrJSON& node_cfg)
     {
         auto node = std::make_shared<FramePipelineGraphNode>(node_cfg);
@@ -38,7 +28,7 @@ void FramePipeline::deserialize(const ObjectPtrJSON& config)
     });
 
     std::vector<std::pair<std::string, std::string>> links;
-    auto links_collection = json::get_array(pipeline_json, CFG_FLD_PIPELINE_LINKS.data());
+    auto links_collection = json::get_array(pipeline_json, CFG_FLD::LINKS);
     json::for_each_in_array<ArrayPtrJSON>(links_collection, [&pipeline_name, &links, &nodes](const ArrayPtrJSON& link_cfg)
     {
         STEP_ASSERT(link_cfg->size() == 2, "Pipeline {}: Invalid link", pipeline_name);

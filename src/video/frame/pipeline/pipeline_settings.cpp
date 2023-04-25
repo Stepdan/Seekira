@@ -1,12 +1,10 @@
 #include "pipeline_settings.hpp"
 
+#include <base/types/config_fields.hpp>
 #include <base/utils/find_pair.hpp>
 #include <base/utils/string_utils.hpp>
 
 namespace {
-
-constexpr std::string_view CFG_FLD_SYNC_MODE = "sync_mode";
-constexpr std::string_view CFG_FLD_PIPELINE_NAME = "name";
 
 /* clang-format off */
 
@@ -43,8 +41,8 @@ FramePipelineSettings::FramePipelineSettings(const ObjectPtrJSON& config) { dese
 
 void FramePipelineSettings::deserialize(const ObjectPtrJSON& config)
 {
-    m_name = json::get<std::string>(config, CFG_FLD_PIPELINE_NAME.data());
-    utils::from_string(m_sync_policy, json::get<std::string>(config, CFG_FLD_SYNC_MODE.data()));
+    m_name = json::get<std::string>(config, CFG_FLD::NAME);
+    utils::from_string(m_sync_policy, json::get<std::string>(config, CFG_FLD::SYNC_MODE));
 }
 
 }  // namespace step::video::pipeline

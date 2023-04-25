@@ -2,6 +2,7 @@
 
 #include "base_settings.hpp"
 
+#include <base/types/config_fields.hpp>
 #include <base/utils/json/json_utils.hpp>
 
 #include <functional>
@@ -31,7 +32,7 @@ public:
 
     BaseSettings create(const ObjectPtrJSON& json_obj)
     {
-        const auto id = json::get<std::string>(json_obj, CFG_FLD_TASK_SETTINGS_ID.data());
+        const auto id = json::get<std::string>(json_obj, CFG_FLD::TASK_SETTINGS_ID);
         STEP_ASSERT(!m_creators.contains(id), "Task settings creator with id {} was not registered!", id);
 
         return m_creators[id](json_obj);

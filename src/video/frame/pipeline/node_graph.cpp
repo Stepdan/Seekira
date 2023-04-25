@@ -5,13 +5,6 @@
 #include <abstract_task/settings_factory.hpp>
 #include <abstract_task/abstract_task_factory.hpp>
 
-namespace {
-
-constexpr std::string_view CFG_FLD_NODE = "node";
-constexpr std::string_view CFG_FLD_SETTINGS = "settings";
-
-}  // namespace
-
 namespace step::video::pipeline {
 
 FramePipelineGraphNode::FramePipelineGraphNode(const std::string& node_id, std::unique_ptr<IFramePipelineNode>&& node)
@@ -23,9 +16,9 @@ FramePipelineGraphNode::FramePipelineGraphNode(const ObjectPtrJSON& json_obj) { 
 
 void FramePipelineGraphNode::deserialize(const ObjectPtrJSON& container)
 {
-    m_node_id = json::get<std::string>(container, CFG_FLD_NODE.data());
+    m_node_id = json::get<std::string>(container, CFG_FLD::NODE);
 
-    const auto task_settings = json::get_object(container, CFG_FLD_SETTINGS.data());
+    const auto task_settings = json::get_object(container, CFG_FLD::SETTINGS);
     const auto base_task_settings = task::TaskSettingsFactory::instance().create(task_settings);
 
     m_node = task::AbstractTaskFactory<FramePipelineDataType&>::instance().create_unique(m_node_id, base_task_settings);
