@@ -49,6 +49,7 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC
     Boost::stacktrace
     Boost::exception
+    Boost::thread
     Poco::Data
     Poco::Net
     Poco::Util

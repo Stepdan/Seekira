@@ -4,6 +4,7 @@ namespace step {
 
 const std::string CFG_FLD::ID = "id";
 const std::string CFG_FLD::NAME = "name";
+const std::string CFG_FLD::PATH = "path";
 const std::string CFG_FLD::WIDTH = "width";
 const std::string CFG_FLD::HEIGHT = "height";
 const std::string CFG_FLD::SETTINGS = "settings";
@@ -33,6 +34,7 @@ const std::string CFG_FLD::RESOLUTION = "resolution";
 const std::string CFG_FLD::EXPOSURE = "exposure";
 const std::string CFG_FLD::FRAME_RATE = "frame_rate";
 const std::string CFG_FLD::RECONNECT_TIMEOUT = "reconnect_timeout";
+const std::string CFG_FLD::CYCLIC = "cyclic";
 
 const std::string CFG_FLD::TASK_SETTINGS_ID = "id";
 

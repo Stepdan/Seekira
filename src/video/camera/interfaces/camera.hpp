@@ -4,6 +4,7 @@
 #include <video/camera/interfaces/types/camera_settings.hpp>
 
 #include <base/interfaces/event_handler_list.hpp>
+#include <base/utils/thread/thread_pool_execute_policy.hpp>
 
 #include <atomic>
 
@@ -45,8 +46,15 @@ public:
     bool is_streaming() const { return m_is_streaming; }
 
 public:
-    void register_observer(IFrameSourceObserver* observer) override;
-    void unregister_observer(IFrameSourceObserver* observer) override;
+    void register_observer(IFrameSourceObserver* observer) override
+    {
+        m_frame_observers.register_event_handler(observer);
+    }
+
+    void unregister_observer(IFrameSourceObserver* observer) override
+    {
+        m_frame_observers.unregister_event_handler(observer);
+    }
 
 protected:
     void handle_frame(Frame&& data)
@@ -60,7 +68,7 @@ protected:
     std::atomic_bool m_is_streaming{false};
     CameraErrorCallback m_error_callback;
 
-    step::EventHandlerList<IFrameSourceObserver> m_frame_observers;
+    step::EventHandlerList<IFrameSourceObserver, ThreadPoolExecutePolicy<0>> m_frame_observers;
 };
 
 }  // namespace step::video

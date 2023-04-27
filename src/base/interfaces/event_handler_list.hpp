@@ -20,7 +20,7 @@ public:
     void operator()(std::function<void()> functor) { functor(); }
 };
 
-template <typename IHandler>
+template <typename IHandler, class DeliveryPolicy = SyncExecutePolicy>
 class EventHandlerList : virtual public EventPublisher<IHandler>
 {
 protected:
@@ -77,7 +77,7 @@ private:
     std::vector<EventHandler*> m_subscribers;
     std::recursive_mutex m_access_guard;
     std::recursive_mutex m_notification_guard;
-    SyncExecutePolicy m_exec_policy;
+    DeliveryPolicy m_exec_policy;
 };
 
 }  // namespace step

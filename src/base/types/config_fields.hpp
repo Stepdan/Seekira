@@ -12,6 +12,7 @@ public:
     /* Common */
     static const std::string ID;
     static const std::string NAME;
+    static const std::string PATH;
 
     static const std::string WIDTH;
     static const std::string HEIGHT;
@@ -49,6 +50,7 @@ public:
     static const std::string EXPOSURE;
     static const std::string FRAME_RATE;
     static const std::string RECONNECT_TIMEOUT;
+    static const std::string CYCLIC;
 
     /* Abstract task */
     static const std::string TASK_SETTINGS_ID;

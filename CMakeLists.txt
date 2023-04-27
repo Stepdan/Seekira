@@ -51,7 +51,7 @@ conan_cmake_run(
         opencv/*:with_cudnn=False
         opencv/*:with_ffmpeg=False
         #-----------------------------
-        boost:shared=False
+        boost:shared=True
         boost:zlib=False
         boost:lzma=False
         boost:zstd=False
