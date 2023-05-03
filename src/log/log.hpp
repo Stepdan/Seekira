@@ -48,14 +48,14 @@ private:
 
 }  // namespace step::log
 
-// {:>16.16s}; - STEPKIT_MODULE_NAME
+// {:>20.20s}; - STEPKIT_MODULE_NAME
 #define STEP_LOG(level, format, ...)                                                                                   \
-    step::log::Logger::instance().log(level, "{:>16.16s}; msg=" format " ({}:{}, {})", STEPKIT_MODULE_NAME,            \
+    step::log::Logger::instance().log(level, "{:>20.20s}; msg=" format " ({}:{}, {})", STEPKIT_MODULE_NAME,            \
                                       ##__VA_ARGS__, __FILE__, __LINE__, __FUNCTION__)
 
 #define STEP_LOG_TO_DEFAULT_NO_SOURCE(level, format, ...)                                                              \
-    step::log::Logger::instance().log_to_default(level, "{:>16.16s}; msg=" format, STEPKIT_MODULE_NAME, ##__VA_ARGS__)
+    step::log::Logger::instance().log_to_default(level, "{:>20.20s}; msg=" format, STEPKIT_MODULE_NAME, ##__VA_ARGS__)
 
 #define STEP_LOG_TO_DEFAULT(level, format, ...)                                                                        \
-    step::log::Logger::instance().log_to_default(level, "{:>16.16s}; msg=" format " ({}:{}, {})", STEPKIT_MODULE_NAME, \
+    step::log::Logger::instance().log_to_default(level, "{:>20.20s}; msg=" format " ({}:{}, {})", STEPKIT_MODULE_NAME, \
                                                  ##__VA_ARGS__, __FILE__, __LINE__, __FUNCTION__)

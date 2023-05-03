@@ -63,7 +63,9 @@ public:
             std::unique_lock<std::recursive_mutex> lock(m_notification_guard);
 
             for (const auto& handler : subscribersCopy)
+            {
                 m_exec_policy(std::bind(functor, handler));
+            }
         }
     }
 

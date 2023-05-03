@@ -1,0 +1,40 @@
+{
+    "pipeline": {
+        "settings": {
+            "name": "invalid_link_one_node_pipeline"
+        },
+        "nodes": [
+            {
+                "node": "input_node",
+                "settings": {
+                    "id": "InputNodeSettings"
+                }
+            },
+            {
+                "node": "empty_node_1",
+                "settings": {
+                    "id": "EmptyNodeSettings"
+                }
+            },
+            {
+                "node": "empty_node_2",
+                "settings": {
+                    "id": "EmptyNodeSettings"
+                }
+            }
+        ],
+        "links": [
+            [
+                "input_node",
+                "empty_node_1"
+            ],
+            [
+                "empty_node_1",
+                "empty_node_2"
+            ],
+            [
+                "empty_node_1"
+            ]
+        ]
+    }
+}

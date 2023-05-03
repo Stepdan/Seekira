@@ -17,6 +17,8 @@
 
 #include <base/utils/exception/assert.hpp>
 
+#include <log/log.hpp>
+
 namespace step {
 
 std::unique_ptr<ThreadPool> g_thread_pool;
@@ -40,7 +42,7 @@ void set_global_thread_pool(std::unique_ptr<ThreadPool>&& thread_pool) { g_threa
 
 ThreadPool& get_global_thread_pool()
 {
-    STEP_ASSERT(!!g_thread_pool, "Global thread pool wasn't set");
+    STEP_ASSERT(g_thread_pool, "Global thread pool wasn't set");
 
     return *g_thread_pool;
 }
@@ -61,7 +63,17 @@ void ThreadPool::stop()
     m_impl->m_threads.join_all();
 }
 
-void ThreadPool::add_task(const std::function<void()>& task) { m_impl->m_service.post(std::bind(task)); }
+void ThreadPool::add_task(const std::function<void()>& task)
+{
+    try
+    {
+        m_impl->m_service.post(std::bind(task));
+    }
+    catch (...)
+    {
+        STEP_LOG(L_ERROR, "blabla");
+    }
+}
 
 //..............................................................................
 
