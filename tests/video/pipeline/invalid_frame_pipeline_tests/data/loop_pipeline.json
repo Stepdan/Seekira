@@ -1,7 +1,8 @@
 {
     "pipeline": {
         "settings": {
-            "name": "loop_pipeline"
+            "name": "loop_pipeline",
+            "sync_mode": "parallel_no_wait"
         },
         "nodes": [
             {

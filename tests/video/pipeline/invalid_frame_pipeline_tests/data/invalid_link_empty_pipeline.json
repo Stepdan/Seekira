@@ -1,7 +1,8 @@
 {
     "pipeline": {
         "settings": {
-            "name": "invalid_link_empty_pipeline"
+            "name": "invalid_link_empty_pipeline",
+            "sync_mode": "parallel_no_wait"
         },
         "nodes": [
             {

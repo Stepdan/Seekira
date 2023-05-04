@@ -1,7 +1,8 @@
 {
     "pipeline": {
         "settings": {
-            "name": "non_existing_child_node_pipeline"
+            "name": "non_existing_child_node_pipeline",
+            "sync_mode": "parallel_no_wait"
         },
         "nodes": [
             {

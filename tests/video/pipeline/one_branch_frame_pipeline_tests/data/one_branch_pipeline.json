@@ -1,7 +1,8 @@
 {
     "pipeline": {
         "settings": {
-            "name": "one_branch_pipeline"
+            "name": "one_branch_pipeline",
+            "sync_mode": "parallel_no_wait"
         },
         "nodes": [
             {

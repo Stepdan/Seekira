@@ -1,7 +1,8 @@
 {
     "pipeline": {
         "settings": {
-            "name": "self_loop_link_pipeline"
+            "name": "self_loop_link_pipeline",
+            "sync_mode": "parallel_no_wait"
         },
         "nodes": [
             {

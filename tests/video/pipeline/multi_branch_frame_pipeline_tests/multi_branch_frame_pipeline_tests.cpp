@@ -132,7 +132,7 @@ TEST_F(PipelineTest, multi_branch_pipeline_multiple_run)
 
     for (size_t counter = 0; counter < 100; ++counter)
     {
-        std::this_thread::sleep_for(20ms);
+        std::this_thread::sleep_for(1ms);
         EXPECT_NO_THROW(source.create_and_process_frame());
         counter++;
     }

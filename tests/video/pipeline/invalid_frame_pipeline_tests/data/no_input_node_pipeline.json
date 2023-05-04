@@ -1,7 +1,8 @@
 {
     "pipeline": {
         "settings": {
-            "name": "no_input_node_pipeline"
+            "name": "no_input_node_pipeline",
+            "sync_mode": "parallel_no_wait"
         },
         "nodes": [
             {

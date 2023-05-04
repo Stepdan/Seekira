@@ -1,7 +1,8 @@
 {
     "pipeline": {
         "settings": {
-            "name": "duplicate_links_pipeline"
+            "name": "duplicate_links_pipeline",
+            "sync_mode": "parallel_no_wait"
         },
         "nodes": [
             {
