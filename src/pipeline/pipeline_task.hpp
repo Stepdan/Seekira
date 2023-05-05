@@ -43,6 +43,6 @@ template <typename TData>
 using IPipelineNodeTask = task::ITask<std::shared_ptr<PipelineData<TData>>>;
 
 template <typename TData, typename TSettings>
-using PipelineNodeTask = task::BaseTask<std::shared_ptr<PipelineData<TData>>, TSettings>;
+using PipelineNodeTask = task::BaseTask<TSettings, std::shared_ptr<PipelineData<TData>>>;
 
 }  // namespace step::pipeline

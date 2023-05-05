@@ -1,0 +1,3 @@
+add_subdirectory(interfaces)
+add_subdirectory(settings)
+add_subdirectory(effects)

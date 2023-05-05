@@ -4,5 +4,5 @@ add_subdirectory(abstract_task)
 add_subdirectory(graph)
 add_subdirectory(pipeline)
 add_subdirectory(video)
-
+add_subdirectory(proc)
 add_subdirectory(application)

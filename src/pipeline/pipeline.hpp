@@ -120,6 +120,8 @@ private:
                         STEP_LOG(L_ERROR, "Pipeline {}: Branch {} exception: {}", m_settings.name, id, e.what());
                         m_branches_data[id] = {nullptr, BranchStatus::NeedStop};
                         branch->reset_exception();
+
+                        // TODO Exception event handling
                     }
                 }
             }

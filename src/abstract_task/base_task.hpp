@@ -2,11 +2,11 @@
 
 #include "base_settings.hpp"
 
-#include <base/utils/exception/throw_utils.hpp>
+#include <base/utils/exception/assert.hpp>
 
 namespace step::task {
 
-template <typename TData>
+template <typename TData, typename TReturnData = void>
 class ITask
 {
 public:
@@ -16,15 +16,16 @@ public:
     virtual void set_settings(const BaseSettings& settings) = 0;
     virtual void reset() = 0;
 
-    virtual void process(TData) = 0;
+    virtual TReturnData process(TData) = 0;
 };
 
-template <typename TData, typename TSettings>
-class BaseTask : public ITask<TData>
+template <typename TSettings, typename TData, typename TReturnData = void>
+class BaseTask : public ITask<TData, TReturnData>
 {
 protected:
-    using DataType = TData;
     using SettingsType = TSettings;
+    using DataType = TData;
+    using ReturnDataType = TReturnData;
 
 protected:
     BaseTask() = default;
@@ -49,7 +50,7 @@ protected:
         m_typed_settings = settings;
     }
 
-    virtual void process(DataType) override { utils::throw_runtime_with_log("BaseTask not implemented!"); }
+    virtual ReturnDataType process(DataType) override { STEP_UNDEFINED("BaseTask not implemented!"); }
 
 protected:
     SettingsType m_typed_settings;
