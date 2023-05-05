@@ -46,6 +46,7 @@ public:
 protected:
     bool add_process_data(const std::shared_ptr<PipelineData<TData>>& data)
     {
+        // TODO Single method instead of lazy start?
         if (!m_is_running)
         {
             m_need_stop.store(false);
@@ -66,7 +67,6 @@ private:
     bool add_process_data(const IdType& id, const std::shared_ptr<PipelineData<TData>>& data)
     {
         // NO LOCK THERE
-        // parallel_no_wait
         auto& branch_data = m_branches_data[id];
         if (branch_data.status != BranchStatus::Finished)
         {
@@ -103,6 +103,27 @@ private:
         {
             std::scoped_lock lock(m_branches_data_guard);
 
+            // Check for exceptions
+            {
+                for (auto& [id, branch] : m_branches)
+                {
+                    try
+                    {
+                        if (auto eptr = branch->get_exception(); eptr)
+                        {
+                            STEP_LOG(L_WARN, "Pipeline {}: Handle exception from branch {}", m_settings.name, id);
+                            std::rethrow_exception(eptr);
+                        }
+                    }
+                    catch (const std::exception& e)
+                    {
+                        STEP_LOG(L_ERROR, "Pipeline {}: Branch {} exception: {}", m_settings.name, id, e.what());
+                        m_branches_data[id] = {nullptr, BranchStatus::NeedStop};
+                        branch->reset_exception();
+                    }
+                }
+            }
+
             bool ready_for_wait_iteration = true;
             // For ParallelWait we ensure that all branches are stopped and input are ready
             if (m_settings.sync_policy == SyncPolicy::ParallelWait)
@@ -124,6 +145,7 @@ private:
                 {
                     m_branches[id]->stop();
                     branch_data.status = BranchStatus::Finished;
+                    STEP_LOG(L_INFO, "Pipeline {} stop branch {}", m_settings.name, id);
                     continue;
                 }
 
@@ -156,7 +178,7 @@ private:
         // In case of stopping - stop and wait for all branches
         for (const auto& [id, branch] : m_branches)
         {
-            STEP_LOG(L_INFO, "Stopping branch {} due pipeline stop", id);
+            STEP_LOG(L_INFO, "Pipeline {}: Stopping branch {} due pipeline stop", m_settings.name, id);
             branch->stop();
             m_branches_data[id] = {nullptr, BranchStatus::Finished};
         }
@@ -252,7 +274,9 @@ private:
     PipelineSettings m_settings;
     PipelineGraphNode<TData>::Ptr m_root;
 
-    robin_hood::unordered_map<IdType, std::shared_ptr<PipelineBranch<TData>>> m_branches;
+    std::atomic_bool m_is_running{false};
+    std::atomic_bool m_need_stop{false};
+    std::thread m_worker;
 
     enum class BranchStatus
     {
@@ -272,10 +296,7 @@ private:
     };
     std::mutex m_branches_data_guard;
     robin_hood::unordered_map<IdType, BranchProcessData<std::shared_ptr<PipelineData<TData>>>> m_branches_data;
-
-    std::atomic_bool m_is_running{false};
-    std::atomic_bool m_need_stop{false};
-    std::thread m_worker;
+    robin_hood::unordered_map<IdType, std::shared_ptr<PipelineBranch<TData>>> m_branches;
 };
 
 }  // namespace step::pipeline

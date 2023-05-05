@@ -1,3 +1,4 @@
 add_subdirectory(invalid_frame_pipeline_tests)
 add_subdirectory(one_branch_frame_pipeline_tests)
 add_subdirectory(multi_branch_frame_pipeline_tests)
+add_subdirectory(exception_pipeline_tests)

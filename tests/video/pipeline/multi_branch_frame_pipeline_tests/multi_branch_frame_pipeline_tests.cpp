@@ -1,10 +1,3 @@
-#include "empty_node.hpp"
-
-#include <pipeline/nodes/input_node.hpp>
-
-#include <abstract_task/settings_factory.hpp>
-#include <abstract_task/abstract_task_factory.hpp>
-
 #include <base/interfaces/event_handler_list.hpp>
 #include <base/utils/thread/thread_pool_execute_policy.hpp>
 #include <base/utils/json/json_utils.hpp>
@@ -73,7 +66,7 @@ class PipelineTest : public ::testing::Test
 public:
     void SetUp()
     {
-        step::app::Registrator::instance().initialize();
+        step::app::Registrator::instance();
         m_pipeline = nullptr;
     }
 
@@ -110,8 +103,6 @@ TEST_F(PipelineTest, multi_branch_pipeline_single_run)
     FrameSource source;
     source.register_observer(m_pipeline.get());
     EXPECT_NO_THROW(source.create_and_process_frame());
-
-    std::this_thread::sleep_for(1s);
 }
 
 TEST_F(PipelineTest, multi_branch_pipeline_multiple_run)

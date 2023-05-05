@@ -38,6 +38,9 @@ class PipelineBranch : public IPipelineBranchEventSource<TData>
 public:
     ~PipelineBranch() { stop(); }
 
+    std::exception_ptr get_exception() const { return m_exception_ptr; }
+    void reset_exception() { m_exception_ptr = nullptr; }
+
     void add(std::shared_ptr<PipelineGraphNode<TData>> node)
     {
         if (m_is_running)
@@ -58,19 +61,33 @@ public:
 
     void run(const std::shared_ptr<PipelineData<TData>>& data)
     {
+        if (m_exception_ptr)
+        {
+            STEP_LOG(L_WARN, "Can't run branch {}: unhandling exception, stop required.", get_ids().first);
+            return;
+        }
+
         if (m_is_running)
             return;
 
         std::scoped_lock lock(m_guard);
 
         m_worker = std::thread([this, processed_data = clone_pipeline_data_shared(data)]() {
-            std::ranges::for_each(m_list, [&processed_data](const std::shared_ptr<PipelineGraphNode<TData>>& node) {
-                node->process(processed_data);
-            });
-            // notify executor
-            m_event_observers.perform_for_each_event_handler(
-                std::bind(&IPipelineBranchEventObserver<TData>::on_branch_finished, std::placeholders::_1, get_ids(),
-                          processed_data));
+            try
+            {
+                std::ranges::for_each(m_list, [&processed_data](const std::shared_ptr<PipelineGraphNode<TData>>& node) {
+                    node->process(processed_data);
+                });
+                // notify executor
+                m_event_observers.perform_for_each_event_handler(
+                    std::bind(&IPipelineBranchEventObserver<TData>::on_branch_finished, std::placeholders::_1,
+                              get_ids(), processed_data));
+            }
+            catch (...)
+            {
+                STEP_LOG(L_WARN, "Catch exception in branch {}", get_ids().first);
+                m_exception_ptr = std::current_exception();
+            }
         });
 
         m_is_running = true;
@@ -82,6 +99,7 @@ public:
             m_worker.join();
 
         m_is_running = false;
+        m_exception_ptr = nullptr;
     }
 
     bool is_running() const noexcept { return m_is_running; }
@@ -105,6 +123,9 @@ private:
 
     std::list<std::shared_ptr<PipelineGraphNode<TData>>> m_list;
     EventHandlerList<IPipelineBranchEventObserver<TData>> m_event_observers;
+
+    // Exception handling
+    std::exception_ptr m_exception_ptr{nullptr};
 };
 
 }  // namespace step::pipeline

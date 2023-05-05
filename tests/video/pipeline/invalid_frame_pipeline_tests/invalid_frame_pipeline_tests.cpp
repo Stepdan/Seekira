@@ -1,6 +1,3 @@
-#include <abstract_task/settings_factory.hpp>
-#include <abstract_task/abstract_task_factory.hpp>
-
 #include <base/utils/json/json_utils.hpp>
 
 #include <video/pipeline/frame_pipeline.hpp>
