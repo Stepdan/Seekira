@@ -1,4 +1,4 @@
-project(step_frame_tests)
+project(step_gui_image_utils_tests)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp)
@@ -17,12 +17,20 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     #gmock
     gtest
     gtest_main
-    step::frame_utils
+    step::gui
 )
 target_compile_definitions(${PROJECT_NAME} PRIVATE
-    FRAME_TESTS_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/"
-    STEPKIT_MODULE_NAME="FRAME_TESTS"
+    GUI_IMAGE_UTILS_TESTS_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/"
+    STEPKIT_MODULE_NAME="GUI_IMAGE_UTILS_TESTS"
 )
+
+if (WIN32)
+    add_custom_command(
+        TARGET ${PROJECT_NAME} PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}> $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        COMMAND_EXPAND_LISTS
+    )
+endif ()
 
 gtest_discover_tests(${PROJECT_NAME} WORKING_DIRECTORY ${STEPKIT_BUILD_BIN_DIR})
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${STEPKIT_BUILD_BIN_DIR})

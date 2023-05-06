@@ -1,4 +1,4 @@
-project(one_branch_frame_pipeline_tests)
+project(step_one_branch_frame_pipeline_tests)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp)

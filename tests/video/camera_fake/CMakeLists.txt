@@ -1,4 +1,4 @@
-project(camera_fake_tests)
+project(step_camera_fake_tests)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS *.hpp)

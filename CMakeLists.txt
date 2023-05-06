@@ -19,6 +19,45 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${STEPKIT_BUILD_BIN_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${STEPKIT_BUILD_LIB_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${STEPKIT_BUILD_BIN_DIR})
 
+set(WITH_GUI true)
+
+if(WITH_GUI)
+    # Qt configuration
+    set(QT_DIR "C:/Qt/5.15.2/msvc2019_64")
+    if(NOT QT_DIR)
+        message(NOTICE "Define QT_DIR to use external Qt")
+    endif()
+
+    # Describe conan dependencies
+    set(USE_EXTERNAL_QT FALSE)
+    if(DEFINED QT_DIR)
+        set(USE_EXTERNAL_QT TRUE)
+    endif()
+
+    if(USE_EXTERNAL_QT)
+        message(NOTICE "Using Qt from ${QT_DIR}. To use conan version undef QT_DIR variable")
+        file(REMOVE "${CMAKE_BINARY_DIR}/FindQt5.cmake")
+        set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};${QT_DIR}/lib/cmake/Qt5/")
+    else()
+        message(NOTICE "Using Qt from conan. To use external Qt build define QT_DIR variable")
+        set(CONAN_Qt zstd/1.5.5 freetype/2.13.0 qt/5.15.8)
+        set(CONAN_OPTIONS_Qt
+                qt:shared=True
+                qt:commercial=False
+                qt:opengl=desktop
+                qt:qtdoc=False
+                qt:qtdeclarative=True
+                qt:qtquickcontrols=True
+                qt:qtquickcontrols2=True
+                qt:qtwebengine=False
+                qt:with_zstd=True
+                qt:with_pq=False
+                qt:with_odbc=False
+                qt:with_sqlite3=False
+            )
+    endif()
+endif()
+
 include(conan)
 
 conan_cmake_run(
@@ -28,6 +67,7 @@ conan_cmake_run(
         opencv/4.5.5
         poco/1.12.4
         boost/1.81.0
+        ${CONAN_Qt}
     BASIC_SETUP
     CMAKE_TARGETS
     UPDATE
@@ -93,6 +133,7 @@ conan_cmake_run(
         poco:enable_data_postgresql=False
         poco:enable_data_mysql=False
         #-----------------------------
+        ${CONAN_OPTIONS_Qt}
     BUILD
         missing
     GENERATORS
@@ -103,6 +144,34 @@ conan_cmake_run(
     )
 
 include(${CMAKE_CURRENT_BINARY_DIR}/conan_paths.cmake)
+
+# Qt
+if(WITH_GUI)
+    set(QT_VERSION 5)
+    set(QT "Qt${QT_VERSION}")
+    set(${QT}_DIR "${QT_DIR}/bin")
+
+    set(QT_COMPONENTS "Core;Gui;Widgets;Qml;Quick;QuickControls2")
+    find_package(${QT} COMPONENTS ${QT_COMPONENTS} REQUIRED)
+    if(USE_EXTERNAL_QT)
+        set(QML_IMPORT_PATH "${QT_DIR}/qml")
+        set(QT_PLUGINS_PATH "${QT_DIR}/plugins")
+        add_library(${QT}::${QT} INTERFACE IMPORTED)
+        foreach(component ${QT_COMPONENTS})
+            set(QT_LIBS "${QT}::${component};${QT_LIBS}")
+        endforeach()
+        set_property(TARGET ${QT}::${QT} PROPERTY INTERFACE_LINK_LIBRARIES ${QT_LIBS})
+    else()
+        message(FATAL_ERROR "TODO Set qt dirs for conan package configuration")
+        #set(QT_DIR "${${QT}_Core_LIB_DIRS}/..")
+        #set(QML_IMPORT_PATH "${QT_DIR}/bin/archdatadir/qml")
+        #set(QT_PLUGINS_PATH "${QT_DIR}/bin/archdatadir/plugins")
+    endif()
+
+    if(WIN32)
+        include(windeployqt)
+    endif()
+endif()
 
 find_package(Boost REQUIRED)
 find_package(Eigen3 REQUIRED)

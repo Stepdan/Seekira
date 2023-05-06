@@ -11,3 +11,7 @@ mark_as_advanced(BUILD_GMOCK BUILD_GTEST BUILD_SHARED_LIBS
 add_subdirectory(video)
 #add_subdirectory(serializable)
 #add_subdirectory(easy_profiler)
+
+if(WITH_GUI)
+    add_subdirectory(gui)
+endif()
