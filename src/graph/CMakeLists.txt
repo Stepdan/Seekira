@@ -1,5 +1,5 @@
-project(graph)
-set(PROJECT_ALIAS ${PROJECT_NAME})
+project(step_graph)
+set(PROJECT_ALIAS graph)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS *.hpp)

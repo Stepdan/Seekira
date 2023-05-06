@@ -1,5 +1,5 @@
-project(abstract_task)
-set(PROJECT_ALIAS ${PROJECT_NAME})
+project(step_abstract_task)
+set(PROJECT_ALIAS abstract_task)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS

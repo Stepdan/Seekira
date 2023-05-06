@@ -6,3 +6,7 @@ add_subdirectory(pipeline)
 add_subdirectory(video)
 add_subdirectory(proc)
 add_subdirectory(application)
+
+if(WITH_GUI)
+add_subdirectory(gui)
+endif()

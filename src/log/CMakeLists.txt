@@ -1,5 +1,5 @@
-project(log)
-set(PROJECT_ALIAS ${PROJECT_NAME})
+project(step_log)
+set(PROJECT_ALIAS log)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS *.hpp)

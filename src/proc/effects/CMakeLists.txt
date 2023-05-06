@@ -1,4 +1,4 @@
-project(proc_effects)
+project(step_proc_effects)
 set(PROJECT_ALIAS proc_effects)
 
 if(NOT DEFINED HEADERS)

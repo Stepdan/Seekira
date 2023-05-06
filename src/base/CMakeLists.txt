@@ -1,4 +1,4 @@
-project(steptech_base)
+project(step_base)
 set(PROJECT_ALIAS base)
 
 if(NOT DEFINED HEADERS)

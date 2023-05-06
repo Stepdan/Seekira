@@ -1,5 +1,5 @@
-project(application)
-set(PROJECT_ALIAS ${PROJECT_NAME})
+project(step_application)
+set(PROJECT_ALIAS application)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS

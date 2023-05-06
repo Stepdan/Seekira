@@ -1,5 +1,5 @@
-project(frame_utils)
-set(PROJECT_ALIAS ${PROJECT_NAME})
+project(step_frame_utils)
+set(PROJECT_ALIAS frame_utils)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS *.hpp)

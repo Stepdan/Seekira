@@ -1,4 +1,4 @@
-project(proc_settings)
+project(step_proc_settings)
 set(PROJECT_ALIAS proc_settings)
 
 if(NOT DEFINED HEADERS)

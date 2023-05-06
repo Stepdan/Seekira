@@ -1,5 +1,5 @@
-project(frame_pipeline)
-set(PROJECT_ALIAS ${PROJECT_NAME})
+project(step_frame_pipeline)
+set(PROJECT_ALIAS frame_pipeline)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)

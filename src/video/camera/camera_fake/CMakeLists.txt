@@ -1,4 +1,5 @@
-project(camera_fake)
+project(step_camera_fake)
+set(PROJECT_ALIAS camera_fake)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS *.hpp)
@@ -15,7 +16,7 @@ add_library(${PROJECT_NAME} STATIC
     ${HEADERS}
     ${SOURCES}
 )
-add_library(step::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+add_library(step::${PROJECT_ALIAS} ALIAS ${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC

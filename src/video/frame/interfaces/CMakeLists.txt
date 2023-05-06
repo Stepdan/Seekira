@@ -1,5 +1,5 @@
-project(frame_interface)
-set(PROJECT_ALIAS ${PROJECT_NAME})
+project(step_frame_interface)
+set(PROJECT_ALIAS frame_interface)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS

@@ -1,5 +1,5 @@
-project(camera_interfaces)
-set(PROJECT_ALIAS ${PROJECT_NAME})
+project(step_camera_interfaces)
+set(PROJECT_ALIAS camera_interfaces)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_TYPES types/*.hpp)

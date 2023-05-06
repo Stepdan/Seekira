@@ -1,5 +1,5 @@
-project(pipeline)
-set(PROJECT_ALIAS ${PROJECT_NAME})
+project(step_pipeline)
+set(PROJECT_ALIAS pipeline)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)

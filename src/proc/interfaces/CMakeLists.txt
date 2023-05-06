@@ -1,4 +1,4 @@
-project(proc_interfaces)
+project(step_proc_interfaces)
 set(PROJECT_ALIAS proc_interfaces)
 
 if(NOT DEFINED HEADERS)
