@@ -147,6 +147,10 @@ include(${CMAKE_CURRENT_BINARY_DIR}/conan_paths.cmake)
 
 # Qt
 if(WITH_GUI)
+    set(CMAKE_AUTOMOC ON)
+    set(CMAKE_AUTORCC ON)
+    set(CMAKE_AUTOUIC ON)
+
     set(QT_VERSION 5)
     set(QT "Qt${QT_VERSION}")
     set(${QT}_DIR "${QT_DIR}/bin")
@@ -166,10 +170,6 @@ if(WITH_GUI)
         #set(QT_DIR "${${QT}_Core_LIB_DIRS}/..")
         #set(QML_IMPORT_PATH "${QT_DIR}/bin/archdatadir/qml")
         #set(QT_PLUGINS_PATH "${QT_DIR}/bin/archdatadir/plugins")
-    endif()
-
-    if(WIN32)
-        include(windeployqt)
     endif()
 endif()
 

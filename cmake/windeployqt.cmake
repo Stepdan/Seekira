@@ -27,6 +27,8 @@ function(windeployqt target)
                 --no-compiler-runtime
                 --no-system-d3d-compiler
                 --no-translations
+                --qmldir ${QML_FILES_PATH}
+                --qmlimport ${QML_IMPORT_PATH}
                 \"$<TARGET_FILE:${target}>\"
         COMMENT "Deploying Qt libraries using windeployqt for compilation target '${target}' ..."
     )
