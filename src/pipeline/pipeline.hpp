@@ -10,8 +10,15 @@
 namespace step::pipeline {
 
 template <typename TData>
-class Pipeline : public graph::BaseGraph, public IPipelineBranchEventObserver<TData>, public ISerializable
+class Pipeline : public graph::BaseGraph,
+                 public utils::ThreadWorker<PipelineDataTypePtr<TData>>,
+                 public IPipelineBranchEventObserver<TData>,
+                 public ISerializable
 {
+protected:
+    using ThreadWorkerDataType = PipelineDataTypePtr<TData>;
+    using ThreadWorkerType = step::utils::ThreadWorker<ThreadWorkerDataType>;
+
 public:
     Pipeline(const ObjectPtrJSON& config)
     {
@@ -22,20 +29,16 @@ public:
         deserialize(config);
     }
 
-    virtual ~Pipeline() { reset(); }
+    virtual ~Pipeline() { stop(); }
 
-    void reset()
+    virtual void stop() override
     {
-        m_need_stop.store(true);
-        if (m_worker.joinable())
-            m_worker.join();
-
-        m_is_running.store(false);
-
-        m_root.reset();
+        STEP_LOG(L_INFO, "Stopping pipeline {}", m_settings.name);
+        ThreadWorkerType::stop();
+        for (auto& [id, branch] : m_branches)
+            branch->stop();
+        STEP_LOG(L_INFO, "Pipeline {} has been stopped", m_settings.name);
     }
-
-    bool is_running() const { return m_is_running; }
 
     IdType get_root_id() const
     {
@@ -43,146 +46,85 @@ public:
         return m_root->get_id();
     }
 
-protected:
-    bool add_process_data(const std::shared_ptr<PipelineData<TData>>& data)
-    {
-        // TODO Single method instead of lazy start?
-        if (!m_is_running)
-        {
-            m_need_stop.store(false);
-            STEP_LOG(L_INFO, "Start pipeline {}", m_settings.name);
-            m_worker = std::thread(&Pipeline::run, this);
-            m_is_running.store(true);
-        }
-
-        bool result;
-        {
-            std::scoped_lock lock(m_branches_data_guard);
-            result = add_process_data(get_root_id(), data);
-        }
-        return result;
-    }
-
 private:
-    bool add_process_data(const IdType& id, const std::shared_ptr<PipelineData<TData>>& data)
+    void process_data(ThreadWorkerDataType&& data) override
     {
-        // NO LOCK THERE
-        auto& branch_data = m_branches_data[id];
-        if (branch_data.status != BranchStatus::Finished)
-        {
-            return false;
-        }
-
-        branch_data = {clone_pipeline_data_shared(data), BranchStatus::Ready};
-        return true;
-    }
-
-    void run()
-    {
-        switch (m_settings.sync_policy)
-        {
-            case SyncPolicy::ParallelWait:
-            case SyncPolicy::ParallelNoWait:
-                run_parallel();
-                break;
-            case SyncPolicy::Sync:
-                STEP_UNDEFINED("Sync policy for pipeline is undefined");
-                break;
-            default:
-                STEP_UNDEFINED("Undefined sync policy for pipeline");
-                break;
-        }
-    }
-
-    void run_parallel()
-    {
+        auto process_data = std::move(data);
         const auto& root_id = get_root_id();
         bool is_ready;
 
-        while (!m_need_stop)
+        std::scoped_lock lock(m_branches_data_guard);
+
+        // Process input data
+        auto& branch_data = m_branches_data[root_id];
+        // Skip data if input branch still processing
+        if (branch_data.status != BranchStatus::Finished)
+            return;
+
+        branch_data = {process_data, BranchStatus::Ready};
+
+        // Check for exceptions
+        for (auto& [id, branch] : m_branches)
         {
-            std::scoped_lock lock(m_branches_data_guard);
+            if (!branch->has_exceptions())
+                continue;
 
-            // Check for exceptions
+            STEP_LOG(L_ERROR, "Pipeline {}: Handle exceptions from branch {}", m_settings.name, id);
+            for (auto branch_exception : branch->get_exceptions())
             {
-                for (auto& [id, branch] : m_branches)
+                try
                 {
-                    try
-                    {
-                        if (auto eptr = branch->get_exception(); eptr)
-                        {
-                            STEP_LOG(L_WARN, "Pipeline {}: Handle exception from branch {}", m_settings.name, id);
-                            std::rethrow_exception(eptr);
-                        }
-                    }
-                    catch (const std::exception& e)
-                    {
-                        STEP_LOG(L_ERROR, "Pipeline {}: Branch {} exception: {}", m_settings.name, id, e.what());
-                        m_branches_data[id] = {nullptr, BranchStatus::NeedStop};
-                        branch->reset_exception();
-
-                        // TODO Exception event handling
-                    }
+                    std::rethrow_exception(branch_exception);
+                }
+                catch (const std::exception& e)
+                {
+                    STEP_LOG(L_ERROR, "Pipeline {}: Branch {} exception: {}", m_settings.name, id, e.what());
+                    m_branches_data[id] = {nullptr, BranchStatus::Finished};
+                    ThreadWorkerType::add_exception(std::current_exception());
                 }
             }
+            branch->reset_exceptions();
+        }
+        // TODO exception handling
+        ThreadWorkerType::reset_exceptions();
 
-            bool ready_for_wait_iteration = true;
-            // For ParallelWait we ensure that all branches are stopped and input are ready
-            if (m_settings.sync_policy == SyncPolicy::ParallelWait)
-            {
-                ready_for_wait_iteration = std::ranges::all_of(m_branches_data, [&root_id](const auto& item) {
-                    return item.first == root_id ? item.second.status == BranchStatus::Ready
-                                                 : item.second.status == BranchStatus::Finished;
-                });
-            }
-
-            for (auto& [id, branch_data] : m_branches_data)
-            {
-                // Skip if branch is running now
-                if (branch_data.status == BranchStatus::Running)
-                    continue;
-
-                // Stop branch if it has been marked as 'NeedStop'
-                if (branch_data.status == BranchStatus::NeedStop)
-                {
-                    m_branches[id]->stop();
-                    branch_data.status = BranchStatus::Finished;
-                    STEP_LOG(L_INFO, "Pipeline {} stop branch {}", m_settings.name, id);
-                    continue;
-                }
-
-                is_ready = branch_data.data_to_process && branch_data.status == BranchStatus::Ready;
-
-                if (m_settings.sync_policy == SyncPolicy::ParallelWait)
-                {
-                    // For ParallelWait we should ensure that we are processing input with all stopped other branches
-                    is_ready = is_ready && (root_id != id || root_id == id && ready_for_wait_iteration);
-                }
-
-                // Skip if smth is not ready
-                if (!is_ready)
-                    continue;
-
-                STEP_ASSERT(branch_data.data_to_process && branch_data.status == BranchStatus::Ready,
-                            "Invalid pipeline process data for start!");
-
-                STEP_LOG(L_INFO, "Pipeline {} start branch {}", m_settings.name, id);
-
-                // Copy processing data and clear it from storage
-                //    to skip next data before finishing
-                auto process_data = clone_pipeline_data_shared(branch_data.data_to_process);
-                branch_data = {nullptr, BranchStatus::Running};
-
-                m_branches[id]->run(process_data);
-            }
+        // For ParallelWait we ensure that all branches are stopped and input are ready
+        bool ready_for_wait_iteration = true;
+        if (m_settings.sync_policy == SyncPolicy::ParallelWait)
+        {
+            ready_for_wait_iteration = std::ranges::all_of(m_branches_data, [&root_id](const auto& item) {
+                return item.first == root_id ? item.second.status == BranchStatus::Ready
+                                             : item.second.status == BranchStatus::Finished;
+            });
         }
 
-        // In case of stopping - stop and wait for all branches
-        for (const auto& [id, branch] : m_branches)
+        for (auto& [id, branch_data] : m_branches_data)
         {
-            STEP_LOG(L_INFO, "Pipeline {}: Stopping branch {} due pipeline stop", m_settings.name, id);
-            branch->stop();
-            m_branches_data[id] = {nullptr, BranchStatus::Finished};
+            // Skip if branch is running now
+            if (branch_data.status == BranchStatus::Running)
+                continue;
+
+            is_ready = branch_data.data_to_process && branch_data.status == BranchStatus::Ready;
+
+            if (m_settings.sync_policy == SyncPolicy::ParallelWait)
+            {
+                // For ParallelWait we should ensure that we are processing input with all stopped other branches
+                is_ready = is_ready && (root_id != id || root_id == id && ready_for_wait_iteration);
+            }
+
+            // Skip if smth is not ready
+            if (!is_ready)
+                continue;
+
+            STEP_ASSERT(branch_data.data_to_process && branch_data.status == BranchStatus::Ready,
+                        "Invalid pipeline process data for start!");
+
+            STEP_LOG(L_INFO, "Pipeline {} start branch {}", m_settings.name, id);
+
+            // Copy processing data and clear it from storage
+            //    to skip next data before finishing
+            m_branches[id]->add_data(std::move(branch_data.data_to_process));
+            branch_data = {nullptr, BranchStatus::Running};
         }
     }
 
@@ -241,7 +183,7 @@ private:
             auto processed_id = id;
 
             auto node = get_node(processed_id);
-            branch->add(std::dynamic_pointer_cast<PipelineGraphNode<TData>>(node));
+            branch->add_node(std::dynamic_pointer_cast<PipelineGraphNode<TData>>(node));
             if (node->get_children_ids().empty())
                 continue;
 
@@ -250,7 +192,7 @@ private:
             while (!m_branches.contains(processed_id))
             {
                 auto node = get_node(processed_id);
-                branch->add(std::dynamic_pointer_cast<PipelineGraphNode<TData>>(node));
+                branch->add_node(std::dynamic_pointer_cast<PipelineGraphNode<TData>>(node));
                 if (node->get_children_ids().empty())
                     break;
 
@@ -261,15 +203,19 @@ private:
 
     // IPipelineListEventObserver
 private:
-    void on_branch_finished(std::pair<IdType, IdType> branch_ids, std::shared_ptr<PipelineData<TData>> data) override
+    void on_branch_finished(std::pair<IdType, IdType> branch_ids, PipelineDataTypePtr<TData> data) override
     {
         STEP_LOG(L_INFO, "On branch finished [{} -> ... -> {}]", branch_ids.first, branch_ids.second);
 
         const auto& children_ids = get_node(branch_ids.second)->get_children_ids();
         std::scoped_lock lock(m_branches_data_guard);
-        m_branches_data[branch_ids.first] = {nullptr, BranchStatus::NeedStop};
+        m_branches_data[branch_ids.first] = {nullptr, BranchStatus::Finished};
         for (const auto& child_id : children_ids)
-            add_process_data(child_id, data);
+        {
+            auto& branch_data = m_branches_data[child_id];
+            if (branch_data.status == BranchStatus::Finished)
+                branch_data = {clone_pipeline_data_shared(data), BranchStatus::Ready};
+        }
     }
 
 private:
@@ -285,7 +231,7 @@ private:
         /* clang-format off */
         Ready       = 1, // Is stopped and has data for processing
         Running     = 2, // Is running, data is empty
-        NeedStop    = 3, // Finished but stop requires, data is empty
+        //NeedStop    = 3, // Finished but stop requires, data is empty
         Finished    = 4, // Is stopped, no data for processing
         /* clang-format on */
     };
@@ -296,7 +242,7 @@ private:
         TProcessData data_to_process;
         BranchStatus status{BranchStatus::Finished};
     };
-    std::mutex m_branches_data_guard;
+    mutable std::mutex m_branches_data_guard;
     robin_hood::unordered_map<IdType, BranchProcessData<std::shared_ptr<PipelineData<TData>>>> m_branches_data;
     robin_hood::unordered_map<IdType, std::shared_ptr<PipelineBranch<TData>>> m_branches;
 };

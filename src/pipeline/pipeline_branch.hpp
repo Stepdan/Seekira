@@ -5,10 +5,9 @@
 #include <base/interfaces/event_handler_list.hpp>
 #include <base/utils/exception/assert.hpp>
 
-#include <atomic>
+#include <base/utils/thread/thread_worker.hpp>
+
 #include <list>
-#include <mutex>
-#include <thread>
 
 namespace step::pipeline {
 
@@ -18,8 +17,7 @@ class IPipelineBranchEventObserver
 public:
     virtual ~IPipelineBranchEventObserver() = default;
 
-    virtual void on_branch_finished(std::pair<IdType, IdType> branch_ids,
-                                    std::shared_ptr<PipelineData<TData>> data) = 0;
+    virtual void on_branch_finished(std::pair<IdType, IdType> branch_ids, PipelineDataTypePtr<TData> data) = 0;
 };
 
 template <typename TData>
@@ -33,25 +31,30 @@ public:
 };
 
 template <typename TData>
-class PipelineBranch : public IPipelineBranchEventSource<TData>
+class PipelineBranch : public step::utils::ThreadWorker<PipelineDataTypePtr<TData>>,
+                       public IPipelineBranchEventSource<TData>
 {
+    using ThreadWorkerDataType = PipelineDataTypePtr<TData>;
+    using ThreadWorkerType = step::utils::ThreadWorker<ThreadWorkerDataType>;
+
 public:
-    ~PipelineBranch() { stop(); }
+    ~PipelineBranch() { ThreadWorkerType::stop(); }
 
     std::exception_ptr get_exception() const { return m_exception_ptr; }
     void reset_exception() { m_exception_ptr = nullptr; }
 
-    void add(std::shared_ptr<PipelineGraphNode<TData>> node)
+    void add_node(std::shared_ptr<PipelineGraphNode<TData>> node)
     {
-        if (m_is_running)
+        if (ThreadWorkerType::is_running())
             return;
 
-        std::scoped_lock lock(m_guard);
+        std::scoped_lock lock(m_list_guard);
         m_list.push_back(node);
     }
 
     std::pair<IdType, IdType> get_ids() const
     {
+        std::scoped_lock lock(m_list_guard);
         STEP_ASSERT(!m_list.empty(), "Pipeline list is empty!");
         STEP_ASSERT(m_list.front(), "Pipeline list front is null!");
         STEP_ASSERT(m_list.back(), "Pipeline list back is null!");
@@ -59,50 +62,25 @@ public:
         return {m_list.front()->get_id(), m_list.back()->get_id()};
     }
 
-    void run(const std::shared_ptr<PipelineData<TData>>& data)
+    virtual void stop() override
     {
-        if (m_exception_ptr)
-        {
-            STEP_LOG(L_WARN, "Can't run branch {}: unhandling exception, stop required.", get_ids().first);
-            return;
-        }
+        STEP_LOG(L_INFO, "Stopping branch {}", get_ids().first);
+        ThreadWorkerType::stop();
+        STEP_LOG(L_INFO, "Branch {} has been stopped", get_ids().first);
+    }
 
-        if (m_is_running)
-            return;
-
-        std::scoped_lock lock(m_guard);
-
-        m_worker = std::thread([this, processed_data = clone_pipeline_data_shared(data)]() {
-            try
-            {
-                std::ranges::for_each(m_list, [&processed_data](const std::shared_ptr<PipelineGraphNode<TData>>& node) {
-                    node->process(processed_data);
-                });
-                // notify executor
-                m_event_observers.perform_for_each_event_handler(
-                    std::bind(&IPipelineBranchEventObserver<TData>::on_branch_finished, std::placeholders::_1,
-                              get_ids(), processed_data));
-            }
-            catch (...)
-            {
-                STEP_LOG(L_WARN, "Catch exception in branch {}", get_ids().first);
-                m_exception_ptr = std::current_exception();
-            }
+private:
+    void process_data(ThreadWorkerDataType&& data) override
+    {
+        auto process_data = std::move(data);
+        std::ranges::for_each(m_list, [&process_data](const std::shared_ptr<PipelineGraphNode<TData>>& node) {
+            node->process(process_data);
         });
-
-        m_is_running = true;
+        // notify executor
+        m_event_observers.perform_for_each_event_handler(
+            std::bind(&IPipelineBranchEventObserver<TData>::on_branch_finished, std::placeholders::_1, get_ids(),
+                      clone_pipeline_data_shared(process_data)));
     }
-
-    void stop()
-    {
-        if (m_worker.joinable())
-            m_worker.join();
-
-        m_is_running = false;
-        m_exception_ptr = nullptr;
-    }
-
-    bool is_running() const noexcept { return m_is_running; }
 
     // IPipelineListEventSource
 public:
@@ -117,10 +95,7 @@ public:
     }
 
 private:
-    std::atomic_bool m_is_running;
-    std::mutex m_guard;
-    std::thread m_worker;
-
+    mutable std::mutex m_list_guard;
     std::list<std::shared_ptr<PipelineGraphNode<TData>>> m_list;
     EventHandlerList<IPipelineBranchEventObserver<TData>> m_event_observers;
 

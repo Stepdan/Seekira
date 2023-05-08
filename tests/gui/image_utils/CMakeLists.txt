@@ -1,4 +1,4 @@
-project(step_gui_image_utils_tests)
+project(step_tests_gui_image_utils)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp)
@@ -21,7 +21,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     GUI_IMAGE_UTILS_TESTS_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/"
-    STEPKIT_MODULE_NAME="UI_IMAGE_UTILS_TESTS"
+    STEPKIT_MODULE_NAME="T_UI_IMAGE_UTILS"
 )
 
 if (WIN32)

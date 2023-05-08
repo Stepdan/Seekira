@@ -1,4 +1,4 @@
-project(step_frame_tests)
+project(step_tests_frame)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp)
@@ -21,7 +21,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     FRAME_TESTS_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/"
-    STEPKIT_MODULE_NAME="FRAME_TESTS"
+    STEPKIT_MODULE_NAME="T_FRAME"
 )
 
 gtest_discover_tests(${PROJECT_NAME} WORKING_DIRECTORY ${STEPKIT_BUILD_BIN_DIR})

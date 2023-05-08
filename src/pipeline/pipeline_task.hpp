@@ -21,6 +21,9 @@ struct PipelineData
 };
 
 template <typename TData>
+using PipelineDataTypePtr = std::shared_ptr<PipelineData<TData>>;
+
+template <typename TData>
 inline PipelineData<TData> clone_pipeline_data(const PipelineData<TData>& data)
 {
     PipelineData<TData> copy;
@@ -32,17 +35,16 @@ inline PipelineData<TData> clone_pipeline_data(const PipelineData<TData>& data)
 }
 
 template <typename TData>
-inline std::shared_ptr<PipelineData<TData>> clone_pipeline_data_shared(
-    const std::shared_ptr<PipelineData<TData>>& data_ptr)
+inline PipelineDataTypePtr<TData> clone_pipeline_data_shared(const PipelineDataTypePtr<TData>& data_ptr)
 {
     STEP_ASSERT(data_ptr, "Can't clone empty pipeline data!");
     return std::make_shared<PipelineData<TData>>(clone_pipeline_data(*data_ptr));
 }
 
 template <typename TData>
-using IPipelineNodeTask = task::ITask<std::shared_ptr<PipelineData<TData>>>;
+using IPipelineNodeTask = task::ITask<PipelineDataTypePtr<TData>>;
 
 template <typename TData, typename TSettings>
-using PipelineNodeTask = task::BaseTask<TSettings, std::shared_ptr<PipelineData<TData>>>;
+using PipelineNodeTask = task::BaseTask<TSettings, PipelineDataTypePtr<TData>>;
 
 }  // namespace step::pipeline

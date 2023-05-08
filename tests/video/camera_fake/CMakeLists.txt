@@ -1,4 +1,4 @@
-project(step_camera_fake_tests)
+project(step_tests_camera_fake)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS *.hpp)
@@ -20,7 +20,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     CAMERA_FAKE_TESTS_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/"
-    STEPKIT_MODULE_NAME="CAMERA_FRAME_TESTS"
+    STEPKIT_MODULE_NAME="T_CAMERA_FRAME"
 )
 
 gtest_discover_tests(${PROJECT_NAME} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

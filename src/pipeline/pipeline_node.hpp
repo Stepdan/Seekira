@@ -32,7 +32,7 @@ public:
 
     PipelineGraphNode(const ObjectPtrJSON& config) { deserialize(config); }
 
-    void process(const std::shared_ptr<PipelineData<TData>>& data)
+    void process(const PipelineDataTypePtr<TData>& data)
     {
         STEP_LOG(L_INFO, "Processing pipeline node {}", m_id);
         m_task->process(data);
@@ -46,8 +46,7 @@ private:
         const auto task_settings = json::get_object(container, CFG_FLD::SETTINGS);
         auto base_task_settings = task::TaskSettingsFactory::instance().create(task_settings);
 
-        m_task = task::AbstractTaskFactory<std::shared_ptr<PipelineData<TData>>>::instance().create_unique(
-            base_task_settings);
+        m_task = task::AbstractTaskFactory<PipelineDataTypePtr<TData>>::instance().create_unique(base_task_settings);
     }
 
 private:

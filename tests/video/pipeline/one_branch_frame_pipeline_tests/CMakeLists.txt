@@ -1,4 +1,4 @@
-project(step_one_branch_frame_pipeline_tests)
+project(step_tests_one_branch_frame_pipeline)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp)
@@ -23,7 +23,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     ONE_BRANCH_FRAME_PIPELINE_TESTS_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/"
-    STEPKIT_MODULE_NAME="O_BRANCH_FRAME_PIPELINE_TESTS"
+    STEPKIT_MODULE_NAME="T_ONE_BRANCH_PIPELINE"
 )
 
 gtest_discover_tests(${PROJECT_NAME} WORKING_DIRECTORY ${STEPKIT_BUILD_BIN_DIR})
