@@ -24,8 +24,8 @@ public:
     template <typename... Args>
     void log(LOG_LEVEL level, const fmt::format_string<Args...>& str, Args&&... args)
     {
-        if (logger_)
-            logger_->log(level, str, std::forward<Args>(args)...);
+        if (m_logger)
+            m_logger->log(level, str, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
@@ -43,7 +43,7 @@ private:
     Logger& operator=(Logger&&) = delete;
 
 private:
-    std::shared_ptr<spdlog::logger> logger_;
+    std::shared_ptr<spdlog::logger> m_logger;
 };
 
 }  // namespace step::log

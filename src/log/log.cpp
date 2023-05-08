@@ -5,7 +5,7 @@
 
 namespace {
 
-constexpr const char* LOGGER_NAME = "stepkit_logger";
+constexpr const char* m_loggerNAME = "stepkit_logger";
 
 constexpr const char* LOG_PATTERN = "%Y-%m-%d %H:%M:%S.%f; %^%8l%$; thread %t; %v";
 
@@ -47,42 +47,42 @@ void Logger::set_settings(LoggingSettings&& settings)
     reset();
 
     // Create stderr sink with level L_TRACE to grab all messages in backtrace
-    logger_ = std::make_shared<spdlog::logger>(LOGGER_NAME, CreateStderrSink(settings.get_sync_policy(), L_TRACE));
+    m_logger = std::make_shared<spdlog::logger>(m_loggerNAME, CreateStderrSink(settings.get_sync_policy(), L_TRACE));
     if (settings.get_backtrace_size() != 0)
-        logger_->enable_backtrace(settings.get_backtrace_size());
+        m_logger->enable_backtrace(settings.get_backtrace_size());
 
-    logger_->set_pattern(LOG_PATTERN);
+    m_logger->set_pattern(LOG_PATTERN);
 
     // register the actual logger through the spdlog system. this allows, in
     // particular, to control log level, etc. via environment variables
 
     // Note: we only allow Logger::instance() singleton, so this static-lifetime
     // registration is safe
-    spdlog::register_logger(logger_);
+    spdlog::register_logger(m_logger);
     spdlog::cfg::load_env_levels();
 }
 
 void Logger::reset()
 {
-    if (!logger_)
+    if (!m_logger)
         return;
 
     spdlog::shutdown();
-    logger_.reset();
+    m_logger.reset();
 }
 
 void Logger::set_log_level(LOG_LEVEL level)
 {
-    if (logger_)
-        logger_->set_level(level);
+    if (m_logger)
+        m_logger->set_level(level);
 }
 
-LOG_LEVEL Logger::get_log_level() const { return logger_ ? logger_->level() : L_OFF; }
+LOG_LEVEL Logger::get_log_level() const { return m_logger ? m_logger->level() : L_OFF; }
 
 void Logger::dump_backtrace()
 {
-    if (logger_)
-        logger_->dump_backtrace();
+    if (m_logger)
+        m_logger->dump_backtrace();
 }
 
 }  // namespace step::log

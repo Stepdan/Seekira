@@ -1,6 +1,6 @@
 #pragma once
 
-#include "thread_pool.hpp"
+#include "thread_pool_event_handler.hpp"
 
 #include <thread>
 #include <functional>
@@ -34,7 +34,7 @@ private:
     /**
 	 * Пул потоков, в котором выполняются задачи, передаваемые объекту политики.
 	 */
-    ThreadPool m_thread_pool;
+    ThreadPoolEventHandler m_thread_pool;
 };
 
 }  // namespace step

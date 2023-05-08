@@ -68,6 +68,7 @@ class PipelineTest : public ::testing::Test
 public:
     void SetUp()
     {
+        step::log::Logger::instance().set_log_level(L_TRACE);
         step::app::Registrator::instance();
         m_pipeline = nullptr;
     }

@@ -1,5 +1,9 @@
 #pragma once
 
+#include <base/interfaces/event_handler_list.hpp>
+
+#include <log/log.hpp>
+
 #include <atomic>
 #include <condition_variable>
 #include <exception>
@@ -8,18 +12,42 @@
 #include <mutex>
 #include <queue>
 
-#include <log/log.hpp>
-
 namespace step::utils {
 
-template <typename TData>
-class ThreadWorker
+template <typename IdType, typename TResultData>
+class IThreadWorkerEventObserver
+{
+public:
+    virtual ~IThreadWorkerEventObserver() = default;
+
+    virtual void on_finished(const IdType& id, TResultData data) = 0;
+};
+
+template <typename IdType, typename TResultData>
+class IThreadWorkerEventSource
+{
+public:
+    virtual ~IThreadWorkerEventSource() = default;
+
+    virtual void register_observer(IThreadWorkerEventObserver<IdType, TResultData>* observer) = 0;
+    virtual void unregister_observer(IThreadWorkerEventObserver<IdType, TResultData>* observer) = 0;
+};
+
+template <typename IdType, typename TData, typename TResultData>
+class ThreadWorker : public IThreadWorkerEventSource<IdType, TResultData>
 {
     using DataType = TData;
+    using ResultDataType = TResultData;
 
 public:
-    ThreadWorker() = default;
-    ~ThreadWorker() { stop(); }
+    ThreadWorker(IdType id) : m_id(id) {}
+    ~ThreadWorker()
+    {
+        STEP_LOG(L_TRACE, "ThreadWorker {} destruction", m_id);
+        stop();
+    }
+
+    IdType get_id() const { return m_id; }
 
     bool is_running() const noexcept { return m_is_running; }
 
@@ -50,11 +78,15 @@ public:
 
         m_worker = std::thread(&ThreadWorker::worker_thread, this);
         m_is_running.store(true);
+        STEP_LOG(L_TRACE, "ThreadWorker {} has been started", m_id);
     }
 
-    virtual void stop()
+    void stop()
     {
-        STEP_LOG(L_TRACE, "Stopping ThreadWorker");
+        if (!m_is_running)
+            return;
+
+        STEP_LOG(L_TRACE, "Stopping ThreadWorker {}", m_id);
         m_need_stop.store(true);
         m_data_cnd.notify_one();
 
@@ -65,8 +97,9 @@ public:
         reset_exceptions();
 
         m_is_running.store(false);
+        m_need_stop.store(false);
 
-        STEP_LOG(L_TRACE, "ThreadWorker has been stopped");
+        STEP_LOG(L_TRACE, "ThreadWorker has been stopped {}", m_id);
     }
 
 public:
@@ -74,12 +107,6 @@ public:
     {
         std::scoped_lock lock(m_exception_mutex);
         return !m_exception_ptrs.empty();
-    }
-
-    void add_exception(std::exception_ptr ex)
-    {
-        std::scoped_lock lock(m_exception_mutex);
-        return m_exception_ptrs.push_back(ex);
     }
 
     std::deque<std::exception_ptr> get_exceptions() const
@@ -113,7 +140,7 @@ public:
     }
 
 protected:
-    virtual void process_data(DataType&& data) = 0;
+    virtual ResultDataType process_data(DataType&& data) = 0;
 
 private:
     void reset_data()
@@ -139,7 +166,12 @@ private:
                 {
                     auto data = m_data.front();
                     m_data.pop();
-                    process_data(std::move(data));
+                    auto result_data = process_data(std::move(data));
+
+                    // notify executor
+                    m_event_observers.perform_for_each_event_handler(
+                        std::bind(&IThreadWorkerEventObserver<IdType, ResultDataType>::on_finished,
+                                  std::placeholders::_1, m_id, std::move(result_data)));
                 }
                 catch (...)
                 {
@@ -150,7 +182,21 @@ private:
         }
     }
 
+    // IThreadWorkerEventSource
+public:
+    void register_observer(IThreadWorkerEventObserver<IdType, TResultData>* observer) override
+    {
+        m_event_observers.register_event_handler(observer);
+    }
+
+    void unregister_observer(IThreadWorkerEventObserver<IdType, TResultData>* observer) override
+    {
+        m_event_observers.unregister_event_handler(observer);
+    }
+
 private:
+    IdType m_id;
+
     std::atomic_bool m_is_running{false};
     std::atomic_bool m_need_stop{false};
 
@@ -162,6 +208,8 @@ private:
 
     mutable std::mutex m_exception_mutex;
     std::deque<std::exception_ptr> m_exception_ptrs;
+
+    EventHandlerList<IThreadWorkerEventObserver<IdType, DataType>> m_event_observers;
 };
 
 }  // namespace step::utils

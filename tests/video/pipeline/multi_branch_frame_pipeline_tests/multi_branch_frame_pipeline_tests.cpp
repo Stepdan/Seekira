@@ -66,6 +66,7 @@ class PipelineTest : public ::testing::Test
 public:
     void SetUp()
     {
+        step::log::Logger::instance().set_log_level(L_TRACE);
         step::app::Registrator::instance();
         m_pipeline = nullptr;
     }
@@ -87,7 +88,7 @@ TEST_F(PipelineTest, multi_branch_pipeline_constructible_destructible)
     EXPECT_NO_THROW(init_pipeline(pipeline_cfg));
 }
 
-TEST_F(PipelineTest, multi_branch_pipeline_single_run)
+TEST_F(PipelineTest, multi_branch_pipeline_fast_destruction)
 {
     const auto init_pipeline = [this](const ObjectPtrJSON& cfg) { m_pipeline = std::make_unique<FramePipeline>(cfg); };
 
@@ -123,7 +124,7 @@ TEST_F(PipelineTest, multi_branch_pipeline_multiple_run)
 
     for (size_t counter = 0; counter < 100; ++counter)
     {
-        std::this_thread::sleep_for(1ms);
+        std::this_thread::sleep_for(33ms);
         EXPECT_NO_THROW(source.create_and_process_frame());
         counter++;
     }

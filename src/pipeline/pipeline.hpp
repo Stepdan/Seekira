@@ -3,6 +3,8 @@
 #include "pipeline_branch.hpp"
 #include "pipeline_settings.hpp"
 
+#include <base/utils/thread/thread_pool.hpp>
+
 #include <graph/graph.hpp>
 
 #include <log/log.hpp>
@@ -11,13 +13,13 @@ namespace step::pipeline {
 
 template <typename TData>
 class Pipeline : public graph::BaseGraph,
-                 public utils::ThreadWorker<PipelineDataTypePtr<TData>>,
-                 public IPipelineBranchEventObserver<TData>,
+                 public utils::ThreadPool<IdType, PipelineDataTypePtr<TData>, PipelineDataTypePtr<TData>>,
                  public ISerializable
 {
 protected:
-    using ThreadWorkerDataType = PipelineDataTypePtr<TData>;
-    using ThreadWorkerType = step::utils::ThreadWorker<ThreadWorkerDataType>;
+    using ThreadPoolDataType = PipelineDataTypePtr<TData>;
+    using ThreadPoolResultDataType = ThreadPoolDataType;
+    using ThreadPoolType = step::utils::ThreadPool<IdType, PipelineDataTypePtr<TData>, PipelineDataTypePtr<TData>>;
 
 public:
     Pipeline(const ObjectPtrJSON& config)
@@ -29,15 +31,11 @@ public:
         deserialize(config);
     }
 
-    virtual ~Pipeline() { stop(); }
-
-    virtual void stop() override
+    virtual ~Pipeline()
     {
-        STEP_LOG(L_INFO, "Stopping pipeline {}", m_settings.name);
-        ThreadWorkerType::stop();
-        for (auto& [id, branch] : m_branches)
-            branch->stop();
-        STEP_LOG(L_INFO, "Pipeline {} has been stopped", m_settings.name);
+        STEP_LOG(L_TRACE, "Pipeline {} destruction", m_settings.name);
+        ThreadPoolType::stop();
+        // Stop (thread_pool_stop_impl) will be called from ThreadPool::stop during ThreadPool destruction
     }
 
     IdType get_root_id() const
@@ -46,25 +44,48 @@ public:
         return m_root->get_id();
     }
 
-private:
-    void process_data(ThreadWorkerDataType&& data) override
+    bool add_process_data(PipelineDataTypePtr<TData>&& data)
     {
-        auto process_data = std::move(data);
+        if (!ThreadPoolType::is_running())
+            ThreadPoolType::run();
+
+        return add_process_data(get_root_id(), std::move(data));
+    }
+
+private:
+    bool add_process_data(const IdType& id, PipelineDataTypePtr<TData>&& data)
+    {
+        std::scoped_lock lock(m_branches_data_guard);
+        auto& branch_data = m_branches_data[id];
+        if (branch_data.status != BranchStatus::Finished)
+            return false;
+
+        branch_data = {std::move(data), BranchStatus::Ready};
+        return true;
+    }
+
+    void thread_pool_stop_impl() override
+    {
+        // NO LOCK THERE
+        // Under thread_pool mutex m_stop_guard locking.
+        // All threads already joined and stopped
+        STEP_LOG(L_INFO, "Stopping pipeline {}", m_settings.name);
+
+        for (auto& [id, branch_data] : m_branches_data)
+            branch_data = {nullptr, BranchStatus::Finished};
+
+        STEP_LOG(L_INFO, "Pipeline {} has been stopped", m_settings.name);
+    }
+
+    void thread_pool_iteration() override
+    {
         const auto& root_id = get_root_id();
         bool is_ready;
 
         std::scoped_lock lock(m_branches_data_guard);
 
-        // Process input data
-        auto& branch_data = m_branches_data[root_id];
-        // Skip data if input branch still processing
-        if (branch_data.status != BranchStatus::Finished)
-            return;
-
-        branch_data = {process_data, BranchStatus::Ready};
-
         // Check for exceptions
-        for (auto& [id, branch] : m_branches)
+        for (auto& [id, branch] : ThreadPoolType::m_threads)
         {
             if (!branch->has_exceptions())
                 continue;
@@ -80,13 +101,11 @@ private:
                 {
                     STEP_LOG(L_ERROR, "Pipeline {}: Branch {} exception: {}", m_settings.name, id, e.what());
                     m_branches_data[id] = {nullptr, BranchStatus::Finished};
-                    ThreadWorkerType::add_exception(std::current_exception());
                 }
             }
+            // TODO exception handling
             branch->reset_exceptions();
         }
-        // TODO exception handling
-        ThreadWorkerType::reset_exceptions();
 
         // For ParallelWait we ensure that all branches are stopped and input are ready
         bool ready_for_wait_iteration = true;
@@ -123,7 +142,8 @@ private:
 
             // Copy processing data and clear it from storage
             //    to skip next data before finishing
-            m_branches[id]->add_data(std::move(branch_data.data_to_process));
+
+            ThreadPoolType::m_threads[id]->add_data(std::move(branch_data.data_to_process));
             branch_data = {nullptr, BranchStatus::Running};
         }
     }
@@ -163,36 +183,37 @@ private:
 
     void init_branches()
     {
+        std::set<IdType> branch_ids;
         for (const auto& id : get_nodes_without_parents())
-            m_branches[id] = std::make_shared<PipelineBranch<TData>>();
+            branch_ids.insert(id);
 
         for (const auto& parent_id : get_nodes_with_children())
-        {
             for (const auto& child_id : get_node(parent_id)->get_children_ids())
-            {
-                m_branches[child_id] = std::make_shared<PipelineBranch<TData>>();
-            }
-        }
+                branch_ids.insert(child_id);
 
-        for (auto& [id, branch] : m_branches)
+        for (const auto& id : branch_ids)
         {
+            auto list_front_id = id;
+            auto processed_id = id;
+            auto node = get_node(processed_id);
+
+            ThreadPoolType::add_thread_worker(
+                std::make_shared<PipelineBranch<TData>>(std::dynamic_pointer_cast<PipelineGraphNode<TData>>(node)));
+
+            auto& branch = ThreadPoolType::m_threads[processed_id];
             branch->register_observer(this);
             m_branches_data[id] = {nullptr, BranchStatus::Finished};
 
-            auto list_front_id = id;
-            auto processed_id = id;
-
-            auto node = get_node(processed_id);
-            branch->add_node(std::dynamic_pointer_cast<PipelineGraphNode<TData>>(node));
             if (node->get_children_ids().empty())
                 continue;
 
             processed_id = node->get_children_ids().front();
 
-            while (!m_branches.contains(processed_id))
+            while (!branch_ids.contains(processed_id))
             {
                 auto node = get_node(processed_id);
-                branch->add_node(std::dynamic_pointer_cast<PipelineGraphNode<TData>>(node));
+                std::dynamic_pointer_cast<PipelineBranch<TData>>(branch)->add_node(
+                    std::dynamic_pointer_cast<PipelineGraphNode<TData>>(node));
                 if (node->get_children_ids().empty())
                     break;
 
@@ -201,15 +222,24 @@ private:
         }
     }
 
-    // IPipelineListEventObserver
+    // IThreadWorkerEventObserver
 private:
-    void on_branch_finished(std::pair<IdType, IdType> branch_ids, PipelineDataTypePtr<TData> data) override
+    void on_finished(const IdType& id, ThreadPoolResultDataType data) override
     {
-        STEP_LOG(L_INFO, "On branch finished [{} -> ... -> {}]", branch_ids.first, branch_ids.second);
+        STEP_LOG(L_INFO, "on_finished branch {}", id);
+        if (ThreadPoolType::need_stop())
+        {
+            STEP_LOG(L_INFO, "Skip on_finished branch {} due stopping", id);
+            return;
+        }
 
-        const auto& children_ids = get_node(branch_ids.second)->get_children_ids();
+        const auto branch_last_id =
+            std::dynamic_pointer_cast<PipelineBranch<TData>>(ThreadPoolType::m_threads[id])->get_last_id();
+
+        const auto& children_ids = get_node(branch_last_id)->get_children_ids();
+
         std::scoped_lock lock(m_branches_data_guard);
-        m_branches_data[branch_ids.first] = {nullptr, BranchStatus::Finished};
+        m_branches_data[id] = {nullptr, BranchStatus::Finished};
         for (const auto& child_id : children_ids)
         {
             auto& branch_data = m_branches_data[child_id];
@@ -222,10 +252,9 @@ private:
     PipelineSettings m_settings;
     PipelineGraphNode<TData>::Ptr m_root;
 
-    std::atomic_bool m_is_running{false};
-    std::atomic_bool m_need_stop{false};
-    std::thread m_worker;
-
+    /*
+        For thread pool iterations
+    */
     enum class BranchStatus
     {
         /* clang-format off */
@@ -239,12 +268,11 @@ private:
     template <typename TProcessData>
     struct BranchProcessData
     {
-        TProcessData data_to_process;
+        TProcessData data_to_process{nullptr};
         BranchStatus status{BranchStatus::Finished};
     };
     mutable std::mutex m_branches_data_guard;
     robin_hood::unordered_map<IdType, BranchProcessData<std::shared_ptr<PipelineData<TData>>>> m_branches_data;
-    robin_hood::unordered_map<IdType, std::shared_ptr<PipelineBranch<TData>>> m_branches;
 };
 
 }  // namespace step::pipeline

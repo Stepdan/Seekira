@@ -1,4 +1,4 @@
-#include "thread_pool.hpp"
+#include "thread_pool_event_handler.hpp"
 
 // Объявление версии Windows нужно для boost::asio. Если убрать следующий блок #ifndef...#endif, при сборке компилятор выведет предупреждение.
 #ifdef _WIN32
@@ -21,9 +21,9 @@
 
 namespace step {
 
-std::unique_ptr<ThreadPool> g_thread_pool;
+std::unique_ptr<ThreadPoolEventHandler> g_thread_pool;
 
-struct ThreadPool::Impl
+struct ThreadPoolEventHandler::Impl
 {
     Impl(unsigned int threadCount) : m_work(m_service)
     {
@@ -38,9 +38,12 @@ struct ThreadPool::Impl
     boost::thread_group m_threads;
 };
 
-void set_global_thread_pool(std::unique_ptr<ThreadPool>&& thread_pool) { g_thread_pool = std::move(thread_pool); }
+void set_global_thread_pool(std::unique_ptr<ThreadPoolEventHandler>&& thread_pool)
+{
+    g_thread_pool = std::move(thread_pool);
+}
 
-ThreadPool& get_global_thread_pool()
+ThreadPoolEventHandler& get_global_thread_pool()
 {
     STEP_ASSERT(g_thread_pool, "Global thread pool wasn't set");
 
@@ -49,31 +52,23 @@ ThreadPool& get_global_thread_pool()
 
 //..............................................................................
 
-ThreadPool::ThreadPool(unsigned int threadCount) : m_impl(std::make_unique<Impl>(threadCount)) {}
+ThreadPoolEventHandler::ThreadPoolEventHandler(unsigned int threadCount) : m_impl(std::make_unique<Impl>(threadCount))
+{
+}
 
 //..............................................................................
 
-ThreadPool::~ThreadPool(void) { stop(); }
+ThreadPoolEventHandler::~ThreadPoolEventHandler(void) { stop(); }
 
 //..............................................................................
 
-void ThreadPool::stop()
+void ThreadPoolEventHandler::stop()
 {
     m_impl->m_service.stop();
     m_impl->m_threads.join_all();
 }
 
-void ThreadPool::add_task(const std::function<void()>& task)
-{
-    try
-    {
-        m_impl->m_service.post(std::bind(task));
-    }
-    catch (...)
-    {
-        STEP_LOG(L_ERROR, "blabla");
-    }
-}
+void ThreadPoolEventHandler::add_task(const std::function<void()>& task) { m_impl->m_service.post(std::bind(task)); }
 
 //..............................................................................
 
