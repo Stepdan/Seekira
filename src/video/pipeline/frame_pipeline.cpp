@@ -1,6 +1,6 @@
 #include "frame_pipeline.hpp"
 
-#include <log/log.hpp>
+#include <core/log/log.hpp>
 
 namespace step::video {
 

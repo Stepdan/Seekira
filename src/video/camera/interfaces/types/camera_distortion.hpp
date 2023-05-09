@@ -1,6 +1,6 @@
 #pragma once
 
-#include <base/interfaces/serializable.hpp>
+#include <core/base/interfaces/serializable.hpp>
 
 #include <vector>
 

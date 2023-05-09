@@ -1,6 +1,6 @@
 #pragma once
 
-#include <base/utils/string_utils.hpp>
+#include <core/base/utils/string_utils.hpp>
 
 #include <fmt/format.h>
 

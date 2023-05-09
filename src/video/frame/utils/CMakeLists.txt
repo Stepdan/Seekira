@@ -1,5 +1,4 @@
 project(step_frame_utils)
-set(PROJECT_ALIAS frame_utils)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS *.hpp)
@@ -13,7 +12,7 @@ source_group("Headers" FILES ${HEADERS})
 source_group("Sources" FILES ${SOURCES})
 
 add_library(${PROJECT_NAME} STATIC)
-add_library(step::${PROJECT_ALIAS} ALIAS ${PROJECT_NAME})
+add_library(step::frame_utils ALIAS ${PROJECT_NAME})
 find_package(OpenCV REQUIRED)
 
 target_sources(${PROJECT_NAME}
@@ -38,8 +37,8 @@ target_compile_definitions(${PROJECT_NAME}
     BUILD_WITH_EASY_PROFILER
 )
 
-install(TARGETS ${PROJECT_NAME} EXPORT ${INSTALL_TARGET_NAME}
-    COMPONENT ${PROJECT_NAME}
-    FILE_SET headers DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_ALIAS}
-    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
+# install(TARGETS ${PROJECT_NAME} EXPORT ${INSTALL_TARGET_NAME}
+#     COMPONENT ${PROJECT_NAME}
+#     FILE_SET headers DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_ALIAS}
+#     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+# )

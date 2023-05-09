@@ -1,6 +1,6 @@
 #pragma once
 
-#include <abstract_task/base_task.hpp>
+#include <core/task/base_task.hpp>
 
 #include <video/frame/interfaces/frame.hpp>
 

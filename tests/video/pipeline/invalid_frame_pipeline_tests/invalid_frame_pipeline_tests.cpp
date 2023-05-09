@@ -1,8 +1,8 @@
-#include <base/utils/json/json_utils.hpp>
+#include <core/base/json/json_utils.hpp>
 
 #include <video/pipeline/frame_pipeline.hpp>
 
-#include <log/log.hpp>
+#include <core/log/log.hpp>
 
 #include <gtest/gtest.h>
 

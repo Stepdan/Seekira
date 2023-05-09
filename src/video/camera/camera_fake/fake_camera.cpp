@@ -2,10 +2,10 @@
 
 #include <video/frame/utils/frame_utils.hpp>
 
-#include <base/utils/json/json_utils.hpp>
-#include <base/utils/exception/assert.hpp>
+#include <core/base/json/json_utils.hpp>
+#include <core/exception/assert.hpp>
 
-#include <log/log.hpp>
+#include <core/log/log.hpp>
 
 #include <stdexcept>
 
@@ -56,7 +56,7 @@ FakeFrameProvider::FakeFrameProvider(const FakeCameraSettings& settings) : m_set
     else  // assume single file
     {
         add_frame(m_frames, source_path, [](const std::filesystem::path& path) {
-            step::utils::throw_runtime_with_log(fmt::format("Path {} does not point to a valid frame", path.string()));
+            STEP_THROW_RUNTIME("Path {} does not point to a valid frame", path.string());
         });
     }
 }

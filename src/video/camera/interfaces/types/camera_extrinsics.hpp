@@ -1,6 +1,6 @@
 #pragma once
 
-#include <base/types/pose.hpp>
+#include <core/base/types/pose.hpp>
 
 #include <optional>
 

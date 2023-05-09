@@ -1,7 +1,7 @@
 #include "qimage_utils.hpp"
 
-#include <base/utils/find_pair.hpp>
-#include <base/utils/exception/throw_utils.hpp>
+#include <core/base/utils/find_pair.hpp>
+#include <core/exception/assert.hpp>
 #include <video/frame/utils/frame_utils_opencv.hpp>
 
 #include <opencv2/imgproc/imgproc.hpp>
@@ -31,7 +31,7 @@ QImage::Format pix_fmt_to_qimage_fmt(step::video::PixFmt fmt)
     }
     else
     {
-        step::utils::throw_runtime_with_log(fmt::format("Invalid pix fmt {}!", fmt));
+        STEP_THROW_RUNTIME("Invalid pix fmt {}!", fmt);
     }
 }
 
@@ -44,7 +44,7 @@ step::video::PixFmt qimage_fmt_to_pix_fmt(QImage::Format fmt)
     }
     else
     {
-        step::utils::throw_runtime_with_log(fmt::format("Invalid qimage fmt {}!", fmt));
+        STEP_THROW_RUNTIME("Invalid qimage fmt {}!", fmt);
     }
 }
 

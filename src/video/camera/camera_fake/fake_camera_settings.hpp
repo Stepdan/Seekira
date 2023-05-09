@@ -2,7 +2,7 @@
 
 #include <video/camera/interfaces/camera_factory.hpp>
 
-#include <base/interfaces/serializable.hpp>
+#include <core/base/interfaces/serializable.hpp>
 
 #include <filesystem>
 

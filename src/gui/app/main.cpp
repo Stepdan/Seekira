@@ -1,4 +1,4 @@
-#include <log/log.hpp>
+#include <core/log/log.hpp>
 
 #include <gui/ui/main_window.hpp>
 

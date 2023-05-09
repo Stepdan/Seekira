@@ -3,7 +3,7 @@
 #include <video/frame/utils/frame_utils.hpp>
 #include <video/frame/utils/frame_utils_opencv.hpp>
 
-#include <base/utils/thread/thread_guard.hpp>
+#include <core/threading/thread_guard.hpp>
 
 #include <gtest/gtest.h>
 
@@ -45,14 +45,14 @@ protected:
 
 struct FrameHandler : public step::video::IFrameSourceObserver
 {
-    step::utils::ThreadGuard<step::video::FramesPtrs> captured_frames;
+    step::threading::ThreadGuard<step::video::FramesPtrs> captured_frames;
 
     void process_frame(step::video::FramePtr frame_ptr) override { captured_frames->push_back(frame_ptr); }
 };
 
 struct FrameHandlerAsync : public step::video::IFrameSourceObserver
 {
-    step::utils::ThreadGuard<step::video::FramesPtrs> captured_frames;
+    step::threading::ThreadGuard<step::video::FramesPtrs> captured_frames;
     std::mutex captured_frames_mutex;
 
     void process_frame(step::video::FramePtr frame_ptr) override
@@ -75,7 +75,7 @@ struct FrameHandlerEmpty : public step::video::IFrameSourceObserver
 
 struct FrameHandlerOneFrame : public step::video::IFrameSourceObserver
 {
-    step::utils::ThreadGuard<step::video::FramePtr> frame;
+    step::threading::ThreadGuard<step::video::FramePtr> frame;
 
     void process_frame(step::video::FramePtr frame_ptr) override { *frame.lock() = frame_ptr; }
 };

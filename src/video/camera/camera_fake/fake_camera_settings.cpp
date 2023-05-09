@@ -1,6 +1,6 @@
 #include "fake_camera_settings.hpp"
 
-#include <base/types/config_fields.hpp>
+#include <core/base/types/config_fields.hpp>
 
 namespace step::video {
 

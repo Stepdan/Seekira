@@ -3,8 +3,8 @@
 #include <video/frame/interfaces/frame_interfaces.hpp>
 #include <video/camera/interfaces/types/camera_settings.hpp>
 
-#include <base/interfaces/event_handler_list.hpp>
-#include <base/utils/thread/thread_pool_execute_policy.hpp>
+#include <core/base/interfaces/event_handler_list.hpp>
+#include <core/threading/thread_pool_execute_policy.hpp>
 
 #include <atomic>
 
@@ -68,7 +68,7 @@ protected:
     std::atomic_bool m_is_streaming{false};
     CameraErrorCallback m_error_callback;
 
-    step::EventHandlerList<IFrameSourceObserver, ThreadPoolExecutePolicy<0>> m_frame_observers;
+    step::EventHandlerList<IFrameSourceObserver, threading::ThreadPoolExecutePolicy<0>> m_frame_observers;
 };
 
 }  // namespace step::video

@@ -2,7 +2,7 @@
 
 #include "frame.hpp"
 
-#include <base/utils/exception/assert.hpp>
+#include <core/exception/assert.hpp>
 
 namespace step::video {
 

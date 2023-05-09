@@ -16,6 +16,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     #gmock
     gtest
     gtest_main
+    step::core_threading
     step::camera_fake
 )
 target_compile_definitions(${PROJECT_NAME} PRIVATE

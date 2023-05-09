@@ -7,8 +7,8 @@
 
 #include <video/frame/interfaces/pixel_format.hpp>
 
-#include <base/interfaces/serializable.hpp>
-#include <base/types/time.hpp>
+#include <core/base/interfaces/serializable.hpp>
+#include <core/base/types/time.hpp>
 
 #include <optional>
 

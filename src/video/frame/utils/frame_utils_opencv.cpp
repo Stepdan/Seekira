@@ -1,8 +1,8 @@
 #include "frame_utils_opencv.hpp"
 
-#include <base/utils/find_pair.hpp>
-#include <base/utils/string_utils.hpp>
-#include <base/utils/exception/throw_utils.hpp>
+#include <core/base/utils/find_pair.hpp>
+#include <core/base/utils/string_utils.hpp>
+#include <core/exception/assert.hpp>
 
 #include <opencv2/core/hal/interface.h>
 #include <opencv2/imgproc.hpp>
@@ -67,8 +67,7 @@ int get_colorspace_convert_id(PixFmt from, PixFmt to)
         it != std::cend(colorspace_convert_ids))
         return it->second;
     else
-        step::utils::throw_runtime_with_log(
-            fmt::format("get_colorspace_convert_id(): No OpenCV colorspace for pix fmts: {} -> {}", from, to));
+        STEP_THROW_RUNTIME("get_colorspace_convert_id(): No OpenCV colorspace for pix fmts: {} -> {}", from, to);
 }
 
 int get_cv_data_type(PixFmt fmt)
@@ -76,8 +75,7 @@ int get_cv_data_type(PixFmt fmt)
     if (auto it = step::utils::find_pair_iterator_by_first(cv_data_types, fmt); it != std::cend(cv_data_types))
         return it->second;
     else
-        step::utils::throw_runtime_with_log(
-            fmt::format("get_cv_data_type(): No OpenCV data type for pix fmt: {}", fmt));
+        STEP_THROW_RUNTIME("get_cv_data_type(): No OpenCV data type for pix fmt: {}", fmt);
 }
 
 }  // namespace step::video::utils

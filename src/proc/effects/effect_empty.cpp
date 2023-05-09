@@ -1,6 +1,6 @@
 #include "registrator.hpp"
 
-#include <log/log.hpp>
+#include <core/log/log.hpp>
 
 namespace step::proc {
 

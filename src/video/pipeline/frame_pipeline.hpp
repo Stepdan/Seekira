@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pipeline/pipeline.hpp>
+#include <core/pipeline/pipeline.hpp>
 #include <video/frame/interfaces/frame_interfaces.hpp>
 
 namespace step::video {

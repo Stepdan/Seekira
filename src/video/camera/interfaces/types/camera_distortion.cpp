@@ -1,6 +1,6 @@
 #include "camera_distortion.hpp"
 
-#include <base/utils/type_utils.hpp>
+#include <core/base/utils/type_utils.hpp>
 
 namespace step::video {
 

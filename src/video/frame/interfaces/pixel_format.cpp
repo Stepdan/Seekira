@@ -1,7 +1,7 @@
 #include "pixel_format.hpp"
 
-#include <base/utils/find_pair.hpp>
-#include <base/utils/exception/throw_utils.hpp>
+#include <core/base/utils/find_pair.hpp>
+#include <core/exception/throw_utils.hpp>
 
 #include <cassert>
 #include <utility>

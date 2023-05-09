@@ -1,7 +1,7 @@
 #include "frame_utils.hpp"
 #include "frame_utils_opencv.hpp"
 
-#include <base/utils/exception/throw_utils.hpp>
+#include <core/exception/assert.hpp>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -36,7 +36,7 @@ Frame open_file(const std::string& path, PixFmt fmt /*= PixFmt::BGR*/)
             cv_open_flags = cv::IMREAD_UNCHANGED;
             break;
         default:
-            step::utils::throw_runtime_with_log(fmt::format("Invalid PixFmt for open file: {}", fmt));
+            STEP_THROW_RUNTIME("Invalid PixFmt for open file: {}", fmt);
     }
 
     auto mat = cv::imread(path, cv_open_flags);

@@ -1,12 +1,12 @@
-#include <base/interfaces/event_handler_list.hpp>
-#include <base/utils/thread/thread_pool_execute_policy.hpp>
-#include <base/utils/json/json_utils.hpp>
+#include <core/base/interfaces/event_handler_list.hpp>
+#include <core/threading/thread_pool_execute_policy.hpp>
+#include <core/base/json/json_utils.hpp>
 
 #include <video/pipeline/frame_pipeline.hpp>
 
 #include <application/registrator.hpp>
 
-#include <log/log.hpp>
+#include <core/log/log.hpp>
 
 #include <gtest/gtest.h>
 
@@ -58,7 +58,7 @@ public:
     }
 
 private:
-    step::EventHandlerList<video::IFrameSourceObserver, step::ThreadPoolExecutePolicy<0>> m_frame_observers;
+    step::EventHandlerList<video::IFrameSourceObserver, step::threading::ThreadPoolExecutePolicy<0>> m_frame_observers;
 };
 
 class PipelineTest : public ::testing::Test

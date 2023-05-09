@@ -1,8 +1,8 @@
 #include "camera_settings.hpp"
 
-#include <base/types/config_fields.hpp>
-#include <base/utils/type_utils.hpp>
-#include <base/utils/string_utils.hpp>
+#include <core/base/types/config_fields.hpp>
+#include <core/base/utils/type_utils.hpp>
+#include <core/base/utils/string_utils.hpp>
 
 namespace step::video {
 
