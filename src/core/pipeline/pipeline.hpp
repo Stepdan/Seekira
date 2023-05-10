@@ -222,7 +222,7 @@ private:
         }
     }
 
-    // IThreadWorkerEventObserver
+    // IThreadPoolWorkerEventObserver
 private:
     void on_finished(const IdType& id, ThreadPoolResultDataType data) override
     {

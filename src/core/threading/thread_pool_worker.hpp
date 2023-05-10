@@ -15,35 +15,35 @@
 namespace step::threading {
 
 template <typename IdType, typename TResultData>
-class IThreadWorkerEventObserver
+class IThreadPoolWorkerEventObserver
 {
 public:
-    virtual ~IThreadWorkerEventObserver() = default;
+    virtual ~IThreadPoolWorkerEventObserver() = default;
 
     virtual void on_finished(const IdType& id, TResultData data) = 0;
 };
 
 template <typename IdType, typename TResultData>
-class IThreadWorkerEventSource
+class IThreadPoolWorkerEventSource
 {
 public:
-    virtual ~IThreadWorkerEventSource() = default;
+    virtual ~IThreadPoolWorkerEventSource() = default;
 
-    virtual void register_observer(IThreadWorkerEventObserver<IdType, TResultData>* observer) = 0;
-    virtual void unregister_observer(IThreadWorkerEventObserver<IdType, TResultData>* observer) = 0;
+    virtual void register_observer(IThreadPoolWorkerEventObserver<IdType, TResultData>* observer) = 0;
+    virtual void unregister_observer(IThreadPoolWorkerEventObserver<IdType, TResultData>* observer) = 0;
 };
 
 template <typename IdType, typename TData, typename TResultData>
-class ThreadWorker : public IThreadWorkerEventSource<IdType, TResultData>
+class ThreadPoolWorker : public IThreadPoolWorkerEventSource<IdType, TResultData>
 {
     using DataType = TData;
     using ResultDataType = TResultData;
 
 public:
-    ThreadWorker(IdType id) : m_id(id) {}
-    ~ThreadWorker()
+    ThreadPoolWorker(IdType id) : m_id(id) {}
+    ~ThreadPoolWorker()
     {
-        STEP_LOG(L_TRACE, "ThreadWorker {} destruction", m_id);
+        STEP_LOG(L_TRACE, "ThreadPoolWorker {} destruction", m_id);
         stop();
     }
 
@@ -76,9 +76,9 @@ public:
         if (m_is_running)
             return;
 
-        m_worker = std::thread(&ThreadWorker::worker_thread, this);
+        m_worker = std::thread(&ThreadPoolWorker::worker_thread, this);
         m_is_running.store(true);
-        STEP_LOG(L_TRACE, "ThreadWorker {} has been started", m_id);
+        STEP_LOG(L_TRACE, "ThreadPoolWorker {} has been started", m_id);
     }
 
     void stop()
@@ -86,7 +86,7 @@ public:
         if (!m_is_running)
             return;
 
-        STEP_LOG(L_TRACE, "Stopping ThreadWorker {}", m_id);
+        STEP_LOG(L_TRACE, "Stopping ThreadPoolWorker {}", m_id);
         m_need_stop.store(true);
         m_data_cnd.notify_one();
 
@@ -99,7 +99,7 @@ public:
         m_is_running.store(false);
         m_need_stop.store(false);
 
-        STEP_LOG(L_TRACE, "ThreadWorker {} has been stopped", m_id);
+        STEP_LOG(L_TRACE, "ThreadPoolWorker {} has been stopped", m_id);
     }
 
 public:
@@ -170,7 +170,7 @@ private:
 
                     // notify executor
                     m_event_observers.perform_for_each_event_handler(
-                        std::bind(&IThreadWorkerEventObserver<IdType, ResultDataType>::on_finished,
+                        std::bind(&IThreadPoolWorkerEventObserver<IdType, ResultDataType>::on_finished,
                                   std::placeholders::_1, m_id, std::move(result_data)));
                 }
                 catch (...)
@@ -182,14 +182,14 @@ private:
         }
     }
 
-    // IThreadWorkerEventSource
+    // IThreadPoolWorkerEventSource
 public:
-    void register_observer(IThreadWorkerEventObserver<IdType, TResultData>* observer) override
+    void register_observer(IThreadPoolWorkerEventObserver<IdType, TResultData>* observer) override
     {
         m_event_observers.register_event_handler(observer);
     }
 
-    void unregister_observer(IThreadWorkerEventObserver<IdType, TResultData>* observer) override
+    void unregister_observer(IThreadPoolWorkerEventObserver<IdType, TResultData>* observer) override
     {
         m_event_observers.unregister_event_handler(observer);
     }
@@ -209,7 +209,7 @@ private:
     mutable std::mutex m_exception_mutex;
     std::deque<std::exception_ptr> m_exception_ptrs;
 
-    EventHandlerList<IThreadWorkerEventObserver<IdType, DataType>> m_event_observers;
+    EventHandlerList<IThreadPoolWorkerEventObserver<IdType, DataType>> m_event_observers;
 };
 
 }  // namespace step::threading

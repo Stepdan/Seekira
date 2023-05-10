@@ -1,6 +1,6 @@
 #pragma once
 
-#include "thread_worker.hpp"
+#include "thread_pool_worker.hpp"
 
 #include <core/exception/assert.hpp>
 
@@ -10,13 +10,13 @@
 namespace step::threading {
 
 template <typename IdType, typename TData, typename TResultData>
-class ThreadPool : public IThreadWorkerEventObserver<IdType, TResultData>
+class ThreadPool : public IThreadPoolWorkerEventObserver<IdType, TResultData>
 {
 protected:
     using DataType = TData;
     using ResultDataType = TResultData;
-    using ThreadWorkerType = ThreadWorker<IdType, DataType, ResultDataType>;
-    using ThreadWorkerPtr = std::shared_ptr<ThreadWorkerType>;
+    using ThreadPoolWorkerType = ThreadPoolWorker<IdType, DataType, ResultDataType>;
+    using ThreadPoolWorkerPtr = std::shared_ptr<ThreadPoolWorkerType>;
 
 public:
     ThreadPool() = default;
@@ -29,10 +29,10 @@ public:
     bool is_running() const { return m_is_running; }
     bool need_stop() const { return m_need_stop; }
 
-    void add_thread_worker(const ThreadWorkerPtr& tw_ptr)
+    void add_thread_worker(const ThreadPoolWorkerPtr& tw_ptr)
     {
-        STEP_ASSERT(tw_ptr, "Invalid ThreadWorker ptr!");
-        STEP_ASSERT(!m_threads.contains(tw_ptr->get_id()), "ThreadPool already contains ThreadWorker {}",
+        STEP_ASSERT(tw_ptr, "Invalid ThreadPoolWorker ptr!");
+        STEP_ASSERT(!m_threads.contains(tw_ptr->get_id()), "ThreadPool already contains ThreadPoolWorker {}",
                     tw_ptr->get_id());
 
         m_threads[tw_ptr->get_id()] = tw_ptr;
@@ -93,7 +93,7 @@ private:
     }
 
 protected:
-    std::unordered_map<IdType, ThreadWorkerPtr> m_threads;
+    std::unordered_map<IdType, ThreadPoolWorkerPtr> m_threads;
 
 private:
     std::atomic_bool m_is_running{false};

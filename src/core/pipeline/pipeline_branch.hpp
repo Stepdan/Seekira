@@ -5,7 +5,7 @@
 #include <core/base/interfaces/event_handler_list.hpp>
 #include <core/exception/assert.hpp>
 
-#include <core/threading/thread_worker.hpp>
+#include <core/threading/thread_pool_worker.hpp>
 
 #include <list>
 
@@ -13,24 +13,24 @@ namespace step::pipeline {
 
 template <typename TData>
 class PipelineBranch
-    : public step::threading::ThreadWorker<IdType, PipelineDataTypePtr<TData>, PipelineDataTypePtr<TData>>
+    : public step::threading::ThreadPoolWorker<IdType, PipelineDataTypePtr<TData>, PipelineDataTypePtr<TData>>
 {
-    using ThreadWorkerDataType = PipelineDataTypePtr<TData>;
-    using ThreadWorkerResultDataType = ThreadWorkerDataType;
-    using ThreadWorkerType =
-        step::threading::ThreadWorker<IdType, PipelineDataTypePtr<TData>, PipelineDataTypePtr<TData>>;
+    using ThreadPoolWorkerDataType = PipelineDataTypePtr<TData>;
+    using ThreadPoolWorkerResultDataType = ThreadPoolWorkerDataType;
+    using ThreadPoolWorkerType =
+        step::threading::ThreadPoolWorker<IdType, PipelineDataTypePtr<TData>, PipelineDataTypePtr<TData>>;
 
 public:
-    PipelineBranch(std::shared_ptr<PipelineGraphNode<TData>> init_node) : ThreadWorkerType(init_node->get_id())
+    PipelineBranch(std::shared_ptr<PipelineGraphNode<TData>> init_node) : ThreadPoolWorkerType(init_node->get_id())
     {
         add_node(init_node);
     }
 
-    ~PipelineBranch() { ThreadWorkerType::stop(); }
+    ~PipelineBranch() { ThreadPoolWorkerType::stop(); }
 
     void add_node(std::shared_ptr<PipelineGraphNode<TData>> node)
     {
-        if (ThreadWorkerType::is_running())
+        if (ThreadPoolWorkerType::is_running())
             return;
 
         m_list.push_back(node);
@@ -51,9 +51,9 @@ public:
     }
 
 private:
-    ThreadWorkerResultDataType process_data(ThreadWorkerDataType&& data) override
+    ThreadPoolWorkerResultDataType process_data(ThreadPoolWorkerDataType&& data) override
     {
-        ThreadWorkerResultDataType process_data = std::move(data);
+        ThreadPoolWorkerResultDataType process_data = std::move(data);
         std::ranges::for_each(m_list, [&process_data](const std::shared_ptr<PipelineGraphNode<TData>>& node) {
             node->process(process_data);
         });
