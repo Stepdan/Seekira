@@ -140,7 +140,7 @@ public:
     }
 
 protected:
-    virtual ResultDataType process_data(DataType&& data) = 0;
+    virtual ResultDataType thread_pool_worker_process_data(DataType&& data) = 0;
 
 private:
     void reset_data()
@@ -166,7 +166,7 @@ private:
                 {
                     auto data = m_data.front();
                     m_data.pop();
-                    auto result_data = process_data(std::move(data));
+                    auto result_data = thread_pool_worker_process_data(std::move(data));
 
                     // notify executor
                     m_event_observers.perform_for_each_event_handler(

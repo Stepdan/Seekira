@@ -68,6 +68,7 @@ conan_cmake_run(
         poco/1.12.4
         boost/1.81.0
         ${CONAN_Qt}
+        ffmpeg/5.1
     BASIC_SETUP
     CMAKE_TARGETS
     UPDATE
@@ -76,11 +77,11 @@ conan_cmake_run(
         #-----------------------------
         opencv/*:shared=True
         opencv/*:with_eigen=True
+        opencv/*:with_ffmpeg=True
         opencv/*:contrib=False
         opencv/*:parallel=False
         opencv/*:with_tiff=False
         opencv/*:with_webp=False
-        opencv/*:with_ffmpeg=False
         opencv/*:with_ade=False
         opencv/*:with_openexr=False
         opencv/*:with_webp=False
@@ -179,6 +180,7 @@ find_package(spdlog REQUIRED)
 find_package(fmt REQUIRED)
 find_package(Poco REQUIRED)
 find_package(gtest REQUIRED)
+find_package(ffmpeg REQUIRED)
 
 find_package(OpenCV REQUIRED)
 include_directories ("/usr/include/opencv4/")

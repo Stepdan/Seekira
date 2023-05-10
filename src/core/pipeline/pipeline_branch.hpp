@@ -51,7 +51,7 @@ public:
     }
 
 private:
-    ThreadPoolWorkerResultDataType process_data(ThreadPoolWorkerDataType&& data) override
+    ThreadPoolWorkerResultDataType thread_pool_worker_process_data(ThreadPoolWorkerDataType&& data) override
     {
         ThreadPoolWorkerResultDataType process_data = std::move(data);
         std::ranges::for_each(m_list, [&process_data](const std::shared_ptr<PipelineGraphNode<TData>>& node) {

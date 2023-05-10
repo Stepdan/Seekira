@@ -2,8 +2,6 @@
 
 #include <video/frame/interfaces/frame.hpp>
 
-#include <opencv2/core.hpp>
-
 #include <QImage>
 #include <QPixmap>
 
