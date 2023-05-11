@@ -38,6 +38,8 @@ public:
     FFStreamError open(const std::string& filename, PixFmt pix_fmt = PixFmt::BGR, FrameSize frame_size = FrameSize());
     FFStreamError close();
 
+    void seek(Timestamp ts);
+
     // IFrameSource
 public:
     void register_observer(IFrameSourceObserver* observer) override
@@ -53,6 +55,10 @@ public:
     // ThreadWorker
 private:
     void worker_thread() override;
+
+private:
+    FramePtr read_frame();
+    void seek_frame();
 
 private:
     struct Impl;

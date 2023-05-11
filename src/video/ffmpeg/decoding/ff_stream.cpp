@@ -62,6 +62,11 @@ struct FFStream::Impl
     SwsContext* scaler_ctx{nullptr};
 
     FFStreamInfo info;
+
+    std::atomic_bool need_seek;
+    Timestamp seek_ts;
+
+    std::atomic_bool is_eof;
 };
 
 FFStream::FFStream() : m_impl(std::make_unique<Impl>()) {}
@@ -183,104 +188,109 @@ void FFStream::worker_thread()
 {
     bool is_eof = false;
     bool is_read_err = false;
-    while (!m_need_stop && !is_eof && !is_read_err)
+    while (!m_need_stop && !is_eof)
     {
-        while (av_read_frame(m_impl->format_ctx, m_impl->packet) >= 0)
+        auto frame_ptr = read_frame();
+        if (frame_ptr)
         {
-            if (m_impl->packet->stream_index != m_impl->stream_index)
-            {
-                av_packet_unref(m_impl->packet);
-                continue;
-            }
-
-            if (auto ret = avcodec_send_packet(m_impl->codec_ctx, m_impl->packet); ret < 0)
-            {
-                STEP_LOG(L_ERROR, "Failed to decode packet (avcodec_send_packet): {}, err {}", m_impl->info.filename(),
-                         av_make_error(ret));
-                is_read_err = true;
-                break;
-            }
-
-            if (auto ret = avcodec_receive_frame(m_impl->codec_ctx, m_impl->frame);
-                ret == AVERROR(EAGAIN) || AVERROR_EOF)
-            {
-                is_eof = (ret == AVERROR_EOF);
-                is_read_err = (ret == AVERROR(EAGAIN));
-                av_packet_unref(m_impl->packet);
-                continue;
-            }
-            else if (ret < 0)
-            {
-                STEP_LOG(L_ERROR, "Failed to decode packet (avcodec_receive_frame): {}, err {}",
-                         m_impl->info.filename(), av_make_error(ret));
-                break;
-            }
-
-            av_packet_unref(m_impl->packet);
-            break;
-        }
-
-        try
-        {
-            const auto channels_count = utils::get_channels_count(m_impl->info.pix_fmt());
-
-            FramePtr frame_ptr = std::make_shared<Frame>();
-            frame_ptr->stride = m_impl->info.frame_size().width * channels_count;
-            frame_ptr->pix_fmt = m_impl->info.pix_fmt();
-            frame_ptr->size = m_impl->info.frame_size();
-            // TODO ts
-
-            int stride = static_cast<int>(frame_ptr->stride);
-            switch (m_impl->info.pix_fmt())
-            {
-                case PixFmt::GRAY: {
-                    Frame::DataTypePtr dest[1] = {frame_ptr->data()};
-                    int dest_linesize[1] = {stride};
-                    sws_scale(m_impl->scaler_ctx, m_impl->frame->data, m_impl->frame->linesize, 0,
-                              m_impl->frame->height, dest, dest_linesize);
-                    break;
-                }
-
-                case PixFmt::BGR:
-                    [[fallthrough]];
-                case PixFmt::RGB: {
-                    Frame::DataTypePtr dest[3] = {frame_ptr->data(), nullptr, nullptr};
-                    int dest_linesize[3] = {stride, 0, 0};
-                    sws_scale(m_impl->scaler_ctx, m_impl->frame->data, m_impl->frame->linesize, 0,
-                              m_impl->frame->height, dest, dest_linesize);
-                    break;
-                }
-
-                case PixFmt::BGRA:
-                    [[fallthrough]];
-                case PixFmt::RGBA: {
-                    Frame::DataTypePtr dest[4] = {frame_ptr->data(), nullptr, nullptr, nullptr};
-                    int dest_linesize[4] = {stride, 0, 0, 0};
-                    sws_scale(m_impl->scaler_ctx, m_impl->frame->data, m_impl->frame->linesize, 0,
-                              m_impl->frame->height, dest, dest_linesize);
-                    break;
-                }
-            };
-
             m_frame_observers.perform_for_each_event_handler(
                 std::bind(&IFrameSourceObserver::process_frame, std::placeholders::_1, frame_ptr));
         }
-        catch (...)
-        {
-            STEP_LOG(L_ERROR, "Unknown exception during avframe -> frame");
-            m_exception_ptr = std::current_exception();
-        }
     }
 
-    if (is_eof)
+    if ()
+
+        if (m_need_stop)
+        {
+        }
+}
+
+FramePtr FFStream::read_frame()
+{
+    AVIOInterruptCB while (av_read_frame(m_impl->format_ctx, m_impl->packet) >= 0)
     {
+        if (m_impl->packet->stream_index != m_impl->stream_index)
+        {
+            av_packet_unref(m_impl->packet);
+            continue;
+        }
+
+        if (auto ret = avcodec_send_packet(m_impl->codec_ctx, m_impl->packet); ret < 0)
+        {
+            STEP_LOG(L_ERROR, "Failed to decode packet (avcodec_send_packet): {}, err {}", m_impl->info.filename(),
+                     av_make_error(ret));
+            return nullptr;
+        }
+
+        if (auto ret = avcodec_receive_frame(m_impl->codec_ctx, m_impl->frame); ret == AVERROR(EAGAIN) || AVERROR_EOF)
+        {
+            is_eof = ret == AVERROR_EOF;
+            av_packet_unref(m_impl->packet);
+            continue;
+        }
+        else if (ret < 0)
+        {
+            STEP_LOG(L_ERROR, "Failed to decode packet (avcodec_receive_frame): {}, err {}", m_impl->info.filename(),
+                     av_make_error(ret));
+            return nullptr;
+        }
+
+        av_packet_unref(m_impl->packet);
+        break;
     }
-    if (is_read_err)
+
+    try
     {
+        const auto channels_count = utils::get_channels_count(m_impl->info.pix_fmt());
+
+        FramePtr frame_ptr = std::make_shared<Frame>();
+        frame_ptr->stride = m_impl->info.frame_size().width * channels_count;
+        frame_ptr->pix_fmt = m_impl->info.pix_fmt();
+        frame_ptr->size = m_impl->info.frame_size();
+        // TODO ts
+
+        int stride = static_cast<int>(frame_ptr->stride);
+        switch (m_impl->info.pix_fmt())
+        {
+            case PixFmt::GRAY: {
+                Frame::DataTypePtr dest[1] = {frame_ptr->data()};
+                int dest_linesize[1] = {stride};
+                sws_scale(m_impl->scaler_ctx, m_impl->frame->data, m_impl->frame->linesize, 0, m_impl->frame->height,
+                          dest, dest_linesize);
+                break;
+            }
+
+            case PixFmt::BGR:
+                [[fallthrough]];
+            case PixFmt::RGB: {
+                Frame::DataTypePtr dest[3] = {frame_ptr->data(), nullptr, nullptr};
+                int dest_linesize[3] = {stride, 0, 0};
+                sws_scale(m_impl->scaler_ctx, m_impl->frame->data, m_impl->frame->linesize, 0, m_impl->frame->height,
+                          dest, dest_linesize);
+                break;
+            }
+
+            case PixFmt::BGRA:
+                [[fallthrough]];
+            case PixFmt::RGBA: {
+                Frame::DataTypePtr dest[4] = {frame_ptr->data(), nullptr, nullptr, nullptr};
+                int dest_linesize[4] = {stride, 0, 0, 0};
+                sws_scale(m_impl->scaler_ctx, m_impl->frame->data, m_impl->frame->linesize, 0, m_impl->frame->height,
+                          dest, dest_linesize);
+                break;
+            }
+        };
+
+        return frame_ptr;
     }
-    if (m_need_stop)
+    catch (...)
     {
+        STEP_LOG(L_ERROR, "Unknown exception during avframe -> frame");
+        m_exception_ptr = std::current_exception();
+        return nullptr;
     }
 }
+
+void FFStream::seek_frame() {}
 
 }  // namespace step::video::ff

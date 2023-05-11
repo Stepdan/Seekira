@@ -1,5 +1,5 @@
-project(step_ff_stream)
-set(PROJECT_ALIAS ff_stream)
+project(step_ff_decoding)
+set(PROJECT_ALIAS ff_decoding)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)
@@ -16,7 +16,7 @@ source_group("Headers" FILES ${HEADERS})
 source_group("Sources" FILES ${SOURCES})
 
 add_library(${PROJECT_NAME} STATIC)
-add_library(step::ff_stream ALIAS ${PROJECT_NAME})
+add_library(step::ff_decoding ALIAS ${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME}
     PRIVATE
@@ -32,7 +32,7 @@ target_link_libraries(${PROJECT_NAME}
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    STEPKIT_MODULE_NAME="FF_STREAM"
+    STEPKIT_MODULE_NAME="FF_DECODING"
     PUBLIC
     BUILD_WITH_EASY_PROFILER
 )
