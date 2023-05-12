@@ -9,10 +9,10 @@ ThreadWorker::ThreadWorker() = default;
 ThreadWorker::~ThreadWorker()
 {
     STEP_LOG(L_TRACE, "ThreadWorker destruction");
-    stop();
+    stop_worker();
 }
 
-void ThreadWorker::run()
+void ThreadWorker::run_worker()
 {
     if (m_is_running)
         return;
@@ -22,7 +22,7 @@ void ThreadWorker::run()
     STEP_LOG(L_TRACE, "ThreadWorker has been started");
 }
 
-void ThreadWorker::stop()
+void ThreadWorker::stop_worker()
 {
     if (!m_is_running)
         return;

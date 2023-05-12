@@ -16,8 +16,8 @@ public:
     ThreadWorker();
     ~ThreadWorker();
 
-    void run();
-    void stop();
+    void run_worker();
+    void stop_worker();
 
     bool is_running() const { return m_is_running; }
 

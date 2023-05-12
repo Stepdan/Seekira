@@ -82,6 +82,7 @@ public:
 
 class FormatContextInputSafe : public std::unique_ptr<AVFormatContext, details::DeleterAVCloseInput>
 {
+public:
     FormatContextInputSafe(AVFormatContext* ctx = nullptr)
         : std::unique_ptr<AVFormatContext, details::DeleterAVCloseInput>(ctx)
     {

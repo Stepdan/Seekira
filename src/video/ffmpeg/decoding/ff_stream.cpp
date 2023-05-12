@@ -207,7 +207,7 @@ void FFStream::worker_thread()
 
 FramePtr FFStream::read_frame()
 {
-    AVIOInterruptCB while (av_read_frame(m_impl->format_ctx, m_impl->packet) >= 0)
+    while (av_read_frame(m_impl->format_ctx, m_impl->packet) >= 0)
     {
         if (m_impl->packet->stream_index != m_impl->stream_index)
         {

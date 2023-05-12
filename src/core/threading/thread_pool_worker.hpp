@@ -44,7 +44,7 @@ public:
     ~ThreadPoolWorker()
     {
         STEP_LOG(L_TRACE, "ThreadPoolWorker {} destruction", m_id);
-        stop();
+        stop_worker();
     }
 
     IdType get_id() const { return m_id; }
@@ -55,7 +55,7 @@ public:
     void add_data(TData&& data)
     {
         if (!m_is_running)
-            run();
+            run_worker();
 
         {
             std::scoped_lock lock(m_data_guard);
@@ -71,7 +71,7 @@ public:
         !m_data.empty();
     }
 
-    void run()
+    void run_worker()
     {
         if (m_is_running)
             return;
@@ -81,7 +81,7 @@ public:
         STEP_LOG(L_TRACE, "ThreadPoolWorker {} has been started", m_id);
     }
 
-    void stop()
+    void stop_worker()
     {
         if (!m_is_running)
             return;
