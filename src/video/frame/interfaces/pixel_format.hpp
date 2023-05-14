@@ -33,11 +33,11 @@ bool has_alpha(PixFmt fmt);
 }  // namespace step::video::utils
 
 template <>
-struct fmt::formatter<step::video::PixFmt> : formatter<string_view>
+struct fmt::formatter<step::video::PixFmt> : fmt::formatter<std::string_view>
 {
     template <typename FormatContext>
     auto format(const step::video::PixFmt& pix_fmt, FormatContext& ctx)
     {
-        return format_to(ctx.out(), "{}", step::utils::to_string(pix_fmt));
+        return fmt::format_to(ctx.out(), "{}", step::utils::to_string(pix_fmt));
     }
 };

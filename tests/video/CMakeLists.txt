@@ -1,3 +1,4 @@
 add_subdirectory(frame)
 add_subdirectory(camera_fake)
 add_subdirectory(pipeline)
+add_subdirectory(ffmpeg)

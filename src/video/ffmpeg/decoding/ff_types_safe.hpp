@@ -18,19 +18,19 @@ namespace step::video::ff {
 
 namespace details {
 /* clang-format off */
-struct DeleterEmpty           { using ptr_type = void*                ; void operator()(ptr_type &ptr) { ptr = nullptr; } };
-struct DeleterAVFreeP         { using ptr_type = void*                ; void operator()(ptr_type &ptr) { if(!ptr) return; av_freep(&ptr); } };
-struct DeleterSwsFreeContext  { using ptr_type = SwsContext*          ; void operator()(ptr_type &ptr) { if(!ptr) return; sws_freeContext(ptr); ptr = nullptr; } };
-//struct DeleterAVFifoFree      { using ptr_type = AVFifoBuffer*        ; void operator()(ptr_type &ptr) { if(!ptr) return; av_fifo_free(ptr); ptr = nullptr; } };
-struct DeleterAVDictFree      { using ptr_type = AVDictionary*        ; void operator()(ptr_type &ptr) { if(!ptr) return; av_dict_free(&ptr); ptr = nullptr; } };
-struct DeleterAVCloseInput    { using ptr_type = AVFormatContext*     ; void operator()(ptr_type &ptr) { if(!ptr) return; avformat_close_input(&ptr); ptr = nullptr; } };
-struct DeleterAVFreeContext   { using ptr_type = AVFormatContext*     ; void operator()(ptr_type &ptr) { if(!ptr) return; avformat_free_context(ptr); ptr = nullptr; } };
+struct DeleterEmpty           { using ptr_type = void*                ; void operator()(ptr_type ptr) { ptr = nullptr; } };
+struct DeleterAVFreeP         { using ptr_type = void*                ; void operator()(ptr_type ptr) { if(!ptr) return; av_freep(&ptr); } };
+struct DeleterSwsFreeContext  { using ptr_type = SwsContext*          ; void operator()(ptr_type ptr) { if(!ptr) return; sws_freeContext(ptr); ptr = nullptr; } };
+//struct DeleterAVFifoFree      { using ptr_type = AVFifoBuffer*        ; void operator()(ptr_type ptr) { if(!ptr) return; av_fifo_free(ptr); ptr = nullptr; } };
+struct DeleterAVDictFree      { using ptr_type = AVDictionary*        ; void operator()(ptr_type ptr) { if(!ptr) return; av_dict_free(&ptr); ptr = nullptr; } };
+struct DeleterAVCloseInput    { using ptr_type = AVFormatContext*     ; void operator()(ptr_type ptr) { if(!ptr) return; avformat_close_input(&ptr); ptr = nullptr; } };
+struct DeleterAVFreeContext   { using ptr_type = AVFormatContext*     ; void operator()(ptr_type ptr) { if(!ptr) return; avformat_free_context(ptr); ptr = nullptr; } };
 struct DeleterAVFreeCodecCtx  { using ptr_type = AVCodecContext*      ; void operator()(ptr_type ptr)  { avcodec_free_context(&ptr); } };
-struct DeleterAVFrameFree     { using ptr_type = AVFrame*             ; void operator()(ptr_type &ptr) { if(!ptr) return; av_frame_free(&ptr); ptr = nullptr; } };
-struct DeleterAVFrameUnref    { using ptr_type = AVFrame*             ; void operator()(ptr_type &ptr) { if(!ptr) return; av_frame_unref(ptr); ptr = nullptr; } };
-struct DeleterAVPacketUnref   { using ptr_type = AVPacket*            ; void operator()(ptr_type &ptr) { if(!ptr) return; av_packet_unref(ptr); ptr = nullptr; } };
-//struct DeleterAVBSF           { using ptr_type = AVBSFContext*        ; void operator()(ptr_type &ptr) { if(!ptr) return; av_bsf_free(&ptr); ptr = nullptr; } };
-struct DeleterAVCodecPar      { using ptr_type = AVCodecParameters*   ; void operator()(ptr_type &ptr) { if(!ptr) return; avcodec_parameters_free(&ptr); ptr = nullptr; } };
+struct DeleterAVFrameFree     { using ptr_type = AVFrame*             ; void operator()(ptr_type ptr) { if(!ptr) return; av_frame_free(&ptr); ptr = nullptr; } };
+struct DeleterAVFrameUnref    { using ptr_type = AVFrame*             ; void operator()(ptr_type ptr) { if(!ptr) return; av_frame_unref(ptr); ptr = nullptr; } };
+struct DeleterAVPacketUnref   { using ptr_type = AVPacket*            ; void operator()(ptr_type ptr) { if(!ptr) return; av_packet_unref(ptr); ptr = nullptr; } };
+//struct DeleterAVBSF           { using ptr_type = AVBSFContext*        ; void operator()(ptr_type ptr) { if(!ptr) return; av_bsf_free(&ptr); ptr = nullptr; } };
+struct DeleterAVCodecPar      { using ptr_type = AVCodecParameters*   ; void operator()(ptr_type ptr) { if(!ptr) return; avcodec_parameters_free(&ptr); ptr = nullptr; } };
 /* clang-format on */
 }  // namespace details
 
@@ -152,7 +152,7 @@ public:
     int close() { return avcodec_close(this->get()); }
 };
 
-class DecoderContextSafe : CodecContextSafe
+class DecoderContextSafe : public CodecContextSafe
 {
 public:
     using CodecContextSafe::CodecContextSafe;
@@ -237,12 +237,13 @@ using PacketSafe = std::unique_ptr<AVPacket, details::DeleterAVPacketUnref>;
 }  // namespace step::video::ff
 
 template <>
-struct fmt::formatter<step::video::ff::SwsContextSafe::SwsItem> : formatter<string_view>
+struct fmt::formatter<step::video::ff::SwsContextSafe::SwsItem> : fmt::formatter<string_view>
 {
     template <typename FormatContext>
     auto format(const step::video::ff::SwsContextSafe::SwsItem& item, FormatContext& ctx)
     {
-        const AVPixFmtDescriptor* desc = av_pix_fmt_desc_get(item.pixelFormat);
-        return format_to(ctx.out(), "pixel format desc: {}, width: {}, height: {}", desc->name, width, height);
+        const AVPixFmtDescriptor* desc = av_pix_fmt_desc_get(item.pix_fmt);
+        return fmt::format_to(ctx.out(), "pixel format desc: {}, width: {}, height: {}", desc->name, item.width,
+                              item.height);
     }
 };

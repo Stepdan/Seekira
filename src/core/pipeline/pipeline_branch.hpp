@@ -26,7 +26,7 @@ public:
         add_node(init_node);
     }
 
-    ~PipelineBranch() { ThreadPoolWorkerType::stop(); }
+    ~PipelineBranch() { ThreadPoolWorkerType::stop_worker(); }
 
     void add_node(std::shared_ptr<PipelineGraphNode<TData>> node)
     {

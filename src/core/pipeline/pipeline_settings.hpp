@@ -30,12 +30,12 @@ struct PipelineSettings : public ISerializable
 }  // namespace step::pipeline
 
 template <>
-struct fmt::formatter<step::pipeline::PipelineSettings> : formatter<string_view>
+struct fmt::formatter<step::pipeline::PipelineSettings> : fmt::formatter<string_view>
 {
     template <typename FormatContext>
     auto format(const step::pipeline::PipelineSettings& settings, FormatContext& ctx)
     {
-        return format_to(ctx.out(), "name: {}; sync_mode {};", settings.name,
-                         step::utils::to_string(settings.sync_policy));
+        return fmt::format_to(ctx.out(), "name: {}; sync_mode {};", settings.name,
+                              step::utils::to_string(settings.sync_policy));
     }
 };

@@ -1,4 +1,5 @@
 #include "ff_demuxer.hpp"
+#include "ff_data_packet.hpp"
 
 #include <core/log/log.hpp>
 
@@ -6,6 +7,7 @@
 
 extern "C" {
 #include <libavdevice/avdevice.h>
+#include <libavutil/time.h>
 }
 
 using namespace std::literals;
@@ -28,7 +30,7 @@ namespace step::video::ff {
 
 FFDemuxer::FFDemuxer() : m_video_decoder(nullptr) {}
 
-FFDemuxer::~FFDemuxer() {}
+FFDemuxer::~FFDemuxer() { stop_worker(); }
 
 void FFDemuxer::load(const std::string& url_str)
 {
@@ -46,9 +48,8 @@ void FFDemuxer::load(const std::string& url_str)
         return;
     }
 
-    // TODO For rstp, etc cameras - check predicate
-    bool is_local_file = true;
-    if (is_local_file)
+    // TODO For rstp, etc cameras - check by predicate
+    if (m_is_local_file)
     {
         STEP_LOG(L_INFO, "{} is local file, calling avdevice_register_all()", url_str);
         avdevice_register_all();
@@ -123,78 +124,125 @@ bool FFDemuxer::find_streams()
 void FFDemuxer::worker_thread()
 {
     int ret;
-    AVPacket* packet;
+    double clock = 0.0;
+    double time_base = 0.0;
     bool is_eof = false;
     bool is_err = false;
 
-    while (!m_need_stop && !is_eof && !is_err)
+    if (m_video_decoder->is_opened())
+        time_base = m_video_decoder->time_base();
+
+    STEP_LOG(L_INFO, "Start ff demuxer run with time base {}", time_base);
+
+    try
     {
-        if (!m_format_input_ctx.get())
+        while (!m_need_stop && !is_eof && !is_err)
         {
-            STEP_LOG(L_ERROR, "AVFormatContext m_format_input_ctx is invalid");
-            break;
-        }
-
-        packet = av_packet_alloc();
-        if (!packet)
-        {
-            STEP_LOG(L_ERROR, "Failed to av_packet_alloc");
-            break;
-        }
-
-        ret = av_read_frame(m_format_input_ctx.get(), packet);
-        if (ret < 0)
-        {
-            if (ret == AVERROR_EOF)
+            if (!m_format_input_ctx.get())
             {
-                STEP_LOG(L_INFO, "FFDemuxer end of file");
-                is_eof = true;
+                STEP_LOG(L_ERROR, "AVFormatContext m_format_input_ctx is invalid");
+                break;
+            }
+
+            auto* packet = create_packet(0);
+            if (!packet)
+            {
+                STEP_LOG(L_ERROR, "Failed to av_packet_alloc");
+                break;
+            }
+            auto data_packet =
+                FFDataPacket::create(packet, MediaType::Video, packet->pts, packet->dts, packet->duration);
+
+            ret = av_read_frame(m_format_input_ctx.get(), packet);
+            if (ret < 0)
+            {
+                if (ret == AVERROR_EOF)
+                {
+                    STEP_LOG(L_INFO, "FFDemuxer end of file");
+                    is_eof = true;
+                }
+                else
+                {
+                    STEP_LOG(L_ERROR, "Unable to read frame");
+                }
+                av_packet_free(&packet);
+                break;
+            }
+
+            if (!m_video_decoder)
+            {
+                STEP_LOG(L_CRITICAL, "Video decoder is empty!");
+                is_err = true;
+                // TODO exception?
+                break;
+            }
+
+            if (m_video_streams.contains(packet->stream_index) &&
+                packet->stream_index == m_video_decoder->get_stream_id())
+            {
+                auto frame_ptr = m_video_decoder->decode_packet(data_packet);
+                clock = m_video_decoder->clock();
+                //Send frame to FFWrapper
+                m_frame_observers.perform_for_each_event_handler(
+                    std::bind(&IFrameSourceObserver::process_frame, std::placeholders::_1, frame_ptr));
             }
             else
             {
-                STEP_LOG(L_ERROR, "Unable to read frame");
+                // TODO neccessary?
+                std::this_thread::sleep_for(1ms);
             }
-            av_packet_free(&packet);
-            break;
-        }
 
-        if (!m_video_decoder)
-        {
-            STEP_LOG(L_CRITICAL, "Video decoder is empty!");
-            is_err = true;
-            // TODO exception?
-            break;
-        }
+            // Primitive sync for local playback
+            int count = 0;
+            if (m_is_local_file)
+            {
+                while (clock > av_gettime())
+                {
+                    if (m_need_stop)
+                    {
+                        //av_packet_free(&packet);
+                        break;
+                    }
+                    std::this_thread::sleep_for(Microseconds(static_cast<size_t>(time_base)));
+                    ++count;
+                }
 
-        if (m_video_streams.contains(packet->stream_index) && packet->stream_index == m_video_decoder->get_stream_id())
-        {
-            auto frame_ptr = m_video_decoder->decode_packet(packet);
-            //Send frame to FFWrapper
-            m_frame_observers.perform_for_each_event_handler(
-                std::bind(&IFrameSourceObserver::process_frame, std::placeholders::_1, frame_ptr));
+                if (count > 0)
+                    STEP_LOG(L_TRACE, "Demuxer playback sync: count {}, clock {}", count, clock);
+            }
+
+            //av_packet_free(&packet);
         }
-        else
-        {
-            // TODO neccessary?
-            std::this_thread::sleep_for(1ms);
-        }
+    }
+    catch (const std::exception& e)
+    {
+        m_exception_ptr = std::current_exception();
+        STEP_LOG(L_ERROR, "Handled exception during demuxer's run: {}", e.what());
+    }
+    catch (...)
+    {
+        m_exception_ptr = std::current_exception();
+        STEP_LOG(L_ERROR, "Handled unknown exception during demuxer's run");
     }
 
     if (is_eof)
     {
         STEP_LOG(L_INFO, "Stopping demuxer because of eof");
         stop_worker();
+        return;
     }
 
     if (is_err)
     {
         STEP_LOG(L_INFO, "Stopping demuxer because of err");
         stop_worker();
+        return;
     }
 
     if (m_need_stop)
     {
         STEP_LOG(L_INFO, "Demuxer has been stopped because of stop required!");
+        return;
     }
 }
 

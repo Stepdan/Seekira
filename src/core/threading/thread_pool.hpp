@@ -62,7 +62,7 @@ public:
         m_need_stop.store(true);
 
         for (auto& [id, thread] : m_threads)
-            thread->stop();
+            thread->stop_worker();
 
         thread_pool_stop_impl();
 

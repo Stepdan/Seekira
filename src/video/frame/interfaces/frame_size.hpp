@@ -32,11 +32,11 @@ public:
 }  // namespace step::video
 
 template <>
-struct fmt::formatter<step::video::FrameSize> : formatter<string_view>
+struct fmt::formatter<step::video::FrameSize> : fmt::formatter<std::string_view>
 {
     template <typename FormatContext>
     auto format(const step::video::FrameSize& size, FormatContext& ctx)
     {
-        return format_to(ctx.out(), "width: {}, height: {}", size.width, size.height);
+        return fmt::format_to(ctx.out(), "width: {}, height: {}", size.width, size.height);
     }
 };

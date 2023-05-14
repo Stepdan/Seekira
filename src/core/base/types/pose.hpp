@@ -66,22 +66,22 @@ struct fmt::formatter<Eigen::Affine3d> : formatter<string_view>
     {
         const Eigen::Quaterniond q(affine.linear());
         const Eigen::Vector3d p(affine.translation());
-        return format_to(ctx.out(),
-                         "\np: {{{: 3.6f}, {: 3.6f}, {: 3.6f}}}"
-                         "\nq: {{{: 3.6f}, {: 3.6f}, {: 3.6f}, {: 3.6f}}}",
-                         p.x(), p.y(), p.z(), q.w(), q.x(), q.y(), q.z());
+        return fmt::format_to(ctx.out(),
+                              "\np: {{{: 3.6f}, {: 3.6f}, {: 3.6f}}}"
+                              "\nq: {{{: 3.6f}, {: 3.6f}, {: 3.6f}, {: 3.6f}}}",
+                              p.x(), p.y(), p.z(), q.w(), q.x(), q.y(), q.z());
     }
 };
 
 template <>
-struct fmt::formatter<step::Pose> : formatter<string_view>
+struct fmt::formatter<step::Pose> : fmt::formatter<string_view>
 {
     template <typename FormatContext>
     auto format(const step::Pose& pose, FormatContext& ctx)
     {
-        return format_to(ctx.out(),
-                         "\np: {{{: 3.6f}, {: 3.6f}, {: 3.6f}}}"
-                         "\nq: {{{: 3.6f}, {: 3.6f}, {: 3.6f}, {: 3.6f}}}",
-                         pose.px, pose.py, pose.pz, pose.qw, pose.qx, pose.qy, pose.qz);
+        return fmt::format_to(ctx.out(),
+                              "\np: {{{: 3.6f}, {: 3.6f}, {: 3.6f}}}"
+                              "\nq: {{{: 3.6f}, {: 3.6f}, {: 3.6f}, {: 3.6f}}}",
+                              pose.px, pose.py, pose.pz, pose.qw, pose.qx, pose.qy, pose.qz);
     }
 };

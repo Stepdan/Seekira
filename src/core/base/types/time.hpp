@@ -58,12 +58,12 @@ Timestamp get_current_timestamp();
 
 #define TIME_FORMATTER(TIME_TYPE)                                                                                      \
     template <>                                                                                                        \
-    struct fmt::formatter<TIME_TYPE> : formatter<string_view>                                                          \
+    struct fmt::formatter<TIME_TYPE> : fmt::formatter<string_view>                                                     \
     {                                                                                                                  \
         template <typename FormatContext>                                                                              \
         auto format(const TIME_TYPE& time, FormatContext& ctx)                                                         \
         {                                                                                                              \
-            return format_to(ctx.out(), "{}", time.count());                                                           \
+            return fmt::format_to(ctx.out(), "{}", time.count());                                                      \
         }                                                                                                              \
     };
 

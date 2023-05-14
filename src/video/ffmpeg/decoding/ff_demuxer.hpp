@@ -61,6 +61,8 @@ private:
     std::unique_ptr<FFDecoderVideo> m_video_decoder;
 
     step::EventHandlerList<IFrameSourceObserver> m_frame_observers;
+
+    bool m_is_local_file{true};
 };
 
 }  // namespace step::video::ff

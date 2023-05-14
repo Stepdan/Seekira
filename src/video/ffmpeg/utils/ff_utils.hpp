@@ -1,6 +1,7 @@
 #pragma once
 
 extern "C" {
+#include <libavcodec/packet.h>
 #include <libavutil/error.h>
 }
 
@@ -17,5 +18,9 @@ static const char* av_make_error(int errnum)
     memset(str, 0, sizeof(str));
     return av_make_error_string(str, AV_ERROR_MAX_STRING_SIZE, errnum);
 }
+
+AVPacket* create_packet(size_t size);
+AVPacket* copy_packet(const AVPacket* src);
+void release_packet(AVPacket** packet);
 
 }  // namespace step::video::ff

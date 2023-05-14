@@ -2,6 +2,7 @@
 
 #include "ff_types.hpp"
 #include "ff_types_safe.hpp"
+#include "ff_data_packet.hpp"
 
 #include "video/frame/interfaces/frame.hpp"
 
@@ -15,10 +16,7 @@ public:
     FFDecoderVideo(AVStream* stream);
     ~FFDecoderVideo();
 
-    void set_start_time(TimestampFF ts);
-    TimestampFF get_start_time() const noexcept;
-
-    FramePtr decode_packet(AVPacket* packet);
+    FramePtr decode_packet(const std::shared_ptr<IDataPacket>& packet);
 
     StreamId get_stream_id() const;
     bool is_opened() const;
@@ -37,7 +35,7 @@ private:
 private:
     StreamId m_stream_index;
     CodecSafe m_codec;
-    CodecContextSafe m_codec_ctx;
+    DecoderContextSafe m_decoder_ctx;
     FrameSafe m_frame;
 
     SwsContextSafe m_sws;

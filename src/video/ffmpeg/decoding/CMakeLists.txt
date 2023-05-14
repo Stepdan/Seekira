@@ -27,6 +27,7 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
+    step::core_threading
     step::ff_utils
 )
 

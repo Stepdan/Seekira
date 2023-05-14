@@ -2,3 +2,4 @@ find_package(ffmpeg COMPONENTS avcodec avformat avfilter avdevice swscale swresa
 
 add_subdirectory(utils)
 add_subdirectory(decoding)
+add_subdirectory(wrapper)

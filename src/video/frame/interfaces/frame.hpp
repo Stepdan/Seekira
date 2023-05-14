@@ -185,12 +185,25 @@ using FramesPtrs = std::vector<FramePtr>;
 }  // namespace step::video
 
 template <>
-struct fmt::formatter<step::video::Frame> : formatter<string_view>
+struct fmt::formatter<step::video::Frame> : fmt::formatter<std::string_view>
 {
     template <typename FormatContext>
     auto format(const step::video::Frame& frame, FormatContext& ctx)
     {
-        return format_to(ctx.out(), "size: [{}], stride: {}, bpp: {}, pix_fmt: {}, ptr: {}, ts: {}", frame.size,
-                         frame.stride, frame.bpp(), frame.pix_fmt, (void*)frame.data(), frame.ts);
+        return fmt::format_to(ctx.out(), "{}, stride: {}, bpp: {}, pix_fmt: {}, ptr: {}, ts: {}", frame.size,
+                              frame.stride, frame.bpp(), frame.pix_fmt, (void*)frame.data(), frame.ts.count());
+    }
+};
+
+template <>
+struct fmt::formatter<step::video::FramePtr> : fmt::formatter<std::string_view>
+{
+    template <typename FormatContext>
+    auto format(const step::video::FramePtr& frame_ptr, FormatContext& ctx)
+    {
+        if (!frame_ptr)
+            return fmt::format_to(ctx.out(), "frame_ptr is null{}", "");
+
+        return fmt::format_to(ctx.out(), "{}", *(frame_ptr.get()));
     }
 };
