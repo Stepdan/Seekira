@@ -1,6 +1,6 @@
 #pragma once
 
-#include <video/ffmpeg/decoding/ff_demuxer.hpp>
+#include <video/ffmpeg/decoding/ff_parser.hpp>
 
 namespace step::video::ff {
 
@@ -23,7 +23,7 @@ public:
     void unregister_observer(IFrameSourceObserver* observer) override;
 
 private:
-    FFDemuxer m_demuxer;
+    ParserFF m_parser;
 };
 
 }  // namespace step::video::ff

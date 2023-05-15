@@ -23,4 +23,9 @@ AVPacket* create_packet(size_t size);
 AVPacket* copy_packet(const AVPacket* src);
 void release_packet(AVPacket** packet);
 
+int read_frame_fixed(AVFormatContext* ctx, AVPacket* pkt);
+
+int64_t stream_to_global(int64_t stream_time, const AVRational& stream_time_base);
+int64_t global_to_stream(int64_t global_time, const AVRational& stream_time_base);
+
 }  // namespace step::video::ff

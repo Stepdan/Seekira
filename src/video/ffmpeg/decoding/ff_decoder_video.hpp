@@ -1,10 +1,11 @@
 #pragma once
 
-#include "ff_types.hpp"
 #include "ff_types_safe.hpp"
 #include "ff_data_packet.hpp"
 
 #include "video/frame/interfaces/frame.hpp"
+
+#include <video/ffmpeg/utils/ff_types.hpp>
 
 #include <atomic>
 

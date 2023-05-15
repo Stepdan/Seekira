@@ -45,7 +45,7 @@ public:
     virtual std::shared_ptr<IBlob> get_data() const = 0;
 };
 
-class FFDataPacket : public IDataPacket
+class DataPacketFF : public IDataPacket
 {
 public:
     static std::shared_ptr<IDataPacket> create(AVPacket* packet, MediaType type, TimestampFF pts, TimestampFF dts,
@@ -53,15 +53,15 @@ public:
     //std::shared_ptr<IDataPacket> clone() const;
 
 public:
-    FFDataPacket(AVPacket* packet, MediaType type, TimestampFF pts, TimestampFF dts, TimeFF duration);
-    virtual ~FFDataPacket();
+    DataPacketFF(AVPacket* packet, MediaType type, TimestampFF pts, TimestampFF dts, TimeFF duration);
+    virtual ~DataPacketFF();
 
-    FFDataPacket(const FFDataPacket& rhs);
-    FFDataPacket& operator=(const FFDataPacket& rhs);
-    FFDataPacket(FFDataPacket&& rhs);
-    FFDataPacket& operator=(FFDataPacket&& rhs);
+    DataPacketFF(const DataPacketFF& rhs);
+    DataPacketFF& operator=(const DataPacketFF& rhs);
+    DataPacketFF(DataPacketFF&& rhs);
+    DataPacketFF& operator=(DataPacketFF&& rhs);
 
-    friend void swap(FFDataPacket& lhs, FFDataPacket& rhs) noexcept
+    friend void swap(DataPacketFF& lhs, DataPacketFF& rhs) noexcept
     {
         std::swap(lhs.m_packet, rhs.m_packet);
         std::swap(lhs.m_media_type, rhs.m_media_type);

@@ -8,22 +8,22 @@
 
 namespace step::video::ff {
 
-FFDataPacket::BlobPacket::BlobPacket(AVBufferRef* buf_ref, size_t size, uint8_t* data)
+DataPacketFF::BlobPacket::BlobPacket(AVBufferRef* buf_ref, size_t size, uint8_t* data)
     : m_buffer_ref(av_buffer_ref(buf_ref)), m_size(size), m_data(data)
 {
     if (!m_buffer_ref)
         STEP_THROW_RUNTIME("Unable to allocate memory for buffer: {}", sizeof(AVBufferRef));
 }
 
-FFDataPacket::BlobPacket::~BlobPacket() { av_buffer_unref(&m_buffer_ref); }
+DataPacketFF::BlobPacket::~BlobPacket() { av_buffer_unref(&m_buffer_ref); }
 
-std::shared_ptr<IDataPacket> FFDataPacket::create(AVPacket* packet, MediaType type, TimestampFF pts, TimestampFF dts,
+std::shared_ptr<IDataPacket> DataPacketFF::create(AVPacket* packet, MediaType type, TimestampFF pts, TimestampFF dts,
                                                   TimeFF duration)
 {
-    return std::shared_ptr<IDataPacket>(new FFDataPacket(packet, type, pts, dts, duration));
+    return std::shared_ptr<IDataPacket>(new DataPacketFF(packet, type, pts, dts, duration));
 }
 
-FFDataPacket::FFDataPacket(AVPacket* packet, MediaType type, TimestampFF pts, TimestampFF dts, TimeFF duration)
+DataPacketFF::DataPacketFF(AVPacket* packet, MediaType type, TimestampFF pts, TimestampFF dts, TimeFF duration)
     : m_packet(packet), m_media_type(type), m_pts(pts), m_dts(dts), m_duration(duration)
 {
     if (!m_packet->buf)
@@ -48,7 +48,7 @@ FFDataPacket::FFDataPacket(AVPacket* packet, MediaType type, TimestampFF pts, Ti
     m_blob = std::make_shared<BlobPacket>(m_packet->buf, m_packet->size, m_packet->data);
 }
 
-FFDataPacket::FFDataPacket(const FFDataPacket& rhs)
+DataPacketFF::DataPacketFF(const DataPacketFF& rhs)
     : m_packet(copy_packet(rhs.m_packet))
     , m_media_type(rhs.m_media_type)
     , m_pts(rhs.m_pts)
@@ -58,14 +58,14 @@ FFDataPacket::FFDataPacket(const FFDataPacket& rhs)
 {
 }
 
-FFDataPacket& FFDataPacket::operator=(const FFDataPacket& rhs)
+DataPacketFF& DataPacketFF::operator=(const DataPacketFF& rhs)
 {
-    FFDataPacket tmp(rhs);
+    DataPacketFF tmp(rhs);
     swap(*this, tmp);
     return *this;
 }
 
-FFDataPacket::FFDataPacket(FFDataPacket&& rhs)
+DataPacketFF::DataPacketFF(DataPacketFF&& rhs)
     : m_packet(std::move(rhs.m_packet))
     , m_media_type(std::move(rhs.m_media_type))
     , m_pts(std::move(rhs.m_pts))
@@ -75,22 +75,22 @@ FFDataPacket::FFDataPacket(FFDataPacket&& rhs)
 {
 }
 
-FFDataPacket& FFDataPacket::operator=(FFDataPacket&& rhs)
+DataPacketFF& DataPacketFF::operator=(DataPacketFF&& rhs)
 {
-    FFDataPacket tmp(std::move(rhs));
+    DataPacketFF tmp(std::move(rhs));
     swap(*this, tmp);
     return *this;
 }
 
-FFDataPacket::~FFDataPacket()
+DataPacketFF::~DataPacketFF()
 {
     av_packet_unref(m_packet);
     av_free(m_packet);
 }
 
-// std::shared_ptr<IDataPacket> FFDataPacket::clone() const
+// std::shared_ptr<IDataPacket> DataPacketFF::clone() const
 // {
-//     return std::make_shared<IDataPacket>(new FFDataPacket(*this));
+//     return std::make_shared<IDataPacket>(new DataPacketFF(*this));
 // }
 
 }  // namespace step::video::ff

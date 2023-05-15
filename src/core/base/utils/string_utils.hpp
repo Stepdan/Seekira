@@ -13,6 +13,8 @@ std::vector<std::string> split(std::string s, const std::string& d);
 
 bool starts_with(std::string_view s, std::string_view prefix);
 
+bool str_contains(const std::string& str, const std::string& substr);
+
 }  // namespace step::utils
 
 namespace step::utils {

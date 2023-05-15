@@ -29,4 +29,6 @@ bool starts_with(std::string_view s, std::string_view prefix)
     return prefix == s;
 }
 
+bool str_contains(const std::string& str, const std::string& substr) { return str.find(substr) != std::string::npos; }
+
 }  // namespace step::utils

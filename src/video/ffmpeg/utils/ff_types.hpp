@@ -13,8 +13,6 @@ enum class MediaType
     Undefined,
     Video,
     Audio,
-    SubtitleVideo,
-    SubtitleText
 };
 
 }  // namespace step::video::ff
