@@ -38,17 +38,35 @@ public:
 
     bool open_file(const std::string& filename);
 
+    void seek(StreamId index, TimestampFF time);
     std::shared_ptr<IDataPacket> read();
 
 private:
+    void reopen();
+    void close();
+
     bool find_streams();
 
     AVPacket* read_packet();
     void restore_packet_pts(AVPacket*);
-    void detect_runtime_timeshift(AVPacket const* const pkt);
+
     TimeFF calc_container_shift(StreamId index);
 
     bool is_codec_found(const AVFormatContext* ctx, AVCodecID codec_id);
+    bool is_compressed_swf() const;
+    bool is_cover(StreamId index) const;  // Detect if current video stream contains only cover art
+    bool is_binary_seek() const;
+
+    bool find_stream_info();
+
+    void detect_runtime_timeshift(AVPacket const* const pkt);  // Заполняет m_timeShift и m_dtsShifts при чтении
+    void detect_mp4drm();
+    void detect_fps();
+    void detect_bitrate();
+
+    TimeFF get_duration() const;
+    int64_t get_size() const;
+    StreamId get_seek_stream();
 
     // threading::ThreadWorker
 private:
@@ -88,7 +106,11 @@ private:
     std::shared_ptr<AVFormatInputFF> m_input;
     std::vector<TimestampFF> m_dts_shifts;
 
+    std::map<StreamId, TimestampFF> m_last_seek_ts;
+
     std::vector<bool> m_first_stream_pkt_received;
+    std::map<StreamId, int64_t>
+        m_custom_bitrates;  ///< Переопределённые битрейты потоков. Храним отдельно, т.к. в AVFormatContext они могут перезаписаться при очередном чтении хедера внутри потока.
 
     int m_default_chapter_list_index = -1;
     bool m_contains_invalid_stream_id = false;

@@ -1,6 +1,7 @@
 #pragma once
 
 extern "C" {
+#include <libavformat/format.h>
 #include <libavcodec/packet.h>
 #include <libavutil/error.h>
 }
@@ -8,6 +9,9 @@ extern "C" {
 #include <cstring>
 
 namespace step::video::ff {
+
+constexpr uint16_t MAX_STREAMS{1024};
+constexpr AVRational TIME_BASE_Q{1, AV_TIME_BASE};
 
 // https://github.com/bmewj/video-app/blob/master/src/video_reader.cpp
 // av_err2str returns a temporary array. This doesn't work in gcc.
