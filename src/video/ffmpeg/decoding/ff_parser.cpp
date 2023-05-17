@@ -292,6 +292,26 @@ bool ParserFF::open_file(const std::string& filename)
     return true;
 }
 
+int ParserFF::get_stream_count() const { return m_input ? m_stream_count : 0; }
+
+TimeFF ParserFF::get_stream_duration(StreamId index) const { return m_input ? m_input->context()->duration; }
+
+MediaType ParserFF::get_stream_type(StreamId index) const
+{
+    if (!m_input || m_stream_count <= index)
+        return MediaType::Undefined;
+
+    switch (m_input->context()->streams[index]->codecpar->codec_type)
+    {
+        case AVMEDIA_TYPE_AUDIO:
+            return MediaType::Audio;
+        case AVMEDIA_TYPE_VIDEO:
+            return MediaType::Video;
+        default:
+            return MediaType::Undefined;
+    }
+}
+
 void ParserFF::reopen()
 {
     auto input = m_input;

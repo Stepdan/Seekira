@@ -41,6 +41,13 @@ public:
     void seek(StreamId index, TimestampFF time);
     std::shared_ptr<IDataPacket> read();
 
+    TimeFF get_duration() const;
+    StreamId get_seek_stream();
+    int64_t get_size() const;
+    int get_stream_count() const;
+    TimeFF get_stream_duration(StreamId index) const;
+    MediaType get_stream_type(StreamId index) const;
+
 private:
     void reopen();
     void close();
@@ -63,10 +70,6 @@ private:
     void detect_mp4drm();
     void detect_fps();
     void detect_bitrate();
-
-    TimeFF get_duration() const;
-    int64_t get_size() const;
-    StreamId get_seek_stream();
 
     // threading::ThreadWorker
 private:
