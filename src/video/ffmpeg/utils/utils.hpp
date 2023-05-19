@@ -1,7 +1,7 @@
 #pragma once
 
 extern "C" {
-#include <libavformat/format.h>
+#include <libavformat/avformat.h>
 #include <libavcodec/packet.h>
 #include <libavutil/error.h>
 }

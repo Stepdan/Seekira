@@ -1,8 +1,8 @@
-#include "ff_data_packet.hpp"
+#include "data_packet.hpp"
 
 #include <core/exception/assert.hpp>
 
-#include <video/ffmpeg/utils/ff_utils.hpp>
+#include <video/ffmpeg/utils/utils.hpp>
 
 #include <utility>
 

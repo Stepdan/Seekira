@@ -1,13 +1,13 @@
-#include "ff_parser.hpp"
-#include "ff_data_packet.hpp"
+#include "parser.hpp"
+#include "data_packet.hpp"
 
 #include <core/log/log.hpp>
 
 #include <core/base/types/media_types.hpp>
 #include <core/base/utils/string_utils.hpp>
 
-#include <video/ffmpeg/utils/ff_utils.hpp>
-#include <video/ffmpeg/utils/ff_media_types_utils.hpp>
+#include <video/ffmpeg/utils/utils.hpp>
+#include <video/ffmpeg/utils/media_types_utils.hpp>
 
 extern "C" {
 #include <libavdevice/avdevice.h>

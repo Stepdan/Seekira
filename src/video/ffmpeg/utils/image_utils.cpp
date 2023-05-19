@@ -1,4 +1,4 @@
-#include "ff_image_utils.hpp"
+#include "image_utils.hpp"
 
 #include <core/base/utils/find_pair.hpp>
 #include <core/exception/assert.hpp>

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ff_parser.hpp"
-#include "ff_packet_queue.hpp"
+#include "parser.hpp"
+#include "packet_queue.hpp"
 
 namespace step::video::ff {
 

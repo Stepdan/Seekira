@@ -1,13 +1,13 @@
 #pragma once
 
-#include "ff_decoder_video.hpp"
+#include "decoder_video.hpp"
 
 #include <core/base/interfaces/event_handler_list.hpp>
 #include <core/threading/thread_worker.hpp>
 
 #include <video/frame/interfaces/frame_interfaces.hpp>
 
-#include <video/ffmpeg/utils/ff_types.hpp>
+#include <video/ffmpeg/utils/types.hpp>
 
 #include <functional>
 #include <map>

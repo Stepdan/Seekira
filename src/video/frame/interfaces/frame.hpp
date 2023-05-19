@@ -35,7 +35,8 @@ public:
     /*! @brief Returns a frame view over the specified data.
     */
     static Frame create(const FrameSize& size, size_t stride, PixFmt fmt, DataTypePtr data,
-                        Deleter deleter = Frame::default_deleter, Timestamp t = get_current_timestamp())
+                        Deleter deleter = Frame::default_deleter, Timestamp t = get_current_timestamp(),
+                        int64_t dur = -1)
     {
         Frame frame;
         frame.m_data = data;
@@ -44,6 +45,7 @@ public:
         frame.pix_fmt = fmt;
         frame.stride = stride;
         frame.ts = t;
+        frame.duration = dur;
 
         return frame;
     }
@@ -51,9 +53,9 @@ public:
     /*! @brief Returns a new frame that holds a copy of the data.
     */
     static Frame create_deep(const FrameSize& size, size_t stride, PixFmt fmt, DataTypePtr data,
-                             Timestamp t = get_current_timestamp())
+                             Timestamp t = get_current_timestamp(), int64_t dur = -1)
     {
-        Frame frame_view = create(size, stride, fmt, data, Frame::empty_deleter);
+        Frame frame_view = create(size, stride, fmt, data, Frame::empty_deleter, t, dur);
 
         // Explicit copy constructor
         Frame frame = frame_view;
@@ -70,7 +72,8 @@ public:
         m_deleter = Frame::default_deleter;
     }
 
-    Frame(const Frame& rhs) : size(rhs.size), stride(rhs.stride), pix_fmt(rhs.pix_fmt), ts(rhs.ts)
+    Frame(const Frame& rhs)
+        : size(rhs.size), stride(rhs.stride), pix_fmt(rhs.pix_fmt), ts(rhs.ts), duration(rhs.duration)
     {
         reset();
 
@@ -91,6 +94,7 @@ public:
         , stride(std::exchange(rhs.stride, 0))
         , pix_fmt(std::exchange(rhs.pix_fmt, PixFmt::Undefined))
         , ts(std::exchange(rhs.ts, get_current_timestamp()))
+        , duration(std::exchange(rhs.duration, -1))
     {
     }
     Frame& operator=(Frame&& rhs)
@@ -123,6 +127,7 @@ public:
         std::swap(lhs.pix_fmt, rhs.pix_fmt);
         std::swap(lhs.stride, rhs.stride);
         std::swap(lhs.ts, rhs.ts);
+        std::swap(lhs.duration, rhs.duration);
     }
 
     bool is_valid() const noexcept
@@ -176,6 +181,7 @@ public:
     size_t stride{0};
     PixFmt pix_fmt{PixFmt::Undefined};
     Timestamp ts{step::get_current_timestamp()};
+    int64_t duration{-1};
 };
 
 using Frames = std::vector<Frame>;
@@ -190,8 +196,9 @@ struct fmt::formatter<step::video::Frame> : fmt::formatter<std::string_view>
     template <typename FormatContext>
     auto format(const step::video::Frame& frame, FormatContext& ctx)
     {
-        return fmt::format_to(ctx.out(), "{}, stride: {}, bpp: {}, pix_fmt: {}, ptr: {}, ts: {}", frame.size,
-                              frame.stride, frame.bpp(), frame.pix_fmt, (void*)frame.data(), frame.ts.count());
+        return fmt::format_to(ctx.out(), "{}, stride: {}, bpp: {}, pix_fmt: {}, ptr: {}, ts: {}, duration: {}",
+                              frame.size, frame.stride, frame.bpp(), frame.pix_fmt, (void*)frame.data(),
+                              frame.ts.count(), frame.duration);
     }
 };
 
