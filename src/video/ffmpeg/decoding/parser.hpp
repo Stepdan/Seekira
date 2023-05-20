@@ -7,14 +7,10 @@
 
 #include <video/frame/interfaces/frame_interfaces.hpp>
 
-#include <video/ffmpeg/utils/types.hpp>
-
 #include <functional>
 #include <map>
 
 namespace step::video::ff {
-
-constexpr TimeFF MAX_DURATION = std::numeric_limits<TimeFF>::max();
 
 class AVFormatInputFF
 {
@@ -140,7 +136,7 @@ private:
     FormatContextInputSafe m_format_input_ctx;
     std::map<StreamId, AVStream*> m_video_streams;
 
-    std::unique_ptr<FFDecoderVideo> m_video_decoder;
+    std::unique_ptr<DecoderVideoFF> m_video_decoder;
 
     step::EventHandlerList<IFrameSourceObserver> m_frame_observers;
 

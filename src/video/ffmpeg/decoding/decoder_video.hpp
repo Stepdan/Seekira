@@ -5,8 +5,6 @@
 
 #include "video/frame/interfaces/frame.hpp"
 
-#include <video/ffmpeg/utils/types.hpp>
-
 #include <atomic>
 #include <queue>
 #include <ratio>

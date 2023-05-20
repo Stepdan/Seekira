@@ -1,7 +1,8 @@
 #include "utils.hpp"
-#include "types.hpp"
 
 #include <core/exception/assert.hpp>
+
+#include <video/ffmpeg/interfaces/types.hpp>
 
 extern "C" {
 #include <libavutil/mem.h>

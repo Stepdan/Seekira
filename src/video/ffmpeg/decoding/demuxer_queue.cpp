@@ -83,7 +83,7 @@ bool DemuxerQueue::seek_internal(TimestampFF time)
         MediaType media_type = m_parser->get_stream_type(idx);
         if (media_type != MediaType::Audio && media_type != MediaType::Video)
         {
-            STEP_LOG(L_DEBUG, "Stream {} is not video or audio, it can't be used for seek - SKIPPED");
+            STEP_LOG(L_DEBUG, "Stream {} is not video or audio, it can't be used for seek - SKIPPED", idx);
             continue;
         }
         reset_queue();
@@ -260,19 +260,19 @@ bool DemuxerQueue::read_packets_from_parser(int packetCount)
         }
         // если пришел ключевой пакет, а его временная метка меньше, чем SeekTime
         // то все предыдущие пакеты можно удалить - они не нужны
-        bool resetQueue = false;
+        bool reset_queue = false;
         if (key_frame)
         {
             if (pts_time != AV_NOPTS_VALUE)
             {
-                resetQueue = (pts_time <= m_seek_time) && (duration > 0);
+                reset_queue = (pts_time <= m_seek_time) && (duration > 0);
             }
             else if (dts_time != AV_NOPTS_VALUE)
             {
-                resetQueue = (dts_time <= m_seek_time) && (duration > 0);
+                reset_queue = (dts_time <= m_seek_time) && (duration > 0);
             }
 
-            if (resetQueue)  // удаляем пакеты!!!
+            if (reset_queue)  // удаляем пакеты!!!
             {
                 queue.reset();
             }

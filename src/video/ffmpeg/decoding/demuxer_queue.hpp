@@ -3,26 +3,28 @@
 #include "parser.hpp"
 #include "packet_queue.hpp"
 
+#include <video/ffmpeg/interfaces/demuxer.hpp>
+
 namespace step::video::ff {
 
-class DemuxerQueue
+class DemuxerQueue : public IDemuxer
 {
 public:
     DemuxerQueue(const std::shared_ptr<ParserFF>& parser);
     ~DemuxerQueue();
 
-    TimeFF get_duration() const;
-    TimeFF get_stream_duration(StreamId stream) const;
+    TimeFF get_duration() const override;
+    TimeFF get_stream_duration(StreamId stream) const override;
 
-    int get_stream_count() const;
-    MediaType get_stream_type(StreamId index) const;
+    int get_stream_count() const override;
+    MediaType get_stream_type(StreamId index) const override;
 
-    void enable_stream(StreamId stream, bool value);
+    void enable_stream(StreamId stream, bool value) override;
 
-    TimestampFF seek(TimestampFF time);
-    bool is_eof_reached();
-    std::shared_ptr<IDataPacket> read(StreamId stream);
-    void release_internal_data(StreamId stream);
+    TimestampFF seek(TimestampFF time) override;
+    bool is_eof_reached() override;
+    std::shared_ptr<IDataPacket> read(StreamId stream) override;
+    void release_internal_data(StreamId stream) override;
 
 private:
     void close();

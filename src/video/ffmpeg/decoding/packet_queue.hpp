@@ -1,6 +1,6 @@
 #pragma once
 
-#include <video/ffmpeg/utils/types.hpp>
+#include <video/ffmpeg/interfaces/types.hpp>
 
 #include <list>
 #include <memory>

@@ -1,5 +1,5 @@
-project(step_ff_utils)
-set(PROJECT_ALIAS ff_utils)
+project(step_ff_interfaces)
+set(PROJECT_ALIAS ff_interfaces)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)
@@ -16,7 +16,7 @@ source_group("Headers" FILES ${HEADERS})
 source_group("Sources" FILES ${SOURCES})
 
 add_library(${PROJECT_NAME} STATIC)
-add_library(step::ff_utils ALIAS ${PROJECT_NAME})
+add_library(step::ff_interfaces ALIAS ${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME}
     PRIVATE
@@ -27,12 +27,17 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    step::ff_interfaces
+    ffmpeg::avcodec
+    ffmpeg::avformat
+    ffmpeg::avutil
+    ffmpeg::avdevice
+    ffmpeg::swscale
+    step::frame_utils
 )
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    STEPKIT_MODULE_NAME="FF_UTILS"
+    STEPKIT_MODULE_NAME="FF_INTERFACES"
     PUBLIC
     BUILD_WITH_EASY_PROFILER
 )
