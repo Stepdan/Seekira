@@ -2,10 +2,7 @@
 
 #include "decoder_video.hpp"
 
-#include <core/base/interfaces/event_handler_list.hpp>
-#include <core/threading/thread_worker.hpp>
-
-#include <video/frame/interfaces/frame_interfaces.hpp>
+#include <video/frame/interfaces/frame.hpp>
 
 #include <functional>
 #include <map>
@@ -26,7 +23,7 @@ private:
     AVFormatContext* m_context{nullptr};
 };
 
-class ParserFF : public threading::ThreadWorker, public IFrameSource
+class ParserFF
 {
 public:
     ParserFF();
@@ -48,8 +45,6 @@ private:
     void reopen();
     void close();
 
-    bool find_streams();
-
     AVPacket* read_packet();
     void restore_packet_pts(AVPacket*);
 
@@ -61,27 +56,24 @@ private:
     bool is_binary_seek() const;
 
     bool find_stream_info();
+    TimeFF find_overall_stream_duration();
 
-    void detect_runtime_timeshift(AVPacket const* const pkt);  // Заполняет m_timeShift и m_dtsShifts при чтении
     void detect_mp4drm();
     void detect_fps();
     void detect_bitrate();
 
-    // threading::ThreadWorker
-private:
-    void worker_thread();
+    bool detect_vob_chapters();
+    bool detect_vob_chapters(StreamId stream_id, std::vector<int64_t>& stream_durations);
 
-    // IFrameSource
-public:
-    void register_observer(IFrameSourceObserver* observer) override
-    {
-        m_frame_observers.register_event_handler(observer);
-    }
+    using AVPacketUnique = std::unique_ptr<AVPacket, std::function<void(AVPacket*)>>;
+    void detect_time_shift(const std::vector<AVPacketUnique>& first_packets);
+    void detect_runtime_timeshift(AVPacket const* const pkt);  // Заполняет m_timeShift и m_dtsShifts при чтении
 
-    void unregister_observer(IFrameSourceObserver* observer) override
-    {
-        m_frame_observers.unregister_event_handler(observer);
-    }
+    bool detect_other_info();
+
+    std::vector<AVPacketUnique> get_first_packets();
+
+    int seek_to_zero();
 
 private:
     struct ChapterVOB
@@ -132,15 +124,6 @@ private:
     bool m_format_MpegTs = false;
     bool m_format_DAV = false;
     bool m_format_ASF = false;
-
-    FormatContextInputSafe m_format_input_ctx;
-    std::map<StreamId, AVStream*> m_video_streams;
-
-    std::unique_ptr<DecoderVideoFF> m_video_decoder;
-
-    step::EventHandlerList<IFrameSourceObserver> m_frame_observers;
-
-    bool m_is_local_file{true};
 };
 
 }  // namespace step::video::ff

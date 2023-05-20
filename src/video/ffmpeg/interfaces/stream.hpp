@@ -11,7 +11,7 @@ public:
 
     virtual TimeFF get_duration() const = 0;
     virtual TimestampFF get_position() = 0;
-    virtual std::shared_ptr<IDataPacket> read() = 0;
+    virtual DataPacketPtr read() = 0;
     virtual void request_seek(TimestampFF time, const std::shared_ptr<IStream>& result_checker) = 0;
     virtual void do_seek() = 0;
     virtual bool get_seek_result() = 0;

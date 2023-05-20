@@ -1,6 +1,6 @@
 #include <core/base/json/json_utils.hpp>
 
-#include <video/ffmpeg/wrapper/ff_wrapper.hpp>
+#include <video/ffmpeg/wrapper/wrapper.hpp>
 
 #include <core/log/log.hpp>
 
@@ -73,7 +73,7 @@ TEST_F(FFTest, ff_wrapper_open_file)
     EXPECT_NO_THROW(m_ff_wrapper->open_file("C:/Work/test_video/IMG_5903.MOV"));
 }
 
-TEST_F(FFTest, ff_wrapper_playing_file)
+TEST_F(FFTest, ff_wrapper_read_first_packet)
 {
     const auto init_ff_wrapper = [this]() {
         m_ff_wrapper = std::make_unique<FFWrapper>();

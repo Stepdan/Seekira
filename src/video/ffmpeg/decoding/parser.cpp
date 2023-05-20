@@ -59,6 +59,192 @@ const AVRational& get_available_fps(const AVStream* stream)
     return stream->r_frame_rate;
 }
 
+std::string make_extension(const std::string& str)
+{
+    // Предполагаем, что пришло что-то типа ".MOV"
+    // Убираем точку и приводим к нижнему регистру
+
+    STEP_ASSERT(!str.empty(), "Invalid str for make_extension!");
+    auto ext = str.substr(1, str.length());
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+    return ext;
+}
+
+struct PacketDesc
+{
+    TimestampFF m_pts;
+    TimestampFF m_pos;
+    TimeFF m_duration;
+    size_t m_size;
+};
+
+bool get_current_packet_position(AVFormatContext* ctx, StreamId stream, PacketDesc& packet)
+{
+    while (true)
+    {
+        AVPacket pkt;
+        av_init_packet(&pkt);
+        int res = read_frame_fixed(ctx, &pkt);
+        if (res < 0)
+        {
+            return false;
+        }
+        if (pkt.pts != AV_NOPTS_VALUE && static_cast<StreamId>(pkt.stream_index) == stream)
+        {
+            packet = {pkt.pts, pkt.pos, pkt.duration, size_t(pkt.size)};
+            av_packet_unref(&pkt);
+            return true;
+        }
+        av_packet_unref(&pkt);
+    }
+}
+
+bool get_time_at_position(AVFormatContext* ctx, TimestampFF seek_pos, TimestampFF& packet_ts, TimestampFF& packet_pos,
+                          StreamId stream)
+{
+    if (av_seek_frame(ctx, -1, seek_pos, AVSEEK_FLAG_BYTE) < 0)
+    {
+        assert(0);
+        return false;
+    }
+
+    PacketDesc pkt = {};
+    bool res = get_current_packet_position(ctx, stream, pkt);
+
+    packet_ts = pkt.m_pts;
+    if (res && pkt.m_pos < 0)
+        packet_pos = seek_pos;
+    else
+        packet_pos = pkt.m_pos;
+
+    return res;
+}
+
+bool get_min_time_at_position(AVFormatContext* ctx, int64_t seek_pos, TimestampFF& packet_ts, int64_t& packet_pos,
+                              StreamId stream)
+{
+    const size_t PROBE_SIZE = 10;
+
+    if (av_seek_frame(ctx, -1, seek_pos, AVSEEK_FLAG_BYTE) < 0)
+    {
+        assert(0);
+        return false;
+    }
+
+    bool res = false;
+    packet_ts = AV_NOPTS_VALUE;
+    packet_pos = -1;
+    for (size_t i = 0; i < PROBE_SIZE; ++i)
+    {
+        PacketDesc pkt = {};
+
+        const bool curRes = get_current_packet_position(ctx, stream, pkt);
+        res = res || curRes;
+        if (curRes == false)
+            break;
+
+        if (packet_ts == AV_NOPTS_VALUE)
+            packet_ts = pkt.m_pts;
+        else if (pkt.m_pts != AV_NOPTS_VALUE)
+            packet_ts = std::min(packet_ts, pkt.m_pts);
+
+        if (packet_pos < 0)
+        {
+            if (pkt.m_pos < 0)
+                packet_pos = seek_pos;
+            else
+                packet_pos = pkt.m_pos;
+        }
+    }
+
+    if (res == true)
+    {
+        // seek: set the position like after call of GetTimeAtPosition
+        TimestampFF pts;
+        TimestampFF pos;
+        get_time_at_position(ctx, seek_pos, pts, pos, stream);
+    }
+
+    return res;
+}
+
+bool find_end_of_chapter(AVFormatContext* ctx,    ///< контекст
+                         TimestampFF search_pos,  ///< начальная позиция для поиска
+                         int64_t max_size,  ///< максимальный объем данных для чтения
+                         TimestampFF& end_pts,  ///< последняя временная метка закончившегося чаптера
+                         TimestampFF& new_pts,  ///< начальная временная метка нового чаптера
+                         TimestampFF& new_pos,     ///< позиция начала нового чаптера
+                         int64_t& data_precessed,  ///< кол-во прочитанных байтов
+                         StreamId stream)  ///< индекс потока, для которого производится поиск
+{
+    PacketDesc prev_pkt = {};
+
+    if (search_pos <= 0)
+    {
+        if (!get_time_at_position(ctx, -search_pos, prev_pkt.m_pts, prev_pkt.m_pos, stream))
+            return false;
+    }
+    else
+    {
+        prev_pkt.m_pos = search_pos;
+        prev_pkt.m_pts = end_pts;
+    }
+
+    const int64_t start_pos = prev_pkt.m_pos;
+    PacketDesc pkt = prev_pkt;
+
+    while (get_current_packet_position(ctx, stream, pkt))
+    {
+        if (pkt.m_pos < 0)
+            pkt.m_pos = prev_pkt.m_pos + prev_pkt.m_size;
+
+        if (pkt.m_pos < prev_pkt.m_pos)
+        {
+            /// игнорируем такие пакеты, т.к. они из прошлого
+            assert(0);
+            continue;
+        }
+
+        new_pts = pkt.m_pts;
+        new_pos = pkt.m_pos;
+        data_precessed = pkt.m_pos - start_pos;
+        if (llabs(pkt.m_pts - prev_pkt.m_pts) > AV_SECOND)
+        {
+            const size_t MAX_PTS_REORDER_PROBE_SIZE = 10;
+
+            end_pts = prev_pkt.m_pts +
+                      prev_pkt.m_duration * 2;  // Add one extra duration to solve possible audio stream intersection.
+            for (size_t i = 0; i < MAX_PTS_REORDER_PROBE_SIZE; ++i)
+            {
+                const bool res = get_current_packet_position(ctx, stream, pkt);
+                if (res == false)
+                    break;
+                if (pkt.m_pts < new_pts)
+                    new_pts = pkt.m_pts;
+            }
+            return true;
+        }
+
+        if ((max_size > 0) && (data_precessed > max_size))
+        {
+            /// не смогли найти конец чаптера на указанном отрезке файла
+            return false;
+        }
+
+        const TimestampFF max_stream_pts = std::max(prev_pkt.m_pts, pkt.m_pts);
+        prev_pkt = pkt;
+        prev_pkt.m_pts = max_stream_pts;
+    }
+    end_pts = prev_pkt.m_pts +
+              prev_pkt.m_duration * 2;  // Add one extra duration to solve possible audio stream intersection.
+    if (pkt.m_pos >= 0)
+        new_pos = pkt.m_pos;
+    else if (prev_pkt.m_pos >= 0)
+        new_pos = prev_pkt.m_pos + prev_pkt.m_size;
+    new_pts = AV_NOPTS_VALUE;  /// конец файла
+    return true;
+}
+
 }  // namespace step::video::ff
 
 namespace step::video::ff {
@@ -80,9 +266,9 @@ AVFormatInputFF::~AVFormatInputFF()
 
 namespace step::video::ff {
 
-ParserFF::ParserFF() : m_video_decoder(nullptr) {}
+ParserFF::ParserFF() {}
 
-ParserFF::~ParserFF() { stop_worker(); }
+ParserFF::~ParserFF() { close(); }
 
 bool ParserFF::open_file(const std::string& filename)
 {
@@ -93,7 +279,7 @@ bool ParserFF::open_file(const std::string& filename)
         return false;
     }
 
-    auto extension = path.extension().string();
+    auto extension = make_extension(path.extension().string());
     auto allowed_formats = get_supported_video_formats();
     if (std::ranges::none_of(allowed_formats, [&extension](const std::string& item) { return extension == item; }))
     {
@@ -229,7 +415,12 @@ bool ParserFF::open_file(const std::string& filename)
         m_format_name = FORMAT_FILE::FORMAT_SAMI;
     }
 
-    //FindStreamInfo
+    if (!find_stream_info())
+    {
+        m_input.reset();
+        STEP_THROW_RUNTIME("Can't find stream info during open file {}. Format name {}, streams count {}", m_filename,
+                           m_format_name, m_stream_count);
+    }
 
     return true;
 }
@@ -323,9 +514,9 @@ void ParserFF::seek(StreamId index, TimestampFF time)
         m_prev_pkt_times.clear();
     }
 
-    // m_prevPktTimes.count(index) indicates that we have asf file with stream where all pts = NOPTS_VALUE
+    // m_prev_pktTimes.count(index) indicates that we have asf file with stream where all pts = NOPTS_VALUE
     // After seek in nonzero position ffmpeg returns packets from zero position so we set time to 0
-    // m_firstStreamPktReceived allow us to skip packets with pts = NOPTS_VALUE in the middle of stream @see RestorePacketPTS for details
+    // m_first_stream_pkt_received allow us to skip packets with pts = NOPTS_VALUE in the middle of stream @see RestorePacketPTS for details
     if (m_format_ASF && m_prev_pkt_times.count(index) > 0)
     {
         time = 0;
@@ -374,7 +565,7 @@ void ParserFF::seek(StreamId index, TimestampFF time)
 
     /// грубо определяем направление
     /// @warning cur_dts не является частью публичного API и его поведение может измениться
-    /// @note мы испольуем dts, который начинается с 0, а не с pStream->start_time,
+    /// @note мы испольуем dts, который начинается с 0, а не с stream->start_time,
     /// поэтому смещать pts нужно после определения направления seek-а!
     const AVStream* const stream = m_input->context()->streams[index];
     //bool seek_forward = ((stream->cur_dts != AV_NOPTS_VALUE) && (stream->cur_dts < stream_time));
@@ -388,7 +579,7 @@ void ParserFF::seek(StreamId index, TimestampFF time)
     bool seek_forward = ((m_last_seek_ts[index] != AV_NOPTS_VALUE) && (m_last_seek_ts[index] < stream_time));
 
     //VLOG(L2_TS) << "Seek " << (seekForward? "forward" : "backward" )
-    //	<< "["<<index << "]: "<<  pStream->cur_dts << "p to " << static_cast<long long>(streamTime) << "p\n";
+    //	<< "["<<index << "]: "<<  stream->cur_dts << "p to " << static_cast<long long>(streamTime) << "p\n";
 
     /// для каждого потока временная метка может быть своей, т.к. метки внутри файла могут начинаться не с 0
     /// в этом случае делаем сдвиг по времени
@@ -475,37 +666,6 @@ std::shared_ptr<IDataPacket> ParserFF::read()
     return DataPacketFF::create(pkt, type, packet_time_pts, packet_time_dts, packet_duration);
 }
 
-bool ParserFF::find_streams()
-{
-    m_video_streams.clear();
-
-    if (!m_format_input_ctx)
-    {
-        STEP_LOG(L_ERROR, "Can't find streams: empty format context!");
-        return false;
-    }
-
-    AVMediaType type = AVMEDIA_TYPE_UNKNOWN;
-    for (size_t i = 0; i < m_format_input_ctx->nb_streams; ++i)
-    {
-        if (AVMEDIA_TYPE_VIDEO == m_format_input_ctx->streams[i]->codecpar->codec_type)
-        {
-            auto* stream_ptr = m_format_input_ctx->streams[i];
-            STEP_LOG(L_INFO, "Found video stream: index {}", stream_ptr->index);
-            m_video_streams.insert({stream_ptr->index, stream_ptr});
-        }
-    }
-
-    if (m_video_streams.empty())
-    {
-        STEP_LOG(L_WARN, "No video streams found!");
-        return false;
-    }
-
-    STEP_LOG(L_INFO, "Found {} video streams", m_video_streams.size());
-    return true;
-}
-
 AVPacket* ParserFF::read_packet()
 {
     AVPacket* pkt;
@@ -514,7 +674,7 @@ AVPacket* ParserFF::read_packet()
     while (true)
     {
         pkt = create_packet(0);
-        res = read_frame_fixed(m_format_input_ctx.get(), pkt);
+        res = read_frame_fixed(m_input->context(), pkt);
         if (res < 0)
         {
             av_packet_unref(pkt);
@@ -529,7 +689,7 @@ AVPacket* ParserFF::read_packet()
 
         // иногда попадаются пакеты с номером несуществующего потока - пропускаем их
         STEP_LOG(L_WARN, "Read packet with wrong stream id: {}, max stream id: {}", pkt->stream_index,
-                 m_format_input_ctx->nb_streams);
+                 m_input->context()->nb_streams);
         av_packet_unref(pkt);
     }
 
@@ -688,7 +848,7 @@ void ParserFF::detect_runtime_timeshift(AVPacket const* const pkt)
     // invalid pts value of first packet - it is greater than start time  of stream
     // 2. Value of pts of first packets differs during different reads of the same file
     // To shift all packets it is necessary to update shift value (stored in m_timeShift) at every read
-    // so for Seek with time = 0 perform m_firstStreamPktReceived cleaning
+    // so for Seek with time = 0 perform m_first_stream_pkt_received cleaning
     if (m_first_stream_pkt_received[idx])
         return;
 
@@ -805,6 +965,11 @@ bool ParserFF::find_stream_info()
     }
 
     m_stream_count = m_input->context()->nb_streams;
+    m_time_shift.resize(m_stream_count);
+    m_gen_pts.resize(m_stream_count);
+
+    std::fill(std::begin(m_gen_pts), std::end(m_gen_pts), 0);
+    std::fill(std::begin(m_time_shift), std::end(m_time_shift), 0);
 
     std::set<int> streamsId;
     std::map<AVMediaType, StreamId> first_streams_by_type;
@@ -878,11 +1043,43 @@ bool ParserFF::find_stream_info()
                 m_input->context()->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_DATA)
             {
                 STEP_LOG(L_WARN,
-                         "Invalid input file extension: MPEG-PS with DVD_NAV data stream detected in NOT .vob or .dat "
+                         "Invalid input file extension: MPEG-PS with DVD_NAV data stream detected in "
+                         "NOT .vob or .dat "
                          "file. m_formatVOB set true");
                 m_format_VOB = true;
             }
         }
+    }
+
+    /*
+	 * @warning
+	 * For CODEC_ID_APNG, you cannot perform positioning until you manually determine the duration.
+	 * After each positioning at 0, packets begin to arrive with different timestamps.
+	 * This will lead to an incorrect duration of stream.
+	 * So we first determine the duration for APNG.
+	 * ffmpeg bug, fixed from version 4.1
+	 */
+    if (step::utils::str_contains(m_input->context()->iformat->name, "apng"))
+    {
+        if (m_format_VRO || m_format_VOB)
+            detect_vob_chapters();
+        else
+            detect_other_info();
+
+        std::vector<AVPacketUnique> const first_packets = get_first_packets();
+        detect_time_shift(first_packets);
+        //GetFirstPacketExtradata(first_packets);
+    }
+    else
+    {
+        std::vector<AVPacketUnique> const first_packets = get_first_packets();
+        detect_time_shift(first_packets);
+        //GetFirstPacketExtradata(first_packets);
+
+        if (m_format_VRO || m_format_VOB)
+            detect_vob_chapters();
+        else
+            detect_other_info();
     }
 
     detect_fps();
@@ -1213,6 +1410,591 @@ StreamId ParserFF::get_seek_stream()
     }
 
     return bestIndex;
+}
+
+struct SplitPoint
+{
+    int64_t pos;
+    TimestampFF pts;
+
+    SplitPoint()
+    {
+        pos = -1;
+        pts = AV_NOPTS_VALUE;
+    }
+};
+using SplitList = std::vector<SplitPoint>;
+
+bool ParserFF::detect_vob_chapters()
+{
+    static StreamId InvalidIndex = -1;
+
+    bool ret = true;
+    std::vector<int64_t> streams_durations;
+    StreamId first_video_index = InvalidIndex;
+    StreamId first_audio_index = InvalidIndex;
+    size_t videoStreamsCount = 0;
+    for (StreamId i = 0; i < m_stream_count; ++i)
+    {
+        const auto type = m_input->context()->streams[i]->codecpar->codec_type;
+
+        if (type != AVMEDIA_TYPE_VIDEO && type != AVMEDIA_TYPE_AUDIO)
+            continue;
+
+        if (type == AVMEDIA_TYPE_VIDEO)
+            ++videoStreamsCount;
+
+        if (type == AVMEDIA_TYPE_VIDEO && first_video_index == InvalidIndex)
+            first_video_index = i;
+        if (type == AVMEDIA_TYPE_AUDIO && first_audio_index == InvalidIndex)
+            first_audio_index = i;
+
+        ret = ret && detect_vob_chapters(i, streams_durations);
+    }
+
+    if (first_video_index != InvalidIndex)
+        m_default_chapter_list_index = first_video_index;
+    else if (first_audio_index != InvalidIndex)
+        m_default_chapter_list_index = first_audio_index;
+    else
+        m_default_chapter_list_index = 0;
+
+    if (ret && !streams_durations.empty())
+    {
+        const float MAX_RELATIVE_CHAPTER_SIZE_DIFF = 5;  // %
+
+        bool sync_possible = videoStreamsCount == 1;
+        size_t videoStreamChCount = m_chapters[first_video_index].size();
+        if (sync_possible)
+            for (const auto& stream : m_chapters)
+                if (stream.second.size() != videoStreamChCount)
+                {
+                    sync_possible = false;
+                    break;
+                }
+
+        m_input->context()->duration = *std::max_element(streams_durations.cbegin(), streams_durations.cend());
+
+        if (sync_possible)
+        {
+            // ищем совпадающие главы и устанавливаем для них одинаковое смещение
+            for (const auto& ch : m_chapters[first_video_index])
+            {
+                const TimestampFF mid_pos = (ch.pos_end + ch.pos_start) / 2;
+                const float len = static_cast<float>(std::abs(ch.pts_end - ch.pts_start));
+
+                for (auto& stream : m_chapters)
+                {
+                    if (stream.first == first_video_index)
+                        continue;
+                    for (auto& procCh : stream.second)
+                    {
+                        const float procLen = static_cast<float>(std::abs(procCh.pts_end - procCh.pts_start));
+                        const float relDiff = static_cast<float>(std::abs(len / procLen - 1.) * 100.);
+
+                        if (procCh.pos_start <= mid_pos && mid_pos <= procCh.pos_end &&
+                            relDiff <
+                                MAX_RELATIVE_CHAPTER_SIZE_DIFF)  // главы пересекаются и их длины отличаются не более чем на 5%
+                        {
+                            procCh.time_shift = ch.time_shift;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return ret;
+}
+
+bool ParserFF::detect_vob_chapters(StreamId stream_id, std::vector<int64_t>& streams_durations)
+{
+    SplitList points;
+    const int64_t MB = 1000 * 1000;
+    ///< Примерный размер чаптера (в байтах), которые записывают камеры или dvd-рекодеры
+    const int64_t AVG_CHAPTER_SIZE = 20 * MB;
+    const int64_t file_size = get_size();  ///< Размер файла
+
+    TimestampFF new_pts = AV_NOPTS_VALUE;  ///< начальная временная метка нового чаптера
+    TimestampFF new_pos = 0;               ///< позиция начала нового чаптера
+
+    if (!get_min_time_at_position(m_input->context(), new_pos, new_pts, new_pos, stream_id))
+    {
+        return false;
+    }
+
+    SplitPoint p;
+    p.pts = new_pts;
+    p.pos = new_pos;
+    points.push_back(p);
+
+    //	bool slowSearchDetection = true;
+    int64_t data_processed = 0;  ///< кол-во прочитанных байтов
+
+    while (true)
+    {
+        TimestampFF end_pts = new_pts;  ///< последняя временная метка закончившегося чаптера
+        TimestampFF start_pos = new_pos;
+        int64_t seek_bytes = 0;  ///< сколько байт надо пропустить от текущей позиции
+                                 /*
+		if ((file_size - start_pos > AVG_CHAPTER_SIZE) &&
+			(!slowSearchDetection))
+		{
+			/// небольшая эвристика для ускорения - пропускаем 2/3 предыдущего чаптера
+			seek_bytes = ((std::min)(data_processed, AVG_CHAPTER_SIZE) * 2) / 3;
+		}
+*/
+        TimestampFF search_pos =
+            (seek_bytes == 0)
+                ? start_pos
+                : (-start_pos - seek_bytes);  ///< инвертируем, чтобы выполнить позиционирование внутри FindEndOfChapter
+
+        int64_t search_distance = (std::max)(AVG_CHAPTER_SIZE, data_processed * 3 / 2);  ///< область поиска
+
+        bool res = find_end_of_chapter(m_input->context(), search_pos, search_distance, end_pts, new_pts, new_pos,
+                                       data_processed, stream_id);
+        data_processed += seek_bytes;  ///< добавляем байты, которые пропустили
+
+        if (!res)
+        {
+            /// на указанном интервале не обнаружен конец чаптера
+
+            /// грубо ищем интервал, на котором находится конец чаптера
+
+            int64_t diff_pts = new_pts - end_pts;
+            int64_t diff_pos = new_pos - start_pos;
+
+            int64_t test_step = AVG_CHAPTER_SIZE / 2;  ///< шаг, с которым мы проверяем PTS
+            int max_count = (int)((file_size - new_pos) / test_step);
+            int64_t threshold = 5;
+
+            int i;
+            for (i = 1; i < max_count; i++)
+            {
+                TimestampFF test_pos = new_pos + test_step * i;
+                int64_t testPTS;
+                int64_t testPOS;
+                if (!get_time_at_position(m_input->context(), test_pos, testPTS, testPOS, stream_id))
+                {
+                    assert(0);
+                    return false;
+                }
+
+                int64_t diff_pts2 = testPTS - end_pts;
+                int64_t diff_pos2 = testPOS - start_pos;
+
+                int64_t k1 = av_rescale(1000, diff_pts, diff_pts2);
+                int64_t k2 = av_rescale(1000, diff_pos, diff_pos2);
+
+                // Отношение изменения байтовой позиции к временной метке. Если на рассматриваемом интервале
+                // нет скачка pts, то позиция и время изменяются пропорционально и их отношение ~1.
+                int64_t k = (100 * k1 / k2);
+                k = llabs(k - 100);
+
+                if (k <= threshold)
+                {
+                    /// продолжаем поиск
+                    threshold = (std::max)(k, (int64_t)2);
+                    diff_pts = diff_pts2;
+                    diff_pos = diff_pos2;
+                    continue;
+                }
+                /// нашли конец чаптера
+                break;
+            }
+            search_pos = new_pos + test_step * (i - 1);
+            search_distance = AVG_CHAPTER_SIZE;
+
+            // ищем конец на найденном прблизительно интервале
+            res = find_end_of_chapter(m_input->context(), -search_pos, search_distance, end_pts, new_pts, new_pos,
+                                      data_processed, stream_id);
+            if (!res)
+            {
+                // не получилось, ищем конец без ограничения до конца файла
+                res = find_end_of_chapter(m_input->context(), -search_pos, 0, end_pts, new_pts, new_pos, data_processed,
+                                          stream_id);
+                if (!res)
+                {
+                    assert(0);  /// какая-то странная ошибка
+                    new_pts = AV_NOPTS_VALUE;
+                    new_pos = -1;
+                }
+            }
+        }
+
+        p.pts = end_pts;
+        p.pos = new_pos - 1;
+        points.push_back(p);
+
+        if (new_pts != AV_NOPTS_VALUE)
+        {
+            p.pts = new_pts;
+            p.pos = new_pos;
+            points.push_back(p);
+            continue;
+        }
+        break;
+    }
+
+    av_seek_frame(m_input->context(), -1, 0, AVSEEK_FLAG_BYTE);
+
+    ChapterList& currStreamChapters = m_chapters[stream_id];
+
+    TimeFF clock = 0;
+    points[0].pos = 0;
+    points[points.size() - 1].pos = file_size;
+
+    if (points.size() > 1)
+    {
+        for (unsigned int i = 0; i < points.size(); i += 2)
+        {
+            ChapterVOB ch;
+            ch.pos_start = points[i].pos;
+            ch.pos_end = points[i + 1].pos;
+            ch.pts_start = points[i].pts;
+            ch.pts_end = points[i + 1].pts;
+            ch.time_shift = clock - ch.pts_start;
+            const int64_t chapter_length = ch.pts_end - ch.pts_start;
+            clock += chapter_length;
+            STEP_LOG(L_TRACE, "Stream {}: {}: size {} ---> {}, start {} ({}), end: {} ({}), shift {}", stream_id, i / 2,
+                     ch.pos_end - ch.pos_start, chapter_length, ch.pts_start, ch.pos_start, ch.pts_end, ch.pos_end,
+                     ch.time_shift);
+            currStreamChapters.push_back(ch);
+        }
+    }
+
+    TimeFF duration = av_rescale(clock, AV_SECOND, 90000);  // временная шкала в dvd всегда 1/90000
+    streams_durations.push_back(duration);
+
+    return true;
+}
+
+#define MAX_FILE_SIZE_FOR_READ                                                                                         \
+    30000000  ///< максимальный размер файла, когда мы определяем длительность с помощью чтения
+
+bool ParserFF::detect_other_info()
+{
+    // const auto file_size = get_size();
+    // const int64_t overall_duration = find_overall_stream_duration();
+    // bool duration_detected = (overall_duration < MAX_DURATION);  // удалось обнаружить длительность из потоков;
+    // bool redetect_duration =
+    //     (m_input->context()->duration > MAX_DURATION ||
+    //      m_input->context()->duration <= 0);  // признак, что надо заново определить длительность с помощью чтения
+
+    // if (step::utils::str_contains(m_input->context()->iformat->name, "flv") &&  ///< Только для больших файлов FLV,
+    //     !duration_detected &&  ///< в которых нет данных о потоках в отдельности,
+    //     !redetect_duration &&  ///< но есть общая длительность файла
+    //     file_size > MAX_FILE_SIZE_FOR_READ)  ///< и при этом он большой для ручного поиска
+    // {
+    //     return true;
+    // }
+
+    // if (step::utils::str_contains(m_input->context()->iformat->name, "aac") ||  // для аас всегда определяем длительность
+    //     step::utils::str_contains(m_input->context()->iformat->name, "adts"))  // вручную
+    // {
+    //     redetect_duration = true;
+    //     duration_detected = false;
+    // }
+
+    // if (m_input->context()->nb_streams == 1 && step::utils::str_contains(m_input->context()->iformat->name, "wav") &&
+    //     m_input->context()->streams[0]->codecpar->codec_id == AV_CODEC_ID_MP3)  // вручную для MP3 внутри WAV
+    // {
+    //     redetect_duration = true;
+    //     duration_detected = false;
+    // }
+
+    // if (m_format_SWF)  /// для swf всегда определяем длительность вручную
+    // {
+    //     redetect_duration = true;
+    //     duration_detected = false;
+    // }
+
+    // /// проверяем, что размер файла соответствует битрейту
+    // int64_t bitrate = 0;
+    // for (unsigned int i = 0; i < m_input->context()->nb_streams; i++)
+    // {
+    //     const AVStream* const stream = m_input->context()->streams[i];
+    //     if (!stream)
+    //         continue;
+    //     const AVCodecParameters* const pCodec = stream->codecpar;
+    //     if (!pCodec)
+    //         continue;
+
+    //     int64_t codecBitrate = pCodec->bit_rate;
+    //     if (!codecBitrate)
+    //     {
+    //         if (pCodec->codec_type == AVMEDIA_TYPE_AUDIO)
+    //         {
+    //             /// если битрейт для аудио не задан, то считаем, что он 128 кбит
+    //             codecBitrate = 128000;
+    //         }
+    //         else if (pCodec->codec_type == AVMEDIA_TYPE_VIDEO && pCodec->width > 0 && pCodec->height > 0)
+    //         {
+    //             /// если битрейт для видео не задан, то считаем, что примерно прикидываем, исходя из размера кадра
+    //             double fps = stream->avg_frame_rate.den
+    //                              ? (double)stream->avg_frame_rate.num / stream->avg_frame_rate.den
+    //                              : 25.0;
+    //             codecBitrate =
+    //                 GetDefaultVideoBitrate(CodecIDToTextID(pCodec->codec_id), pCodec->width, pCodec->height, fps);
+    //         }
+    //     }
+    //     else
+    //     {
+    //         if (pCodec->codec_id == AV_CODEC_ID_MPEG1VIDEO && codecBitrate == MPEG1_MAX_BITRATE)
+    //         {
+    //             redetect_duration = true;
+    //             duration_detected = false;
+    //             break;
+    //         }
+    //     }
+    //     bitrate += codecBitrate;
+    // }
+
+    // if (file_size > 0)
+    // {
+    //     if (bitrate < m_input->bit_rate)
+    //     {
+    //         bitrate = m_input->bit_rate;
+    //     }
+    //     avTime newDuration = (bitrate != 0) ? av_rescale(8 * AV_SECOND, file_size, bitrate) : 0;
+    //     if (bitrate == 0)
+    //     {
+    //         redetect_duration = true;
+    //     }
+
+    //     avTime diff = newDuration - m_input->context()->duration;
+
+    //     if (stristr(m_input->context()->url, ".vob") && step::utils::str_contains(m_input->context()->iformat->long_name, "MPEG-PS"))
+    //     {
+    //         /// для vob-файлов вычисляем длительность по битрейту
+    //         /// в общем случае это не правильно, но для vob-файлов,
+    //         /// в которые содержат только 1 чаптер, это будет работать
+    //         m_input->context()->duration = newDuration;
+    //         return true;
+    //     }
+
+    //     if (llabs(diff) > 5 * AV_SECOND)
+    //     {
+    //         if (!duration_detected && !redetect_duration && step::utils::str_contains(m_input->context()->iformat->name, "flv"))
+    //         {
+    //             redetect_duration = true;  ///< Вручную ищем длительность для битых flv
+    //         }
+
+    //         if (file_size <= MAX_FILE_SIZE_FOR_READ &&
+    //             (step::utils::str_contains(m_input->context()->iformat->name, "flv") || step::utils::str_contains(m_input->context()->iformat->name, "asf") ||
+    //              step::utils::str_contains(m_input->context()->iformat->name, "wma") || step::utils::str_contains(m_input->context()->iformat->name, "wmv")))
+    //         {
+    //             duration_detected = false;
+    //             redetect_duration = true;  ///< Вручную ищем длительность для битых других, у которых размер < 30 мб
+    //         }
+    //     }
+    // }
+
+    // if (overall_duration < AV_SECOND && !step::utils::str_contains(m_input->context()->iformat->name, "image2"))
+    // {
+    //     duration_detected = false;
+    //     redetect_duration = true;  ///< Вручную ищем длительность для подозрительно коротких треков, кроме картинок
+    // }
+
+    // if (redetect_duration)
+    // {
+    //     if (duration_detected)
+    //     {
+    //         m_input->context()->duration = overall_duration;
+    //     }
+    //     else
+    //     {
+    //         DetectDurationManually();
+    //     }
+    // }
+
+    return true;
+}
+
+/// @brief Метод ищет минимальную длительность из всех потоков, среди видео потоков учитывается только основной.
+/// Если нет ни одного медиапотока, метод вернёт MAX_DURATION, что в дальнейшем приведет к последовательному чтению
+/// пакетов от начала до конца файла, чтобы гарантированно найти все потоки.
+TimeFF ParserFF::find_overall_stream_duration()
+{
+    /// In .dav files PTS and DTS equal NOPTS value
+    /// so duration may not be detected in usual way
+    if (m_format_DAV && (av_seek_frame(m_input->context(), -1, 0, AVSEEK_FLAG_BYTE) >= 0))
+    {
+        AVPacket pkt1 = {}, *pkt = &pkt1;
+        TimeFF sum_packets_duration = 0;
+        while (av_read_frame(m_input->context(), pkt) >= 0)
+        {
+            sum_packets_duration +=
+                pkt->duration != AV_NOPTS_VALUE
+                    ? stream_to_global(pkt->duration, m_input->context()->streams[pkt->stream_index]->time_base)
+                    : 0;
+            av_packet_unref(pkt);
+        }
+        return sum_packets_duration;
+    }
+
+    int best_stream_index = av_find_best_stream(m_input->context(), AVMEDIA_TYPE_VIDEO, -1, -1, 0, 0);
+    std::vector<int64_t> durations;
+    for (unsigned int i = 0; i < m_input->context()->nb_streams; i++)
+    {
+        AVStream* stream = m_input->context()->streams[i];
+
+        auto codec_type = stream->codecpar->codec_type;
+
+        /// Среди видео потоков учитывается только основной
+        if (best_stream_index >= 0 && i != static_cast<unsigned>(best_stream_index) && codec_type == AVMEDIA_TYPE_VIDEO)
+        {
+            continue;
+        }
+
+        // Все остальные потоки, кроме видео, аудио и субтитров, не учитываем
+        if (codec_type != AVMEDIA_TYPE_VIDEO && codec_type != AVMEDIA_TYPE_AUDIO)
+            continue;
+
+        if (stream->duration == AV_NOPTS_VALUE)
+            continue;
+
+        TimeFF i_duration = stream->duration;
+        // пересчет в микросекунды
+        i_duration = av_rescale_q(i_duration, stream->time_base, TIME_BASE_Q);
+        if (i_duration > 0)
+        {
+            durations.push_back(i_duration);
+            m_stream_durations[i] = i_duration;
+        }
+    }
+
+    if (!durations.empty())
+    {
+        m_min_stream_duration = *std::min_element(durations.cbegin(), durations.cend());
+        m_max_stream_duration = *std::max_element(durations.cbegin(), durations.cend());
+
+        return m_max_stream_duration;
+        // if (m_settings.GetDurationPolicy() == SettingsParser::DurationPolicy::Minimal)
+        //     return m_min_stream_duration;
+        // else if (m_settings.GetDurationPolicy() == SettingsParser::DurationPolicy::Maximal)
+        //     return m_max_stream_duration;
+        // else
+        //     assert(!"invalid logic.");
+    }
+
+    return MAX_DURATION;
+}
+
+void ParserFF::detect_time_shift(const std::vector<AVPacketUnique>& first_packets)
+{
+    // Shift all streams in the container
+    for (StreamId i = 0; i < m_stream_count; ++i)
+    {
+        TimeFF stream_shift = calc_container_shift(i);
+
+        if (stream_shift != 0)
+        {
+            STEP_LOG(L_WARN, "All packets in stream {} will be shifted by {}", i, stream_shift);
+            m_time_shift[i] = stream_shift;
+        }
+    }
+
+    // Shift streams separately
+    for (const auto& pkt : first_packets)
+    {
+        if (pkt == nullptr)
+            continue;
+
+        int64_t const pts = pkt->pts;
+        int64_t const dts = pkt->dts;
+
+        if (pts == AV_NOPTS_VALUE || dts == AV_NOPTS_VALUE)
+            continue;
+
+        int const idx = pkt->stream_index;
+
+        // Packet PTS/DTS can be greater than stream duration and so will be skipped by decoder.
+        if (step::utils::str_contains(m_input->context()->iformat->long_name, "MPEG-TS"))
+        {
+            int64_t const startTime = m_input->context()->streams[idx]->start_time;
+            int64_t const duration = m_input->context()->streams[idx]->duration;
+            if ((startTime != AV_NOPTS_VALUE) && (duration != AV_NOPTS_VALUE))
+            {
+                if ((duration + startTime) < pts)
+                {
+                    m_time_shift[idx] += (pts - startTime);
+                    STEP_LOG(L_WARN, "First packet pts {} is greater than stream startTime + duration {}", pts,
+                             duration + startTime);
+                    STEP_LOG(L_WARN, "All packets in stream {} will be shifted by {}", idx, pts - startTime);
+                }
+            }
+        }
+
+        // \tmp\!Samples\Sorted\Video\m2ts\AVC\MPEG Audio\2012010914332_27.m2ts
+        // Первый видео пакет в этом файле: pts: 0, dts: 7200.
+        // Такое смещение dts идёт по всему файлу.
+        if (!m_dts_shifts.empty() && (pts < dts))
+            m_dts_shifts[idx] = (dts - pts);
+    }
+}
+
+std::vector<ParserFF::AVPacketUnique> ParserFF::get_first_packets()
+{
+    constexpr size_t MAX_PROCESSING_PKT_COUNT = 50;  // Do not try forever!
+
+    auto streams_read_complete = [this]() {
+        return std::all_of(m_first_stream_pkt_received.cbegin(), m_first_stream_pkt_received.cend(),
+                           [](const auto& i) { return i; });
+    };
+
+    if (seek_to_zero() < 0)
+        STEP_LOG(L_WARN, "Can't seek to 0 while getting first packets!");
+
+    std::vector<AVPacketUnique> first_packets;
+    size_t processed_pkt_count = 0;
+    while (!streams_read_complete() && processed_pkt_count < MAX_PROCESSING_PKT_COUNT)
+    {
+        AVPacketUnique pkt(create_packet(0), [](AVPacket* ptr) {
+            if (!ptr)
+                return;
+            release_packet(&ptr);
+        });
+
+        int const res = read_frame_fixed(m_input->context(), pkt.get());
+
+        if (res < 0)
+            break;
+
+        ++processed_pkt_count;
+
+        int const idx = pkt->stream_index;
+        if (m_first_stream_pkt_received[idx])
+            continue;
+        m_first_stream_pkt_received[idx] = true;
+
+        first_packets.push_back(std::move(pkt));
+    }
+
+    if (!streams_read_complete())
+        STEP_LOG(L_WARN, "Can't get first packets from all streams!");
+
+    return std::move(first_packets);
+}
+
+int ParserFF::seek_to_zero()
+{
+    int res = 0;
+    if ((m_format_IMG && is_binary_seek()) || (m_format_SWF && !is_compressed_swf()))
+    {
+        res = av_seek_frame(m_input->context(), -1, 0, AVSEEK_FLAG_BYTE);
+    }
+    else if (is_compressed_swf())
+    {
+        seek(0, 0);
+        res = 0;
+    }
+    else
+    {
+        res = avformat_seek_file(m_input->context(), -1, 0, 0, 0, 0);
+    }
+    return res;
 }
 
 }  // namespace step::video::ff

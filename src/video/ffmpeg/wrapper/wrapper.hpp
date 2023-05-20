@@ -1,6 +1,7 @@
 #pragma once
 
-#include <video/ffmpeg/decoding/ff_parser.hpp>
+#include <video/frame/interfaces/frame_interfaces.hpp>
+#include <video/ffmpeg/decoding/stream_reader.hpp>
 
 namespace step::video::ff {
 
@@ -23,7 +24,9 @@ public:
     void unregister_observer(IFrameSourceObserver* observer) override;
 
 private:
-    ParserFF m_parser;
+    std::shared_ptr<ParserFF> m_parser;
+    std::shared_ptr<IDemuxer> m_demuxer;
+    std::shared_ptr<IStreamReader> m_stream_reader;
 };
 
 }  // namespace step::video::ff
