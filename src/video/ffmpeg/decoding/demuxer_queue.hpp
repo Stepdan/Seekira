@@ -26,6 +26,8 @@ public:
     std::shared_ptr<IDataPacket> read(StreamId stream) override;
     void release_internal_data(StreamId stream) override;
 
+    FormatCodec get_format_codec(StreamId) const override;  // *STEP
+
 private:
     void close();
     void reset_queue();

@@ -5,6 +5,8 @@
 
 #include "video/frame/interfaces/frame.hpp"
 
+#include <video/ffmpeg/interfaces/format_codec.hpp>
+
 #include <atomic>
 #include <queue>
 #include <ratio>
@@ -14,21 +16,10 @@ namespace step::video::ff {
 class DecoderVideoFF
 {
 public:
-    struct Initializer
-    {
-        AVCodecID codec_id;
-        uint32_t codec_tag;
-        FrameSize frame_size;
-        AVRational fps;
-        bool image_flag{false};
-        // TODO AVCodecParameters
-    };
-
-public:
     DecoderVideoFF();
     ~DecoderVideoFF();
 
-    bool open(const Initializer& init);
+    bool open(const FormatCodec& format_codec);
     void flush(TimestampFF start_time);
     void release_internal_data();
     FramePtr decode(const std::shared_ptr<IDataPacket>& data);

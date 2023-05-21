@@ -12,7 +12,15 @@ DemuxedStream::DemuxedStream(std::shared_ptr<StreamReader> reader, StreamId stre
     , m_terminated(false)
     , m_working_time(0)
     , m_processed_count(0)
+    , m_video_decoder(nullptr)
 {
+    if (get_media_type() == MediaType::Video)
+    {
+        m_video_decoder = std::make_unique<DecoderVideoFF>();
+        auto format_codec = m_reader->get_format_codec(stream_id);
+        if (!m_video_decoder->open(format_codec))
+            STEP_THROW_RUNTIME("Can't open decoder for stream {}, format codec: {}", stream_id, format_codec);
+    }
 }
 
 DemuxedStream::~DemuxedStream() { unlink_from_reader(); }
@@ -85,6 +93,18 @@ DataPacketPtr DemuxedStream::read()
     }
 
     return data;
+}
+
+FramePtr DemuxedStream::read_frame()
+{
+    /// При позиционировании за пределы потока возвращаем nullptr
+    if (m_seek_position >= get_duration())
+        return nullptr;
+
+    if (m_buffered_data)
+    {
+        FramePtr frame_ptr;
+    }
 }
 
 void DemuxedStream::request_seek(TimestampFF time, const StreamPtr& result_checker)

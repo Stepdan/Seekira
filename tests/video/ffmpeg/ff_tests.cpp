@@ -1,6 +1,6 @@
 #include <core/base/json/json_utils.hpp>
 
-#include <video/ffmpeg/wrapper/wrapper.hpp>
+#include <video/ffmpeg/player/player.hpp>
 
 #include <core/log/log.hpp>
 
@@ -45,49 +45,43 @@ class FFTest : public ::testing::Test
 public:
     void SetUp() { step::log::Logger::instance().set_log_level(L_TRACE); }
 
-    std::unique_ptr<FFWrapper> m_ff_wrapper;
+    std::unique_ptr<PlayerFF> m_player;
     std::unique_ptr<IFrameSourceObserver> m_frame_observer;
 };
 
-TEST_F(FFTest, ff_wrapper_constructible_destructible)
+TEST_F(FFTest, ff_player_constructible_destructible)
 {
-    const auto init_ff_wrapper = [this]() {
-        m_ff_wrapper = std::make_unique<FFWrapper>();
+    const auto init_ff_player = [this]() {
+        m_player = std::make_unique<PlayerFF>();
         m_frame_observer = std::make_unique<FrameSourceObserver>();
-        m_ff_wrapper->register_observer(m_frame_observer.get());
+        m_player->register_observer(m_frame_observer.get());
     };
 
-    EXPECT_NO_THROW(init_ff_wrapper());
+    EXPECT_NO_THROW(init_ff_player());
 }
 
-TEST_F(FFTest, ff_wrapper_open_file)
+TEST_F(FFTest, ff_player_open_file)
 {
-    const auto init_ff_wrapper = [this]() {
-        m_ff_wrapper = std::make_unique<FFWrapper>();
+    const auto init_ff_player = [this]() {
+        m_player = std::make_unique<PlayerFF>();
         m_frame_observer = std::make_unique<FrameSourceObserver>();
-        m_ff_wrapper->register_observer(m_frame_observer.get());
+        m_player->register_observer(m_frame_observer.get());
     };
 
-    EXPECT_NO_THROW(init_ff_wrapper());
+    EXPECT_NO_THROW(init_ff_player());
 
-    EXPECT_NO_THROW(m_ff_wrapper->open_file("C:/Work/test_video/IMG_5903.MOV"));
+    EXPECT_NO_THROW(m_player->open_file("C:/Work/test_video/IMG_5903.MOV"));
 }
 
-TEST_F(FFTest, ff_wrapper_read_first_packet)
+TEST_F(FFTest, ff_player_seek)
 {
-    const auto init_ff_wrapper = [this]() {
-        m_ff_wrapper = std::make_unique<FFWrapper>();
+    const auto init_ff_player = [this]() {
+        m_player = std::make_unique<PlayerFF>();
         m_frame_observer = std::make_unique<FrameSourceObserver>();
-        m_ff_wrapper->register_observer(m_frame_observer.get());
+        m_player->register_observer(m_frame_observer.get());
     };
 
-    EXPECT_NO_THROW(init_ff_wrapper());
+    EXPECT_NO_THROW(init_ff_player());
 
-    EXPECT_NO_THROW(m_ff_wrapper->open_file("C:/Work/test_video/IMG_5903.MOV"));
-
-    EXPECT_NO_THROW(m_ff_wrapper->run());
-    while (m_ff_wrapper->is_running())
-    {
-        std::this_thread::sleep_for(1s);
-    }
+    EXPECT_NO_THROW(m_player->open_file("C:/Work/test_video/IMG_5903.MOV"));
 }

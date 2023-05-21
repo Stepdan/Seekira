@@ -170,6 +170,14 @@ int StreamReader::get_active_stream_count() const
     return count;
 }
 
+FormatCodec StreamReader::get_format_codec(StreamId stream_id) const
+{
+    if (!m_demuxer)
+        STEP_THROW_RUNTIME("Can't provide FormatCodec for stream {}: empty demuxer!", stream_id);
+
+    return m_demuxer->get_format_codec(stream_id);
+}
+
 void StreamReader::release_internal_data(StreamId stream_id) { m_demuxer->release_internal_data(stream_id); }
 
 void StreamReader::request_seek(StreamId stream_id, TimestampFF time, const StreamPtr& result_checker)

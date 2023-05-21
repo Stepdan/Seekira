@@ -16,7 +16,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     #gmock
     gtest
     gtest_main
-    step::ff_wrapper
+    step::ff_player
 )
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     FF_TESTS_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/"

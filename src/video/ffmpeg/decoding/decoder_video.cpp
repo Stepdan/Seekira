@@ -65,7 +65,7 @@ DecoderVideoFF::~DecoderVideoFF()
     m_codec.reset();
 }
 
-bool DecoderVideoFF::open(const Initializer& init)
+bool DecoderVideoFF::open(const FormatCodec& init)
 {
     m_codec_id = init.codec_id;
     m_codec_tag = init.codec_tag;
@@ -73,7 +73,7 @@ bool DecoderVideoFF::open(const Initializer& init)
 
     /// Сохраняем исходные значения из codecFormat, т.к. при открытии энкодера, так и при чтении фреймов m_codec->width и m_codec->height могут изменится.
     /// Если это произойдет, то кадры будут приведены к текущим m_width и m_height.
-    m_out_frame_size = init.frame_size;
+    m_out_frame_size = FrameSize(static_cast<size_t>(init.width), static_cast<size_t>(init.height));
     m_image_flag = init.image_flag;
     m_clock = 0;
     m_clock_reset = true;

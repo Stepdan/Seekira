@@ -1,5 +1,6 @@
 #pragma once
 
+#include "decoder_video.hpp"
 #include "demuxer_queue.hpp"
 #include "stream.hpp"
 
@@ -29,6 +30,8 @@ public:
     bool is_terminated() const override;
     void release_internal_data() override;
 
+    FramePtr read_frame() override;  // *STEP
+
     void unlink_from_reader();
 
 private:
@@ -43,6 +46,10 @@ private:
     std::atomic_bool m_terminated;  ///< флаг для принудительной остановки конвертации
     TimeFF m_working_time;          ///< Счетчик времени
     size_t m_processed_count;  ///< Количество обработанных объектов
+
+    // TODO Decoder interface for audio *STEP
+    std::unique_ptr<DecoderVideoFF> m_video_decoder;  // *STEP
+    FramePtr m_buffered_data{nullptr};                // *STEP
 };
 
 class StreamReader : public IStreamReader, public std::enable_shared_from_this<StreamReader>
@@ -97,6 +104,7 @@ public:
     void release_stream(StreamId stream_id) override;
     int get_stream_count() const override;
     int get_active_stream_count() const override;
+    FormatCodec get_format_codec(StreamId stream_id) const override;  // *STEP
 
     void release_internal_data(StreamId stream_id);
 

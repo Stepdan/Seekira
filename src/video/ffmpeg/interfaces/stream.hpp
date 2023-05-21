@@ -2,6 +2,8 @@
 
 #include "data_packet.hpp"
 
+#include <video/frame/interfaces/frame.hpp>
+
 namespace step::video::ff {
 
 class IStream
@@ -23,6 +25,8 @@ public:
 
     //---
     virtual MediaType get_media_type() const = 0;
+
+    virtual FramePtr read_frame() = 0;  // *STEP
 };
 
 using StreamPtr = std::shared_ptr<IStream>;

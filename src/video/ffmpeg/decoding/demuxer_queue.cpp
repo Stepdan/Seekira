@@ -31,6 +31,8 @@ int DemuxerQueue::get_stream_count() const { return m_streams; }
 
 MediaType DemuxerQueue::get_stream_type(StreamId index) const { return m_parser->get_stream_type(index); }
 
+FormatCodec DemuxerQueue::get_format_codec(StreamId index) const { return m_parser->get_format_codec(index); }
+
 TimestampFF DemuxerQueue::seek(TimestampFF time)
 {
     STEP_LOG(L_DEBUG, "=============================================");

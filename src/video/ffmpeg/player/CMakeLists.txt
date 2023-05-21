@@ -1,5 +1,5 @@
-project(step_ff_wrapper)
-set(PROJECT_ALIAS ff_wrapper)
+project(step_ff_player)
+set(PROJECT_ALIAS ff_player)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)
@@ -16,7 +16,7 @@ source_group("Headers" FILES ${HEADERS})
 source_group("Sources" FILES ${SOURCES})
 
 add_library(${PROJECT_NAME} STATIC)
-add_library(step::ff_wrapper ALIAS ${PROJECT_NAME})
+add_library(step::ff_player ALIAS ${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME}
     PRIVATE
@@ -27,12 +27,13 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
+    step::core_threading
     step::ff_decoding
 )
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    STEPKIT_MODULE_NAME="FF_WRAPPER"
+    STEPKIT_MODULE_NAME="FF_PLAYER"
     PUBLIC
     BUILD_WITH_EASY_PROFILER
 )

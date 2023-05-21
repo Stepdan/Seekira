@@ -1,6 +1,7 @@
 #pragma once
 
 #include "stream.hpp"
+#include "format_codec.hpp"
 
 namespace step::video::ff {
 
@@ -15,6 +16,8 @@ public:
     virtual void release_stream(StreamId stream_id) = 0;
     virtual int get_stream_count() const = 0;
     virtual int get_active_stream_count() const = 0;
+
+    virtual FormatCodec get_format_codec(StreamId stream_id) const = 0;  // *STEP
 };
 
 }  // namespace step::video::ff

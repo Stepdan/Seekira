@@ -2,6 +2,8 @@
 
 #include "data_packet.hpp"
 
+#include <video/ffmpeg/interfaces/format_codec.hpp>
+
 namespace step::video::ff {
 
 class IDemuxer
@@ -21,6 +23,8 @@ public:
     virtual bool is_eof_reached() = 0;
     virtual std::shared_ptr<IDataPacket> read(StreamId stream) = 0;
     virtual void release_internal_data(StreamId stream) = 0;
+
+    virtual FormatCodec get_format_codec(StreamId) const = 0;  // *STEP
 };
 
 using DemuxerPtr = std::shared_ptr<IDemuxer>;

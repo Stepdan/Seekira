@@ -2,6 +2,8 @@
 
 #include "decoder_video.hpp"
 
+#include <video/ffmpeg/interfaces/format_codec.hpp>
+
 #include <video/frame/interfaces/frame.hpp>
 
 #include <functional>
@@ -40,6 +42,8 @@ public:
     int get_stream_count() const;
     TimeFF get_stream_duration(StreamId index) const;
     MediaType get_stream_type(StreamId index) const;
+
+    FormatCodec get_format_codec(StreamId index) const;  // *STEP
 
 private:
     void reopen();
