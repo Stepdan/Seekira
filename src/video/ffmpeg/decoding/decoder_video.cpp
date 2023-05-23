@@ -10,15 +10,17 @@ namespace step::video::ff {
 
 namespace {
 
-bool get_context(AVCodecID codec_id, uint32_t codec_tag, AVRational fps, DecoderContextSafe& out_context)
-{
-    AVCodecParameters* params = nullptr;  // TODO
-    DecoderContextSafe context(params);
+// TODO Choose format
+AVPixelFormat get_pixel_format(AVCodecContext*, const enum AVPixelFormat*) { return AV_PIX_FMT_BGR24; }
 
-    context->codec = avcodec_find_decoder(codec_id);
+bool get_context(AVCodecParameters* codec_par, AVRational fps, DecoderContextSafe& out_context)
+{
+    DecoderContextSafe context(codec_par);
+
+    context->codec = avcodec_find_decoder(codec_par->codec_id);
     if (!context->codec)
     {
-        STEP_LOG(L_WARN, "Can't find AVCodec for {}", avcodec_get_name(codec_id));
+        STEP_LOG(L_WARN, "Can't find AVCodec for {}", avcodec_get_name(codec_par->codec_id));
         return false;
     }
 
@@ -26,13 +28,15 @@ bool get_context(AVCodecID codec_id, uint32_t codec_tag, AVRational fps, Decoder
     context->lowres = 0;
     context->idct_algo = FF_IDCT_AUTO;
 
+    //context->get_format = get_pixel_format;
+
     /// UTVideo, HAP decoder requires codec_tag, it was set in parser
     if (context->codec_id == AV_CODEC_ID_UTVIDEO || context->codec_id == AV_CODEC_ID_HAP)
-        context->codec_tag = codec_tag;
+        context->codec_tag = codec_par->codec_tag;
 
     if (avcodec_open2(context.get(), context->codec, nullptr))
     {
-        STEP_LOG(L_WARN, "Can't open context for {}", avcodec_get_name(params->codec_id));
+        STEP_LOG(L_WARN, "Can't open context for {}", avcodec_get_name(codec_par->codec_id));
         return false;
     }
 
@@ -67,20 +71,21 @@ DecoderVideoFF::~DecoderVideoFF()
 
 bool DecoderVideoFF::open(const FormatCodec& init)
 {
-    m_codec_id = init.codec_id;
-    m_codec_tag = init.codec_tag;
+    m_codec_id = init.codec_par->codec_id;
+    m_codec_tag = init.codec_par->codec_tag;
     m_fps = init.fps;
 
     /// Сохраняем исходные значения из codecFormat, т.к. при открытии энкодера, так и при чтении фреймов m_codec->width и m_codec->height могут изменится.
     /// Если это произойдет, то кадры будут приведены к текущим m_width и m_height.
-    m_out_frame_size = FrameSize(static_cast<size_t>(init.width), static_cast<size_t>(init.height));
+    m_out_frame_size =
+        FrameSize(static_cast<size_t>(init.codec_par->width), static_cast<size_t>(init.codec_par->height));
     m_image_flag = init.image_flag;
     m_clock = 0;
     m_clock_reset = true;
 
     m_can_reopen_decoder = false;
 
-    if (!get_context(m_codec_id, m_codec_tag, m_fps, m_codec))
+    if (!get_context(init.codec_par, m_fps, m_codec))
         return false;
 
     m_clock = AV_NOPTS_VALUE;
@@ -190,8 +195,8 @@ FramePtr DecoderVideoFF::decode_internal(const std::shared_ptr<IDataPacket>& dat
     if (m_can_reopen_decoder)
     {
         // TODO Codec Parameters
-        if (!get_context(m_codec_id, m_codec_tag, m_fps, m_codec))
-            STEP_THROW_RUNTIME("Can't reopen decoder");
+        //if (!get_context(m_codec_id, m_codec_tag, m_fps, m_codec))
+        //    STEP_THROW_RUNTIME("Can't reopen decoder");
 
         m_can_reopen_decoder = false;
     }
@@ -314,20 +319,17 @@ FramePtr DecoderVideoFF::decode_internal(const std::shared_ptr<IDataPacket>& dat
 
         try
         {
-            const auto channels_count = utils::get_channels_count(PixFmt::BGR);
-            frame_ptr = std::make_shared<Frame>();
-            frame_ptr->stride = m_codec->width * channels_count;
-            frame_ptr->pix_fmt = PixFmt::BGR;
-            frame_ptr->size = {static_cast<size_t>(m_codec->width), static_cast<size_t>(m_codec->height)};
-            {
-                Frame::DataTypePtr dest[3] = {frame_ptr->data(), nullptr, nullptr};
-                int dest_linesize[3] = {static_cast<int>(frame_ptr->stride), 0, 0};
-                sws_scale(m_sws_context.get(), avframe->data, avframe->linesize, 0, avframe->height, dest,
-                          dest_linesize);
-            }
+            const auto channels_count = utils::get_channels_count(m_best_pix_fmt);
 
-            // Check is ff pts is microseconds?
+            AVFrame* frame = allocate_avframe(pix_fmt_to_avformat(m_best_pix_fmt), m_codec->width, m_codec->height,
+                                              m_codec->width * channels_count);
+
+            sws_scale(m_sws_context.get(), avframe->data, avframe->linesize, 0, avframe->height, frame->data,
+                      frame->linesize);
+
+            auto frame_ptr = std::make_shared<Frame>(avframe_to_frame(frame));
             frame_ptr->ts = Microseconds(m_clock);
+            frame_ptr->duration = avframe->pkt_duration;
         }
         catch (...)
         {

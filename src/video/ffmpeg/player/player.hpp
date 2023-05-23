@@ -26,6 +26,8 @@ public:
 
     MediaStatus get_media_status() const;
     PlayingState get_playing_state() const;
+    void set_media_status(MediaStatus);
+    void set_playing_state(PlayingState);
 
 public:
     void register_observer(IFrameSourceObserver* observer) override;
@@ -40,11 +42,11 @@ private:
     void worker_thread() override;
 
 private:
-    std::shared_ptr<ParserFF> m_parser;
-    std::shared_ptr<IDemuxer> m_demuxer;
-    std::shared_ptr<IStreamReader> m_stream_reader;
+    std::shared_ptr<ParserFF> m_parser{nullptr};
+    std::shared_ptr<IDemuxer> m_demuxer{nullptr};
+    std::shared_ptr<IStreamReader> m_stream_reader{nullptr};
 
-    std::unique_ptr<DecoderVideoFF> m_decoder;
+    StreamPtr m_stream{nullptr};
 
     MediaStatus m_media_status;
     PlayingState m_playing_state;

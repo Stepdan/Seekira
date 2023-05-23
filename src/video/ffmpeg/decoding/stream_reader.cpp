@@ -178,6 +178,20 @@ FormatCodec StreamReader::get_format_codec(StreamId stream_id) const
     return m_demuxer->get_format_codec(stream_id);
 }
 
+StreamPtr StreamReader::get_best_video_stream()
+{
+    const auto stream_id = m_demuxer->get_best_video_stream_id();
+    if (stream_id == INVALID_STREAM_ID)
+    {
+        STEP_LOG(L_ERROR, "StreamReader can't provide best video stream!");
+        return nullptr;
+    }
+
+    return get_stream(stream_id);
+}
+
+bool StreamReader::is_eof_reached() { return m_demuxer->is_eof_reached(); }
+
 void StreamReader::release_internal_data(StreamId stream_id) { m_demuxer->release_internal_data(stream_id); }
 
 void StreamReader::request_seek(StreamId stream_id, TimestampFF time, const StreamPtr& result_checker)

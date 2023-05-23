@@ -31,6 +31,7 @@ public:
     void release_internal_data() override;
 
     FramePtr read_frame() override;  // *STEP
+    bool is_eof_reached() override;
 
     void unlink_from_reader();
 
@@ -39,17 +40,19 @@ private:
     StreamId m_stream;
     TimestampFF m_position;       ///< Позиция последнего прочитанного пакета
     std::mutex m_seek_mutex;      ///< Для блокировки seek
-    std::mutex m_read_mutex;      ///< Для блокировки read
+    std::mutex m_read_pkt_mutex;  ///< Для блокировки read
     TimestampFF m_seek_position;  ///< Метка, на которую нужно выполнить Seek
                                   //    bool            m_lastSeekResult;		///< Результат Seek
     std::shared_ptr<IDataPacket> m_buffered_packet;  ///< Буферизированный пакет для проверки Seek
     std::atomic_bool m_terminated;  ///< флаг для принудительной остановки конвертации
     TimeFF m_working_time;          ///< Счетчик времени
-    size_t m_processed_count;  ///< Количество обработанных объектов
+    size_t m_processed_pkt_count;  ///< Количество обработанных объектов
 
     // TODO Decoder interface for audio *STEP
     std::unique_ptr<DecoderVideoFF> m_video_decoder;  // *STEP
     FramePtr m_buffered_data{nullptr};                // *STEP
+    size_t m_processed_frame_count;                   // *STEP
+    std::mutex m_read_frame_mutex;                    ///< Для блокировки read
 };
 
 class StreamReader : public IStreamReader, public std::enable_shared_from_this<StreamReader>
@@ -105,6 +108,8 @@ public:
     int get_stream_count() const override;
     int get_active_stream_count() const override;
     FormatCodec get_format_codec(StreamId stream_id) const override;  // *STEP
+    StreamPtr get_best_video_stream() override;                       // *STEP
+    bool is_eof_reached() override;                                   // *STEP
 
     void release_internal_data(StreamId stream_id);
 

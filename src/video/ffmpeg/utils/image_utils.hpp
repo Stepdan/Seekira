@@ -13,4 +13,6 @@ AVPixelFormat pix_fmt_to_avformat(PixFmt fmt);
 
 Frame avframe_to_frame(const AVFrame* avframe);
 
+AVFrame* allocate_avframe(AVPixelFormat fmt, int width, int height, int stride);
+
 }  // namespace step::video::ff

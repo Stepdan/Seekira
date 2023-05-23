@@ -16,6 +16,12 @@
 
 namespace step::video {
 
+class Frame;
+
+using Frames = std::vector<Frame>;
+using FramePtr = std::shared_ptr<Frame>;
+using FramesPtrs = std::vector<FramePtr>;
+
 class Frame
 {
 public:
@@ -50,6 +56,11 @@ public:
         return frame;
     }
 
+    static Frame clone(Frame& rhs)
+    {
+        return Frame::create(rhs.size, rhs.stride, rhs.pix_fmt, rhs.data(), Frame::empty_deleter, rhs.ts, rhs.duration);
+    }
+
     /*! @brief Returns a new frame that holds a copy of the data.
     */
     static Frame create_deep(const FrameSize& size, size_t stride, PixFmt fmt, DataTypePtr data,
@@ -60,6 +71,16 @@ public:
         // Explicit copy constructor
         Frame frame = frame_view;
         return frame;
+    }
+
+    static Frame clone_deep(Frame& rhs)
+    {
+        return Frame::create_deep(rhs.size, rhs.stride, rhs.pix_fmt, rhs.data(), rhs.ts, rhs.duration);
+    }
+
+    static FramePtr clone_deep(FramePtr rhs_frame_ptr)
+    {
+        return std::make_shared<Frame>(Frame::clone_deep(*rhs_frame_ptr));
     }
 
 public:
@@ -183,10 +204,6 @@ public:
     Timestamp ts{step::get_current_timestamp()};
     int64_t duration{-1};
 };
-
-using Frames = std::vector<Frame>;
-using FramePtr = std::shared_ptr<Frame>;
-using FramesPtrs = std::vector<FramePtr>;
 
 }  // namespace step::video
 

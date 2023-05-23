@@ -33,6 +33,16 @@ MediaType DemuxerQueue::get_stream_type(StreamId index) const { return m_parser-
 
 FormatCodec DemuxerQueue::get_format_codec(StreamId index) const { return m_parser->get_format_codec(index); }
 
+StreamId DemuxerQueue::get_best_video_stream_id()
+{
+    auto stream_id = m_parser->get_seek_stream();
+    if (m_parser->get_stream_type(stream_id) == MediaType::Video)
+        return stream_id;
+
+    STEP_LOG(L_ERROR, "Demuxer can't find best video stream, found {}", stream_id);
+    return INVALID_STREAM_ID;
+}
+
 TimestampFF DemuxerQueue::seek(TimestampFF time)
 {
     STEP_LOG(L_DEBUG, "=============================================");

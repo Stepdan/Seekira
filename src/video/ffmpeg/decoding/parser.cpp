@@ -451,10 +451,7 @@ FormatCodec ParserFF::get_format_codec(StreamId index) const
         STEP_THROW_RUNTIME("Can't provide stream codec info for stream {}", index);
 
     FormatCodec info;
-    info.codec_id = m_input->context()->streams[index]->codecpar->codec_id;
-    info.codec_tag = m_input->context()->streams[index]->codecpar->codec_tag;
-    info.width = m_input->context()->streams[index]->codecpar->width;
-    info.height = m_input->context()->streams[index]->codecpar->height;
+    info.codec_par = m_input->context()->streams[index]->codecpar;
     info.fps = get_available_fps(m_input->context()->streams[index]);
     info.image_flag = m_format_IMG;
 

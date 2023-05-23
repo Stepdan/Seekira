@@ -75,4 +75,20 @@ Frame avframe_to_frame(const AVFrame* avframe)
     return frame;
 }
 
+AVFrame* allocate_avframe(AVPixelFormat fmt, int width, int height, int stride)
+{
+    STEP_ASSERT(fmt == AVPixelFormat::AV_PIX_FMT_BGR24, "Only AV_PIX_FMT_BGR24 supported for allocate_avframe");
+
+    AVFrame* frame;
+    frame = av_frame_alloc();
+    frame->width = width;
+    frame->height = height;
+    frame->format = fmt;
+
+    // TODO Can be different for planar types
+    frame->linesize[0] = stride;
+
+    return frame;
+}
+
 }  // namespace step::video::ff

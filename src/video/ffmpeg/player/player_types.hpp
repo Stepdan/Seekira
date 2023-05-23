@@ -22,6 +22,7 @@ enum class PlayingState
     Playing,
     Seeking,
     Stopped,
+    Error,
 };
 
 }  // namespace step::video::ff

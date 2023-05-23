@@ -25,8 +25,8 @@ public:
 
     //---
     virtual MediaType get_media_type() const = 0;
-
     virtual FramePtr read_frame() = 0;  // *STEP
+    virtual bool is_eof_reached() = 0;
 };
 
 using StreamPtr = std::shared_ptr<IStream>;

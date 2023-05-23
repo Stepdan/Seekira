@@ -25,6 +25,8 @@ public:
     virtual void release_internal_data(StreamId stream) = 0;
 
     virtual FormatCodec get_format_codec(StreamId) const = 0;  // *STEP
+
+    virtual StreamId get_best_video_stream_id() = 0;  // *STEP
 };
 
 using DemuxerPtr = std::shared_ptr<IDemuxer>;

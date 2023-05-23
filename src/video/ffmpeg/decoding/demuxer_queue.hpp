@@ -27,6 +27,7 @@ public:
     void release_internal_data(StreamId stream) override;
 
     FormatCodec get_format_codec(StreamId) const override;  // *STEP
+    StreamId get_best_video_stream_id() override;           // *STEP
 
 private:
     void close();

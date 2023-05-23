@@ -11,8 +11,9 @@ DemuxedStream::DemuxedStream(std::shared_ptr<StreamReader> reader, StreamId stre
     , m_seek_position(0)
     , m_terminated(false)
     , m_working_time(0)
-    , m_processed_count(0)
+    , m_processed_pkt_count(0)
     , m_video_decoder(nullptr)
+    , m_processed_frame_count(0)
 {
     if (get_media_type() == MediaType::Video)
     {
@@ -30,7 +31,7 @@ void DemuxedStream::unlink_from_reader()
     if (!m_reader)
         return;
 
-    std::unique_lock<std::mutex> lock(m_read_mutex);
+    std::scoped_lock lock(m_read_pkt_mutex, m_read_frame_mutex);
     std::shared_ptr<StreamReader> reader_tmp = m_reader;
     m_reader
         .reset();  // обнуляем именно тут, чтобы не было рекурсивного зацикливания при вызове m_reader->ReleaseStream(..)
@@ -72,7 +73,7 @@ DataPacketPtr DemuxedStream::read()
     if (m_terminated)
         return nullptr;
 
-    std::unique_lock lock(m_read_mutex);
+    std::unique_lock lock(m_read_pkt_mutex);
     DataPacketPtr data;
     if (m_buffered_packet)
     {
@@ -89,7 +90,7 @@ DataPacketPtr DemuxedStream::read()
         if (m_position != AV_NOPTS_VALUE)
             m_position += data->duration();
 
-        ++m_processed_count;
+        ++m_processed_pkt_count;
     }
 
     return data;
@@ -97,14 +98,44 @@ DataPacketPtr DemuxedStream::read()
 
 FramePtr DemuxedStream::read_frame()
 {
-    /// При позиционировании за пределы потока возвращаем nullptr
-    if (m_seek_position >= get_duration())
-        return nullptr;
-
-    if (m_buffered_data)
+    std::unique_lock lock(m_read_frame_mutex);
+    while (!is_terminated())
     {
-        FramePtr frame_ptr;
+        /// При позиционировании за пределы потока возвращаем nullptr
+        if (m_seek_position >= get_duration())
+            return nullptr;
+
+        if (m_buffered_data)
+        {
+            FramePtr res{nullptr};
+            {
+                const auto buf_position = m_buffered_data->ts.count();
+                const auto this_position = (m_position == AV_NOPTS_VALUE ? m_seek_position : m_position);
+
+                if (buf_position > this_position)
+                    res = Frame::clone_deep(m_buffered_data);
+
+                if (!res)
+                    m_buffered_data.swap(res);
+            }
+            auto res_position = res->ts.count();
+            auto res_duration = res->duration;
+            m_position = res_position + res_duration;
+            STEP_LOG(L_TRACE, "Decoded data: Time = {}, Duration = {}", res_position, res_duration);
+            ++m_processed_frame_count;
+            return res;
+        }
+
+        auto pkt = read();
+        /// если pPkt == NULL, то все нормально, этот NULL уходит в декодер для извлечения закэшированных данных
+        m_video_decoder->decode(pkt).swap(m_buffered_data);
+        if (m_buffered_data)
+            continue;
+
+        if (!pkt)
+            return nullptr;
     }
+    return nullptr;
 }
 
 void DemuxedStream::request_seek(TimestampFF time, const StreamPtr& result_checker)
@@ -142,7 +173,7 @@ void DemuxedStream::do_seek()
 
 bool DemuxedStream::get_seek_result()
 {
-    std::unique_lock lock(m_read_mutex);
+    std::scoped_lock lock(m_read_pkt_mutex, m_read_frame_mutex);
     /// всегда читаем новый пакет после Seek, иначе подбор нужной позиции не работает
     while (true)
     {
@@ -173,9 +204,11 @@ void DemuxedStream::terminate() { m_terminated.store(true); }
 
 bool DemuxedStream::is_terminated() const { return m_terminated; }
 
+bool DemuxedStream::is_eof_reached() { return m_reader->is_eof_reached(); }
+
 void DemuxedStream::release_internal_data()
 {
-    std::unique_lock lock(m_read_mutex);
+    std::scoped_lock lock(m_read_pkt_mutex, m_read_frame_mutex);
     m_buffered_packet.reset();
     m_position = AV_NOPTS_VALUE;
     m_reader->release_internal_data(m_stream);

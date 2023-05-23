@@ -7,6 +7,7 @@ namespace step::video::ff {
 using TimeFF = int64_t;
 using TimestampFF = int64_t;
 using StreamId = int;
+constexpr StreamId INVALID_STREAM_ID = -1;
 
 /* clang-format off */
 constexpr TimeFF AV_MILLISECOND = 1000;
