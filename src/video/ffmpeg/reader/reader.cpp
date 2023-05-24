@@ -1,0 +1,172 @@
+#include "reader.hpp"
+
+#include <core/log/log.hpp>
+
+#include <core/base/utils/string_utils.hpp>
+
+namespace step::video::ff {
+
+ReaderFF::ReaderFF() : m_need_read_cnd(false) {}
+
+ReaderFF::~ReaderFF() { stop(); }
+
+void ReaderFF::open_file(const std::string& filename)
+{
+    m_parser = std::make_shared<ParserFF>();
+    m_parser->open_file(filename);
+
+    m_demuxer = std::make_shared<DemuxerQueue>(m_parser);
+    m_stream_reader = std::make_shared<StreamReader>(m_demuxer);
+
+    m_stream = m_stream_reader->get_best_video_stream();
+
+    set_reader_state(ReaderState::Ready);
+}
+
+void ReaderFF::start(ReadingMode mode)
+{
+    if (mode == ReadingMode::Undefined)
+    {
+        STEP_LOG(L_ERROR, "Can't start reading: invalid mode!");
+        return;
+    }
+
+    m_read_mode = mode;
+    run_worker();
+
+    bool is_continuously = m_read_mode == ReadingMode::Continuously;
+
+    set_reader_state(is_continuously ? ReaderState::ReadingContiniously : ReaderState::ReadingByRequest);
+    m_need_read_cnd.set_value(is_continuously);
+    m_need_read_cnd.notify_one();
+}
+
+void ReaderFF::stop()
+{
+    stop_worker();
+    m_need_read_cnd.set_value(false);
+}
+
+bool ReaderFF::seek(TimestampFF pos)
+{
+    std::scoped_lock lock(m_read_guard);
+
+    const auto prev_state = m_state;
+    set_reader_state(ReaderState::TryToSeek);
+
+    stop();
+
+    m_stream->request_seek(pos, nullptr);
+    m_stream->do_seek();
+    if (!m_stream->get_seek_result())
+    {
+        STEP_LOG(L_ERROR, "Invalid seek to {}", pos);
+        set_reader_state(ReaderState::InvalidSeek);
+        return false;
+    }
+
+    set_reader_state(ReaderState::SuccessfulSeek);
+
+    if (prev_state == ReaderState::ReadingContiniously || prev_state == ReaderState::ReadingByRequest)
+    {
+        start(m_read_mode);
+    }
+
+    return true;
+}
+
+void ReaderFF::request_read()
+{
+    std::scoped_lock lock(m_read_guard);
+
+    if (m_need_read_cnd.get_value())
+    {
+        STEP_THROW_RUNTIME("request_read has m_need_read = true instead of false");
+    }
+
+    if (m_read_mode != ReadingMode::ByRequest)
+    {
+        STEP_LOG(L_ERROR, "Can't do request_read: read mode is {}", step::utils::to_string(m_read_mode));
+        return;
+    }
+
+    if (m_state != ReaderState::ReadingByRequest)
+    {
+        STEP_LOG(L_WARN, "Can't do request_read: reader state is {}", step::utils::to_string(m_state));
+        return;
+    }
+
+    m_need_read_cnd.set_value(true);
+    m_need_read_cnd.notify_one();
+}
+
+void ReaderFF::set_reader_state(ReaderState state)
+{
+    m_state = state;
+    m_reader_observers.perform_for_each_event_handler(
+        std::bind(&IReaderEventObserver::on_reader_state_changed, std::placeholders::_1, m_state));
+}
+
+void ReaderFF::run_worker() { ThreadWorker::run_worker(); }
+
+void ReaderFF::stop_worker() { ThreadWorker::stop_worker(); }
+
+void ReaderFF::worker_thread()
+{
+    const auto break_predicate = [this]() { return m_need_stop || m_stream->is_eof_reached(); };
+
+    while (!break_predicate())
+    {
+        try
+        {
+            m_need_read_cnd.wait(
+                [this, &break_predicate]() { return break_predicate() || m_need_read_cnd.get_value(); });
+
+            if (break_predicate())
+                break;
+
+            auto frame_ptr = m_stream->read_frame();
+            if (frame_ptr)
+            {
+                // In case of ByRequest we try to obtain valid frame.
+                // If there are no valid frames - Error or Break or EOF occures
+                if (m_read_mode == ReadingMode::ByRequest)
+                    m_need_read_cnd.set_value(false);
+
+                m_frame_observers.perform_for_each_event_handler(
+                    std::bind(&IFrameSourceObserver::process_frame, std::placeholders::_1, frame_ptr));
+            }
+        }
+        catch (const std::exception& e)
+        {
+            STEP_LOG(L_ERROR, "Failed read frame: {}", e.what());
+            m_exception_ptr = std::current_exception();
+            break;
+        }
+        catch (...)
+        {
+            STEP_LOG(L_ERROR, "Unhandled exception during read frame");
+            m_exception_ptr = std::current_exception();
+            break;
+        }
+    }
+
+    // Smth happened during read, reset need_read flag, no valid frame here
+    if (m_read_mode == ReadingMode::ByRequest)
+        m_need_read_cnd.set_value(false);
+
+    if (!m_need_stop && m_exception_ptr)
+        set_reader_state(ReaderState::Error);
+
+    if (!m_need_stop && m_stream->is_eof_reached())
+        set_reader_state(ReaderState::EndOfFile);
+}
+
+/* clang-format off */
+void ReaderFF::register_observer(IFrameSourceObserver* observer) { m_frame_observers.register_event_handler(observer); }
+void ReaderFF::register_observer(IReaderEventObserver* observer) { m_reader_observers.register_event_handler(observer); }
+void ReaderFF::unregister_observer(IFrameSourceObserver* observer) { m_frame_observers.unregister_event_handler(observer); }
+void ReaderFF::unregister_observer(IReaderEventObserver* observer) { m_reader_observers.unregister_event_handler(observer); }
+/* clang-format on */
+
+}  // namespace step::video::ff

@@ -62,7 +62,7 @@ void PlayerFF::worker_thread()
         try
         {
             auto frame_ptr = m_stream->read_frame();
-            if(frame_ptr)
+            if (frame_ptr)
             {
                 m_frame_observers.perform_for_each_event_handler(
                     std::bind(&IFrameSourceObserver::process_frame, std::placeholders::_1, frame_ptr));

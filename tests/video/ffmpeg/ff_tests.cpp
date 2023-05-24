@@ -5,7 +5,7 @@
 
 #include <video/frame/utils/frame_utils.hpp>
 
-#include <video/ffmpeg/player/player.hpp>
+#include <video/ffmpeg/reader/reader.hpp>
 
 #include <gtest/gtest.h>
 
@@ -43,108 +43,81 @@ public:
     void process_frame(FramePtr frame_ptr) override
     {
         STEP_LOG(L_INFO, "Frame processing: {}", frame_ptr);
-        if (frame_ptr && frame_ptr->ts.count() > 4000000 && frame_ptr->ts.count() < 5000000)
-           step::video::utils::save_to_file(*frame_ptr, "C:/Work/test_video/image.png");
+        //if (frame_ptr && frame_ptr->ts.count() > 4000000 && frame_ptr->ts.count() < 5000000)
+        //    step::video::utils::save_to_file(*frame_ptr, "C:/Work/test_video/image.png");
     }
 };
 
-class FFTest : public ::testing::Test, public IPlayerEventObserver
+class FFTest : public ::testing::Test, public IReaderEventObserver
 {
 public:
     void SetUp() { step::log::Logger::instance().set_log_level(L_TRACE); }
 
-    void on_media_status_changed(MediaStatus status)
+    void on_reader_state_changed(ReaderState state)
     {
-        STEP_LOG(L_INFO, "Media status changed to {}", step::utils::to_string(status));
+        STEP_LOG(L_INFO, "Reader state has been changed to {}", step::utils::to_string(state));
+        if (state == ReaderState::EndOfFile)
+            m_is_reading_finished = true;
+
+        if (state == ReaderState::Error || state == ReaderState::InvalidSeek || state == ReaderState::Undefined)
+        {
+            STEP_LOG(L_ERROR, "Invalid state, break!");
+            m_is_reading_finished = true;
+        }
     }
 
-    void on_playing_state_changed(PlayingState state)
+    void init_reader()
     {
-        STEP_LOG(L_INFO, "Playing state changed to {}", step::utils::to_string(state));
-        if (state != PlayingState::Playing)
-            m_is_playing_finished = true;
+        m_reader = std::make_unique<ReaderFF>();
+        m_frame_observer = std::make_unique<FrameSourceObserver>();
+        m_reader->register_observer(m_frame_observer.get());
     }
 
-    std::unique_ptr<PlayerFF> m_player;
+    void open_file(const std::string& filepath)
+    {
+        try
+        {
+            m_reader->open_file(filepath);
+        }
+        catch (std::exception& e)
+        {
+            STEP_LOG(L_ERROR, "Handle exception during opening file: {}", e.what());
+            std::rethrow_exception(std::current_exception());
+        }
+        catch (...)
+        {
+            STEP_LOG(L_ERROR, "Handle unknown exception during opening file");
+            std::rethrow_exception(std::current_exception());
+        }
+    }
+
+    std::unique_ptr<ReaderFF> m_reader;
     std::unique_ptr<IFrameSourceObserver> m_frame_observer;
 
-    bool m_is_playing_finished{false};
+    bool m_is_reading_finished{false};
 };
 
-TEST_F(FFTest, ff_player_constructible_destructible)
-{
-    const auto init_ff_player = [this]() {
-        m_player = std::make_unique<PlayerFF>();
-        m_frame_observer = std::make_unique<FrameSourceObserver>();
-        m_player->register_observer(m_frame_observer.get());
-    };
+TEST_F(FFTest, ff_reader_constructible_destructible) { EXPECT_NO_THROW(init_reader()); }
 
-    EXPECT_NO_THROW(init_ff_player());
+TEST_F(FFTest, ff_reader_open_file)
+{
+    EXPECT_NO_THROW(init_reader());
+
+    const std::string filepath = "C:/Work/test_video/IMG_5903.MOV";
+    EXPECT_NO_THROW(open_file(filepath));
 }
 
-TEST_F(FFTest, ff_player_open_file)
+TEST_F(FFTest, ff_reader_continuously)
 {
-    const auto init_ff_player = [this]() {
-        m_player = std::make_unique<PlayerFF>();
-        m_frame_observer = std::make_unique<FrameSourceObserver>();
-        m_player->register_observer(m_frame_observer.get());
-    };
+    EXPECT_NO_THROW(init_reader());
 
-    EXPECT_NO_THROW(init_ff_player());
+    const std::string filepath = "C:/Work/test_video/IMG_5903.MOV";
+    EXPECT_NO_THROW(open_file(filepath));
 
-    const auto open_file = [this]() {
-        try
-        {
-            m_player->open_file("C:/Work/test_video/IMG_5903.MOV");
-        }
-        catch (std::exception& e)
-        {
-            STEP_LOG(L_ERROR, "Handle exception during opening file: {}", e.what());
-            std::rethrow_exception(std::current_exception());
-        }
-        catch (...)
-        {
-            STEP_LOG(L_ERROR, "Handle unknown exception during opening file");
-            std::rethrow_exception(std::current_exception());
-        }
-    };
+    m_reader->register_observer(m_frame_observer.get());
+    m_reader->register_observer(this);
 
-    EXPECT_NO_THROW(open_file());
-}
-
-TEST_F(FFTest, ff_player_play_video)
-{
-    const auto init_ff_player = [this]() {
-        m_player = std::make_unique<PlayerFF>();
-        m_frame_observer = std::make_unique<FrameSourceObserver>();
-        m_player->register_observer(m_frame_observer.get());
-    };
-
-    EXPECT_NO_THROW(init_ff_player());
-
-    const auto open_file = [this]() {
-        try
-        {
-            m_player->open_file("C:/Work/test_video/IMG_5903.MOV");
-        }
-        catch (std::exception& e)
-        {
-            STEP_LOG(L_ERROR, "Handle exception during opening file: {}", e.what());
-            std::rethrow_exception(std::current_exception());
-        }
-        catch (...)
-        {
-            STEP_LOG(L_ERROR, "Handle unknown exception during opening file");
-            std::rethrow_exception(std::current_exception());
-        }
-    };
-
-    EXPECT_NO_THROW(open_file());
-
-    m_player->register_observer(m_frame_observer.get());
-    m_player->register_observer(this);
-
-    EXPECT_NO_THROW(m_player->play());
-    while (!m_is_playing_finished)
+    EXPECT_NO_THROW(m_reader->start(ReadingMode::Continuously));
+    while (!m_is_reading_finished)
         std::this_thread::sleep_for(50ms);
 }
