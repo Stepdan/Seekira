@@ -121,7 +121,7 @@ FramePtr DemuxedStream::read_frame()
             auto res_position = res->ts.count();
             auto res_duration = res->duration;
             m_position = res_position + res_duration;
-            STEP_LOG(L_TRACE, "Decoded data: Time = {}, Duration = {}", res_position, res_duration);
+            STEP_LOG(L_TRACE, "Decoded frame: Time = {}, Duration = {}", res_position, res_duration);
             ++m_processed_frame_count;
             return res;
         }

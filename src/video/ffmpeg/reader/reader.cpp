@@ -8,7 +8,11 @@ namespace step::video::ff {
 
 ReaderFF::ReaderFF() : m_need_read_cnd(false) {}
 
-ReaderFF::~ReaderFF() { stop(); }
+ReaderFF::~ReaderFF()
+{
+    STEP_LOG(L_INFO, "ReaderFF destruction, file: {}", m_filename);
+    stop();
+}
 
 void ReaderFF::open_file(const std::string& filename)
 {
@@ -21,6 +25,16 @@ void ReaderFF::open_file(const std::string& filename)
     m_stream = m_stream_reader->get_best_video_stream();
 
     set_reader_state(ReaderState::Ready);
+
+    m_filename = filename;
+}
+
+TimeFF ReaderFF::get_duration() const
+{
+    if (!m_stream)
+        STEP_THROW_RUNTIME("ReaderFF can't provide duration: empty stream!");
+
+    return m_stream->get_duration();
 }
 
 void ReaderFF::start(ReadingMode mode)
@@ -38,13 +52,24 @@ void ReaderFF::start(ReadingMode mode)
 
     set_reader_state(is_continuously ? ReaderState::ReadingContiniously : ReaderState::ReadingByRequest);
     m_need_read_cnd.set_value(is_continuously);
-    m_need_read_cnd.notify_one();
+
+    if (is_continuously)
+        m_need_read_cnd.notify_one();
+
+    STEP_LOG(L_INFO, "Start ReaderFF with params: state {}, mode {}", step::utils::to_string(m_state),
+             step::utils::to_string(m_read_mode));
 }
 
 void ReaderFF::stop()
 {
     stop_worker();
+
+    // m_need_read_cnd.notify will be done in before_thread_worker_join()
+    // after m_need_stop.store(true) in ThreadWorker::stop()
+
+    // release request_read
     m_need_read_cnd.set_value(false);
+    m_request_read_finished_cnd.notify_all();
 }
 
 bool ReaderFF::seek(TimestampFF pos)
@@ -77,12 +102,7 @@ bool ReaderFF::seek(TimestampFF pos)
 
 void ReaderFF::request_read()
 {
-    std::scoped_lock lock(m_read_guard);
-
-    if (m_need_read_cnd.get_value())
-    {
-        STEP_THROW_RUNTIME("request_read has m_need_read = true instead of false");
-    }
+    std::unique_lock lock(m_read_guard);
 
     if (m_read_mode != ReadingMode::ByRequest)
     {
@@ -96,8 +116,17 @@ void ReaderFF::request_read()
         return;
     }
 
+    if (m_need_read_cnd.get_value())
+    {
+        STEP_THROW_RUNTIME("request_read has m_need_read = true instead of false");
+    }
+
+    STEP_LOG(L_TRACE, "Request read");
     m_need_read_cnd.set_value(true);
-    m_need_read_cnd.notify_one();
+    m_need_read_cnd.notify_all();
+
+    // Wait until reading finish
+    m_request_read_finished_cnd.wait(lock, [this]() { return !m_need_read_cnd.get_value(); });
 }
 
 void ReaderFF::set_reader_state(ReaderState state)
@@ -111,6 +140,12 @@ void ReaderFF::run_worker() { ThreadWorker::run_worker(); }
 
 void ReaderFF::stop_worker() { ThreadWorker::stop_worker(); }
 
+void ReaderFF::before_thread_worker_join()
+{
+    // m_need_stop already 'true' (see ThreadWorker::stop())
+    m_need_read_cnd.notify_all();
+}
+
 void ReaderFF::worker_thread()
 {
     const auto break_predicate = [this]() { return m_need_stop || m_stream->is_eof_reached(); };
@@ -122,19 +157,24 @@ void ReaderFF::worker_thread()
             m_need_read_cnd.wait(
                 [this, &break_predicate]() { return break_predicate() || m_need_read_cnd.get_value(); });
 
-            if (break_predicate())
-                break;
-
-            auto frame_ptr = m_stream->read_frame();
-            if (frame_ptr)
             {
-                // In case of ByRequest we try to obtain valid frame.
-                // If there are no valid frames - Error or Break or EOF occures
-                if (m_read_mode == ReadingMode::ByRequest)
-                    m_need_read_cnd.set_value(false);
+                if (break_predicate())
+                    break;
 
-                m_frame_observers.perform_for_each_event_handler(
-                    std::bind(&IFrameSourceObserver::process_frame, std::placeholders::_1, frame_ptr));
+                auto frame_ptr = m_stream->read_frame();
+                if (frame_ptr)
+                {
+                    m_frame_observers.perform_for_each_event_handler(
+                        std::bind(&IFrameSourceObserver::process_frame, std::placeholders::_1, frame_ptr));
+
+                    // In case of ByRequest we try to obtain valid frame.
+                    // If there are no valid frames - Error or Break or EOF occures
+                    if (m_read_mode == ReadingMode::ByRequest)
+                    {
+                        m_need_read_cnd.set_value(false);
+                        m_request_read_finished_cnd.notify_all();
+                    }
+                }
             }
         }
         catch (const std::exception& e)
@@ -153,13 +193,19 @@ void ReaderFF::worker_thread()
 
     // Smth happened during read, reset need_read flag, no valid frame here
     if (m_read_mode == ReadingMode::ByRequest)
+    {
+        STEP_LOG(L_INFO, "Set need_read to 'false' during finishing ReaderFF thread worker");
         m_need_read_cnd.set_value(false);
+        m_request_read_finished_cnd.notify_all();
+    }
 
     if (!m_need_stop && m_exception_ptr)
         set_reader_state(ReaderState::Error);
 
     if (!m_need_stop && m_stream->is_eof_reached())
         set_reader_state(ReaderState::EndOfFile);
+
+    STEP_LOG(L_INFO, "ReaderFF worker thread finished!");
 }
 
 /* clang-format off */

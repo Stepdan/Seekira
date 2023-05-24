@@ -20,6 +20,7 @@ enum class ReaderState
     InvalidSeek,
     EndOfFile,
     Error,
+    Destruction,
 };
 
 }  // namespace step::video::ff

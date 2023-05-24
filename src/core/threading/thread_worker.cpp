@@ -30,6 +30,8 @@ void ThreadWorker::stop_worker()
     STEP_LOG(L_TRACE, "Stopping ThreadWorker");
     m_need_stop.store(true);
 
+    before_thread_worker_join();
+
     if (m_worker.joinable())
         m_worker.join();
 

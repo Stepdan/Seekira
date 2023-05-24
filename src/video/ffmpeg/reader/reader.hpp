@@ -20,6 +20,7 @@ public:
     ~ReaderFF();
 
     void open_file(const std::string& filename);
+    TimeFF get_duration() const;
 
     void start(ReadingMode mode);
     void stop();
@@ -39,6 +40,7 @@ private:
     void run_worker() override;
     void stop_worker() override;
     void worker_thread() override;
+    void before_thread_worker_join() override;
 
     void set_reader_state(ReaderState);
 
@@ -49,15 +51,18 @@ private:
 
     StreamPtr m_stream{nullptr};
 
+    std::string m_filename;
+
     step::EventHandlerList<IFrameSourceObserver, threading::ThreadPoolExecutePolicy<0>> m_frame_observers;
     step::EventHandlerList<IReaderEventObserver, threading::ThreadPoolExecutePolicy<0>> m_reader_observers;
 
-    threading::ThreadConditionalParam m_need_read_cnd;
+    threading::ThreadConditionalParam m_need_read_cnd{false};
 
     ReadingMode m_read_mode{ReadingMode::Undefined};
     ReaderState m_state{ReaderState::Undefined};
 
     std::mutex m_read_guard;
+    std::condition_variable m_request_read_finished_cnd;
 };
 
 }  // namespace step::video::ff
