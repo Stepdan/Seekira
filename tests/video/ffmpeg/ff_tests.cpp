@@ -43,8 +43,8 @@ public:
     void process_frame(FramePtr frame_ptr) override
     {
         STEP_LOG(L_INFO, "Frame processing: {}", frame_ptr);
-        if (frame_ptr && frame_ptr->ts.count() == 3733333)
-            step::video::utils::save_to_file(*frame_ptr, "C:/Work/test_video/image.png");
+        if (frame_ptr && frame_ptr->ts.count() > 4000000 && frame_ptr->ts.count() < 5000000)
+           step::video::utils::save_to_file(*frame_ptr, "C:/Work/test_video/image.png");
     }
 };
 

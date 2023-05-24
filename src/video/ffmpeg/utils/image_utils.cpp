@@ -1,5 +1,7 @@
 #include "image_utils.hpp"
+#include "utils.hpp"
 
+#include <core/log/log.hpp>
 #include <core/base/utils/find_pair.hpp>
 #include <core/exception/assert.hpp>
 
@@ -59,18 +61,7 @@ Frame avframe_to_frame(const AVFrame* avframe)
     const auto stride = static_cast<size_t>(avframe->linesize[0]);
     const auto pix_fmt = avformat_to_pix_fmt(static_cast<AVPixelFormat>(avframe->format));
 
-    uint8_t* buffer = nullptr;
-    auto buf_size = av_image_get_buffer_size(static_cast<AVPixelFormat>(avframe->format), width, height, 1);
-
-    auto copy_ret =
-        av_image_copy_to_buffer(buffer, buf_size, (const uint8_t* const*)avframe->data, (const int*)avframe->linesize,
-                                static_cast<AVPixelFormat>(avframe->format), avframe->width, avframe->height, 1);
-    STEP_ASSERT(copy_ret < 0, "Invalid avframe buffer copy!");
-
-    auto frame = Frame::create_deep({width, height}, stride, pix_fmt, buffer);
-
-    if (buffer)
-        av_freep(&buffer);
+    auto frame = Frame::create_deep({width, height}, stride, pix_fmt, const_cast<uint8_t*>(avframe->data[0]));
 
     return frame;
 }
@@ -87,6 +78,15 @@ AVFrame* allocate_avframe(AVPixelFormat fmt, int width, int height, int stride)
 
     // TODO Can be different for planar types
     frame->linesize[0] = stride;
+
+    auto res = av_frame_get_buffer(frame, 0);
+    if(res < 0)
+    {
+        STEP_LOG(L_ERROR, "Can't allocate avframe! Error {}", av_make_error(res));
+        av_frame_free(&frame);
+        return nullptr;
+    }
+
 
     return frame;
 }

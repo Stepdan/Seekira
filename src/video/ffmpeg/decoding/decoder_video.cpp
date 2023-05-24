@@ -324,12 +324,18 @@ FramePtr DecoderVideoFF::decode_internal(const std::shared_ptr<IDataPacket>& dat
             AVFrame* frame = allocate_avframe(pix_fmt_to_avformat(m_best_pix_fmt), m_codec->width, m_codec->height,
                                               m_codec->width * channels_count);
 
+            if(!frame)
+                return nullptr;
+
             sws_scale(m_sws_context.get(), avframe->data, avframe->linesize, 0, avframe->height, frame->data,
                       frame->linesize);
 
-            auto frame_ptr = std::make_shared<Frame>(avframe_to_frame(frame));
+            
+            frame_ptr = std::make_shared<Frame>(avframe_to_frame(frame));
+            av_frame_free(&frame);
+
             frame_ptr->ts = Microseconds(m_clock);
-            frame_ptr->duration = avframe->pkt_duration;
+            frame_ptr->duration = m_prev_duration_frame_pkt;
         }
         catch (...)
         {
