@@ -1,10 +1,10 @@
 #pragma once
 
-#include "types_safe.hpp"
 #include "data_packet.hpp"
 
-#include "video/frame/interfaces/frame.hpp"
+#include <video/frame/interfaces/frame.hpp>
 
+#include <video/ffmpeg/interfaces/types_safe.hpp>
 #include <video/ffmpeg/interfaces/format_codec.hpp>
 
 #include <atomic>

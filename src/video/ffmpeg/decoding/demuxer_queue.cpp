@@ -310,7 +310,7 @@ bool DemuxerQueue::read_packets_from_parser(int packetCount)
 ///             false - иначе
 bool DemuxerQueue::check_streams_position(TimestampFF max_allowed_position)
 {
-    STEP_LOG(L_DEBUG, "Checking stream positions (must be less than {}", max_allowed_position);
+    STEP_LOG(L_DEBUG, "Checking stream positions (must be less or equal than {})", max_allowed_position);
 
     bool seek_is_good = true;
     for (StreamId i = 0; i < m_streams; i++)

@@ -194,9 +194,11 @@ FramePtr DecoderVideoFF::decode_internal(const std::shared_ptr<IDataPacket>& dat
 {
     if (m_can_reopen_decoder)
     {
-        // TODO Codec Parameters
-        //if (!get_context(m_codec_id, m_codec_tag, m_fps, m_codec))
-        //    STEP_THROW_RUNTIME("Can't reopen decoder");
+        // CodecParametersSafe params;
+        // avcodec_parameters_from_context(params.get(), m_codec.get());
+        // params->format = m_open_pix_fmt;
+        // if (!get_context(params.get(), m_fps, m_codec))
+        //     STEP_THROW_RUNTIME("Can't reopen decoder");
 
         m_can_reopen_decoder = false;
     }
@@ -324,13 +326,12 @@ FramePtr DecoderVideoFF::decode_internal(const std::shared_ptr<IDataPacket>& dat
             AVFrame* frame = allocate_avframe(pix_fmt_to_avformat(m_best_pix_fmt), m_codec->width, m_codec->height,
                                               m_codec->width * channels_count);
 
-            if(!frame)
+            if (!frame)
                 return nullptr;
 
             sws_scale(m_sws_context.get(), avframe->data, avframe->linesize, 0, avframe->height, frame->data,
                       frame->linesize);
 
-            
             frame_ptr = std::make_shared<Frame>(avframe_to_frame(frame));
             av_frame_free(&frame);
 

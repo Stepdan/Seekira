@@ -22,10 +22,12 @@ public:
     void open_file(const std::string& filename);
     TimeFF get_duration() const;
 
+    ReaderState get_state() const;
+
     void start(ReadingMode mode);
     void stop();
 
-    bool seek(TimestampFF pos);
+    void seek(TimestampFF pos);
 
     void request_read();
 
@@ -61,7 +63,7 @@ private:
     ReadingMode m_read_mode{ReadingMode::Undefined};
     ReaderState m_state{ReaderState::Undefined};
 
-    std::mutex m_read_guard;
+    mutable std::mutex m_read_guard;
     std::condition_variable m_request_read_finished_cnd;
 };
 

@@ -16,7 +16,10 @@ public:
     virtual DataPacketPtr read() = 0;
     virtual void request_seek(TimestampFF time, const std::shared_ptr<IStream>& result_checker) = 0;
     virtual void do_seek() = 0;
-    virtual bool get_seek_result() = 0;
+    virtual bool
+    get_seek_result() = 0;  // Используется StreamReader'ом, для обычной проверки успешности последнего Seek использовать get_last_seek_result
+
+    virtual bool get_last_seek_result() const = 0;
 
     virtual void terminate() = 0;
     virtual bool is_terminated() const = 0;

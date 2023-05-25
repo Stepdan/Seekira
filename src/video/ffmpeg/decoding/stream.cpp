@@ -148,6 +148,8 @@ void DemuxedStream::request_seek(TimestampFF time, const StreamPtr& result_check
     m_buffered_packet.reset();
     m_position = AV_NOPTS_VALUE;
 
+    m_video_decoder->flush(time);
+
     // сначала добавляем обработчик для декодеров
     if (result_checker)
         m_reader->request_seek(m_stream, time, result_checker);
@@ -169,6 +171,11 @@ void DemuxedStream::do_seek()
     }
 
     m_reader->seek(m_stream);
+
+    // reset because after seek we can read buffered data
+    m_buffered_data.reset();
+
+    STEP_LOG(L_TRACE, "DemuxedStream: do_seek to {}", m_position);
 }
 
 bool DemuxedStream::get_seek_result()
@@ -194,11 +201,14 @@ bool DemuxedStream::get_seek_result()
     if (!m_buffered_packet)
         return false;
 
-    bool res = (m_position <= m_seek_position) && (m_buffered_packet->is_key_frame());
+    m_last_seek_result = (m_position <= m_seek_position) && (m_buffered_packet->is_key_frame());
     STEP_LOG(L_DEBUG, "DemuxedStream {}: pos={}, key_frame={} is {}", m_stream, m_position,
-             m_buffered_packet->is_key_frame(), (res ? "ok" : "error"));
-    return res;
+             m_buffered_packet->is_key_frame(), (m_last_seek_result ? "ok" : "error"));
+
+    return m_last_seek_result;
 }
+
+bool DemuxedStream::get_last_seek_result() const { return m_last_seek_result; }
 
 void DemuxedStream::terminate() { m_terminated.store(true); }
 
@@ -212,6 +222,8 @@ void DemuxedStream::release_internal_data()
     m_buffered_packet.reset();
     m_position = AV_NOPTS_VALUE;
     m_reader->release_internal_data(m_stream);
+
+    //m_video_decoder->release_internal_data();
 }
 
 }  // namespace step::video::ff

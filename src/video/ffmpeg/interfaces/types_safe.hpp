@@ -167,6 +167,17 @@ public:
     int recieve_frame(AVFrame* frame) noexcept { return avcodec_receive_frame(this->get(), frame); }
 };
 
+class CodecParametersSafe : public std::unique_ptr<AVCodecParameters, details::DeleterAVCodecPar>
+{
+public:
+    CodecParametersSafe(AVCodecParameters* data = nullptr)
+        : std::unique_ptr<AVCodecParameters, details::DeleterAVCodecPar>(data ? data : avcodec_parameters_alloc())
+    {
+        if (!this->get())
+            STEP_THROW_RUNTIME("Unable to allocate memory for AVCodecParameters, {}", sizeof(AVCodecParameters));
+    }
+};
+
 class FrameSafe : public std::unique_ptr<AVFrame, details::DeleterAVFrameFree>
 {
 public:

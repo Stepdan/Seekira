@@ -51,7 +51,7 @@ public:
 class FFTest : public ::testing::Test, public IReaderEventObserver
 {
 public:
-    void SetUp() { step::log::Logger::instance().set_log_level(L_TRACE); }
+    void SetUp() { step::log::Logger::instance().set_log_level(L_INFO); }
 
     void on_reader_state_changed(ReaderState state)
     {
@@ -139,7 +139,7 @@ TEST_F(FFTest, ff_reader_request_reading)
         if (m_is_reading_finished)
             break;
 
-        m_reader->request_read();
+        EXPECT_NO_THROW(m_reader->request_read());
     }
 }
 
@@ -154,14 +154,57 @@ TEST_F(FFTest, ff_reader_single_seek)
     m_reader->register_observer(this);
 
     EXPECT_NO_THROW(m_reader->start(ReadingMode::ByRequest));
-
-    for (size_t i = 0; i < 10; ++i)
-    {
-        if (m_is_reading_finished)
-            break;
-
-        EXPECT_NO_THROW(m_reader->request_read());
-    }
-
     EXPECT_NO_THROW(m_reader->seek(m_reader->get_duration() / 2));
+    EXPECT_NO_THROW(m_reader->request_read());
+}
+
+TEST_F(FFTest, ff_reader_seek_to_zero)
+{
+    EXPECT_NO_THROW(init_reader());
+
+    const std::string filepath = "C:/Work/test_video/IMG_5903.MOV";
+    EXPECT_NO_THROW(open_file(filepath));
+
+    m_reader->register_observer(m_frame_observer.get());
+    m_reader->register_observer(this);
+
+    EXPECT_NO_THROW(m_reader->start(ReadingMode::ByRequest));
+    EXPECT_NO_THROW(m_reader->seek(m_reader->get_duration() / 2));
+    EXPECT_NO_THROW(m_reader->request_read());
+    EXPECT_NO_THROW(m_reader->seek(0));
+    EXPECT_NO_THROW(m_reader->request_read());
+}
+
+TEST_F(FFTest, ff_reader_seek_to_end)
+{
+    EXPECT_NO_THROW(init_reader());
+
+    const std::string filepath = "C:/Work/test_video/IMG_5903.MOV";
+    EXPECT_NO_THROW(open_file(filepath));
+
+    m_reader->register_observer(m_frame_observer.get());
+    m_reader->register_observer(this);
+
+    EXPECT_NO_THROW(m_reader->start(ReadingMode::ByRequest));
+    EXPECT_NO_THROW(m_reader->seek(m_reader->get_duration()));
+    EXPECT_NO_THROW(m_reader->request_read());
+
+    ASSERT_EQ(ReaderState::EndOfFile, m_reader->get_state());
+}
+
+TEST_F(FFTest, ff_reader_seek_over_the_end)
+{
+    EXPECT_NO_THROW(init_reader());
+
+    const std::string filepath = "C:/Work/test_video/IMG_5903.MOV";
+    EXPECT_NO_THROW(open_file(filepath));
+
+    m_reader->register_observer(m_frame_observer.get());
+    m_reader->register_observer(this);
+
+    EXPECT_NO_THROW(m_reader->start(ReadingMode::ByRequest));
+    EXPECT_NO_THROW(m_reader->seek(m_reader->get_duration() + m_reader->get_duration() / 10));
+    EXPECT_NO_THROW(m_reader->request_read());
+
+    ASSERT_EQ(ReaderState::EndOfFile, m_reader->get_state());
 }

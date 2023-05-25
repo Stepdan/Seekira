@@ -37,6 +37,12 @@ TimeFF ReaderFF::get_duration() const
     return m_stream->get_duration();
 }
 
+ReaderState ReaderFF::get_state() const
+{
+    std::scoped_lock lock(m_read_guard);
+    return m_state;
+}
+
 void ReaderFF::start(ReadingMode mode)
 {
     if (mode == ReadingMode::Undefined)
@@ -72,10 +78,11 @@ void ReaderFF::stop()
     m_request_read_finished_cnd.notify_all();
 }
 
-bool ReaderFF::seek(TimestampFF pos)
+void ReaderFF::seek(TimestampFF pos)
 {
     std::scoped_lock lock(m_read_guard);
 
+    STEP_LOG(L_INFO, "Try to seek to {}", pos);
     const auto prev_state = m_state;
     set_reader_state(ReaderState::TryToSeek);
 
@@ -83,21 +90,20 @@ bool ReaderFF::seek(TimestampFF pos)
 
     m_stream->request_seek(pos, nullptr);
     m_stream->do_seek();
-    if (!m_stream->get_seek_result())
+    if (!m_stream->get_last_seek_result())
     {
         STEP_LOG(L_ERROR, "Invalid seek to {}", pos);
         set_reader_state(ReaderState::InvalidSeek);
-        return false;
+        return;
     }
 
+    STEP_LOG(L_INFO, "Succesful seek to {} [{}]", m_stream->get_position(), pos);
     set_reader_state(ReaderState::SuccessfulSeek);
 
     if (prev_state == ReaderState::ReadingContiniously || prev_state == ReaderState::ReadingByRequest)
     {
         start(m_read_mode);
     }
-
-    return true;
 }
 
 void ReaderFF::request_read()
