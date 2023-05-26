@@ -5,6 +5,7 @@
 #include <QtQml>
 #include <QQmlApplicationEngine>
 #include <QWindow>
+#include <QMainWindow>
 
 #include <core/log/log.hpp>
 
@@ -15,7 +16,7 @@ struct MainWindow::Impl
     explicit Impl() {}
 
     QQmlApplicationEngine engine;
-    QPointer<QWindow> window;
+    QPointer<QMainWindow> main_window;
 };
 
 MainWindow::MainWindow() : m_impl(std::make_unique<Impl>()) {}
@@ -50,8 +51,8 @@ bool MainWindow::load()
     }
 
     QObject* rootObject = m_impl->engine.rootObjects().first();
-    m_impl->window = qobject_cast<QWindow*>(rootObject);
-    if (m_impl->window == nullptr)
+    m_impl->main_window = qobject_cast<QMainWindow*>(rootObject);
+    if (m_impl->main_window == nullptr)
     {
         STEP_LOG(L_CRITICAL, "Can't find root window");
         return false;
@@ -61,27 +62,27 @@ bool MainWindow::load()
     constexpr int guiY = 0;
     constexpr int guiW = 1024;
     constexpr int guiH = 768;
-    m_impl->window->setGeometry(guiX, guiY, guiW, guiH);
-    m_impl->window->hide();
+    m_impl->main_window->setGeometry(guiX, guiY, guiW, guiH);
+    m_impl->main_window->hide();
 
     return true;
 }
 
-bool MainWindow::is_loaded() { return m_impl->window; }
+bool MainWindow::is_loaded() { return m_impl->main_window; }
 
 void MainWindow::show()
 {
     if (!is_loaded())
         return;
 
-    m_impl->window->show();
-    m_impl->window->raise();
+    m_impl->main_window->show();
+    m_impl->main_window->raise();
 }
 
 void MainWindow::hide()
 {
     if (is_loaded())
-        m_impl->window->hide();
+        m_impl->main_window->hide();
 }
 
 }  // namespace step::gui

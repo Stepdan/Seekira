@@ -17,11 +17,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     #gmock
     gtest
     gtest_main
-    step::ui_utils
+    step::gui_utils
 )
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     GUI_IMAGE_UTILS_TESTS_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/"
-    STEPKIT_MODULE_NAME="T_UI_IMAGE_UTILS"
+    STEPKIT_MODULE_NAME="T_GUI_IMAGE_UTILS"
 )
 
 if (WIN32)

@@ -4,13 +4,11 @@ import QtQuick.Controls.Material 2.4
 import QtQuick.Layouts 1.4
 
 ApplicationWindow {
-    id: window
+    id: applicationWindow
 
     objectName: "mainWindow"
-    title: "StepKit App"
+    title: "Sightrack App"
     flags: Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint
-    Material.theme: Settings.styleMaterialTheme()
-    Material.accent: Settings.styleMaterialAccent()
 
     FontLoader {
         id: monoFont

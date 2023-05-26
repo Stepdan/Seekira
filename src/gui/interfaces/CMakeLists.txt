@@ -1,5 +1,5 @@
-project(step_ui)
-set(PROJECT_ALIAS ui)
+project(step_gui_interfaces)
+set(PROJECT_ALIAS gui_interfaces)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)
@@ -16,7 +16,7 @@ source_group("Headers" FILES ${HEADERS})
 source_group("Sources" FILES ${SOURCES})
 
 add_library(${PROJECT_NAME} STATIC)
-add_library(step::${PROJECT_ALIAS} ALIAS ${PROJECT_NAME})
+add_library(step::gui_interfaces ALIAS ${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME}
     PRIVATE
@@ -27,19 +27,18 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    step::gui_interfaces
-    step::gui_resources
+    step::gui_utils
 )
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    STEPKIT_MODULE_NAME="STEP_GUI_UTILS"
+    STEPKIT_MODULE_NAME="STEP_GUI_INTERFACES"
     PUBLIC
     BUILD_WITH_EASY_PROFILER
 )
 
-install(TARGETS ${PROJECT_NAME} EXPORT ${INSTALL_TARGET_NAME}
-    COMPONENT ${PROJECT_NAME}
-    FILE_SET headers_base DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_ALIAS}
-    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
+# install(TARGETS ${PROJECT_NAME} EXPORT ${INSTALL_TARGET_NAME}
+#     COMPONENT ${PROJECT_NAME}
+#     FILE_SET headers_base DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_ALIAS}
+#     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+# )
