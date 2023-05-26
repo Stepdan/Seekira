@@ -42,7 +42,7 @@ private:
     void run_worker() override;
     void stop_worker() override;
     void worker_thread() override;
-    void before_thread_worker_join() override;
+    void thread_worker_stop_impl() override;
 
     void set_reader_state(ReaderState);
 

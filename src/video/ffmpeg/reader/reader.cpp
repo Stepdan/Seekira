@@ -70,7 +70,7 @@ void ReaderFF::stop()
 {
     stop_worker();
 
-    // m_need_read_cnd.notify will be done in before_thread_worker_join()
+    // m_need_read_cnd.notify will be done in thread_worker_stop_impl()
     // after m_need_stop.store(true) in ThreadWorker::stop()
 
     // release request_read
@@ -146,7 +146,7 @@ void ReaderFF::run_worker() { ThreadWorker::run_worker(); }
 
 void ReaderFF::stop_worker() { ThreadWorker::stop_worker(); }
 
-void ReaderFF::before_thread_worker_join()
+void ReaderFF::thread_worker_stop_impl()
 {
     // m_need_stop already 'true' (see ThreadWorker::stop())
     m_need_read_cnd.notify_all();

@@ -27,7 +27,7 @@ public:
 
 protected:
     virtual void worker_thread() = 0;
-    virtual void before_thread_worker_join() {}
+    virtual void thread_worker_stop_impl() {}
 
 protected:
     std::atomic_bool m_is_running{false};
