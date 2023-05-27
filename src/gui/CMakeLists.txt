@@ -1,5 +1,6 @@
 add_subdirectory(utils)
 add_subdirectory(interfaces)
+add_subdirectory(application)
 add_subdirectory(ui)
 add_subdirectory(resources)
 

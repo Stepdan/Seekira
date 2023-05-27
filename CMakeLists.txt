@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.25)
 project(stepkit)
 
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    add_compile_definitions(STEPKIT_DEBUG)
+    message(STATUS "STEPKIT Debug build")
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF) # the flag used to set the language standard (e.g. -std=c++11 rather than -std=gnu++11).
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

@@ -1,5 +1,11 @@
 #include "main_window.hpp"
 
+#include <core/log/log.hpp>
+#include <core/exception/assert.hpp>
+
+#include <gui/application/application.hpp>
+#include <gui/interfaces/objects_connector_id.hpp>
+
 #include <QApplication>
 #include <QFontDatabase>
 #include <QtQml>
@@ -7,82 +13,50 @@
 #include <QWindow>
 #include <QMainWindow>
 
-#include <core/log/log.hpp>
-
 namespace step::gui {
 
-struct MainWindow::Impl
+struct MainWindow::Impl : public QObject
 {
-    explicit Impl() {}
-
-    QQmlApplicationEngine engine;
-    QPointer<QMainWindow> main_window;
+    QMainWindow m_main_window;
 };
 
-MainWindow::MainWindow() : m_impl(std::make_unique<Impl>()) {}
+MainWindow::MainWindow() : m_impl(std::make_unique<Impl>())
+{
+    utils::ObjectsConnector::register_receiver(ObjectsConnectorID::SET_QML_IN_MAIN_WINDOW(), this,
+                                               SLOT(on_set_qml_window_in_main_window_slot()));
+}
 
 MainWindow::~MainWindow() = default;
 
-bool MainWindow::load()
+MainWindow::operator QMainWindow*() const { return &m_impl->m_main_window; }
+
+void MainWindow::on_set_qml_window_in_main_window_slot()
 {
-    if (is_loaded())
-    {
-        return true;
-    }
+    STEP_LOG(L_DEBUG, "on_set_qml_window_in_main_window_slot started");
 
-    const QString fontPath{":/fonts/RobotoMono-Medium.ttf"};
-    int id = QFontDatabase::addApplicationFont(fontPath);
-    if (id == -1)
-    {
-        STEP_LOG(L_CRITICAL, "Can't load font from {}", fontPath.toStdString());
-        return false;
-    }
-    QString font = QFontDatabase::applicationFontFamilies(id).at(0);
-    QApplication::setFont(QFont{font});
+    const auto windows = step_app->allWindows();
+    const auto it = std::find_if(std::cbegin(windows), std::cend(windows), [](const auto* window) {
+        return window->objectName() == ObjectsConnectorID::QML_MAIN_WINDOW();
+    });
+    STEP_ASSERT(it != std::cend(windows), "No MainWindow in Application!");
 
-    QQmlContext* ctx = m_impl->engine.rootContext();
+    const auto* window = *it;
+    STEP_ASSERT(window, "Invalid MainWindow!");
 
-    // QStringLiteral could not be moved automatically: performance issue fixed in Qt 5.15
-    m_impl->engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));  // NOLINT(performance-no-automatic-move)
-    if (m_impl->engine.rootObjects().isEmpty())
-    {
-        STEP_LOG(L_CRITICAL, "Can't load GUI");
-        return false;
-    }
+    const auto x = window->x();
+    const auto y = window->y();
+    const auto width = window->width();
+    const auto height = window->height();
 
-    QObject* rootObject = m_impl->engine.rootObjects().first();
-    m_impl->main_window = qobject_cast<QMainWindow*>(rootObject);
-    if (m_impl->main_window == nullptr)
-    {
-        STEP_LOG(L_CRITICAL, "Can't find root window");
-        return false;
-    }
+    m_impl->m_main_window.setGeometry(QRect(QPoint(x, y), QPoint(x + width, y + height)));
+    STEP_LOG(L_TRACE, "MainWindow geometry: x={}, y={}, width={}, height={}", x, y, width, height);
 
-    constexpr int guiX = 0;
-    constexpr int guiY = 0;
-    constexpr int guiW = 1024;
-    constexpr int guiH = 768;
-    m_impl->main_window->setGeometry(guiX, guiY, guiW, guiH);
-    m_impl->main_window->hide();
+    const auto set_pos = [](QMainWindow& window, int x, int y) {
+        window.setGeometry(x, y, window.width(), window.height());
+    };
 
-    return true;
-}
-
-bool MainWindow::is_loaded() { return m_impl->main_window; }
-
-void MainWindow::show()
-{
-    if (!is_loaded())
-        return;
-
-    m_impl->main_window->show();
-    m_impl->main_window->raise();
-}
-
-void MainWindow::hide()
-{
-    if (is_loaded())
-        m_impl->main_window->hide();
+    connect(window, &QWindow::xChanged, [&w = m_impl->m_main_window, set_pos](int x) { set_pos(w, x, w.y()); });
+    connect(window, &QWindow::yChanged, [&w = m_impl->m_main_window, set_pos](int y) { set_pos(w, w.x(), y); });
 }
 
 }  // namespace step::gui

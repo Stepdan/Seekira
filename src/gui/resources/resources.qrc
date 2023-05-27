@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>fonts/RobotoMono-Medium.ttf</file>
+        <file>qml/common/functions.js</file>
         <file>qml/main.qml</file>
     </qresource>
 </RCC>

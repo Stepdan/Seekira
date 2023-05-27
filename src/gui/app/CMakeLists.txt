@@ -3,7 +3,7 @@ project(step_app)
 add_executable(step_app main.cpp)
 target_link_libraries(step_app
     PRIVATE
-    step::ui
+    step::gui_ui
 )
 
 target_compile_definitions(step_app

@@ -7,10 +7,10 @@
 
 /// Макрос для добавления идентификаторов.
 /// Автоматически генерирует объявление свойства и реализацию метода доступа, пригодные для использования в QML
-#define ADD_PROPERTY(propName)                                                                                         \
-    Q_PROPERTY(QString propName READ propName CONSTANT)                                                                \
+#define ADD_PROPERTY(prop_name)                                                                                        \
+    Q_PROPERTY(QString prop_name READ prop_name CONSTANT)                                                              \
 public:                                                                                                                \
-    static QString propName() { return #propName; }
+    static QString prop_name() { return #prop_name; }
 
 namespace step::gui {
 
@@ -18,6 +18,9 @@ namespace step::gui {
 class ObjectsConnectorID : public QObject
 {
     Q_OBJECT
+
+    //Идентификаторы для GUI
+    ADD_PROPERTY(SET_QML_IN_MAIN_WINDOW)
 
     // ObjectName главного QML окна
     ADD_PROPERTY(QML_MAIN_WINDOW)

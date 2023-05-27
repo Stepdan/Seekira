@@ -1,16 +1,14 @@
-project(step_gui_ui)
-set(PROJECT_ALIAS gui_ui)
+project(step_gui_application)
+set(PROJECT_ALIAS gui_application)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)
-    file(GLOB HEADERS_CONTROLLERS controllers/*.hpp)
-    set(HEADERS ${HEADERS_BASE} ${HEADERS_CONTROLLERS})
+    set(HEADERS ${HEADERS_BASE})
 endif()
 
 if(NOT DEFINED SOURCES)
     file(GLOB SOURCES
         *.cpp
-        controllers/*.cpp
     )
 endif()
 
@@ -18,25 +16,23 @@ source_group("Headers" FILES ${HEADERS})
 source_group("Sources" FILES ${SOURCES})
 
 add_library(${PROJECT_NAME} STATIC)
-add_library(step::gui_ui ALIAS ${PROJECT_NAME})
+add_library(step::gui_application ALIAS ${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME}
     PRIVATE
     ${SOURCES}
     PUBLIC
     FILE_SET headers_base TYPE HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} FILES "${HEADERS_BASE}"
-    FILE_SET headers_controllers TYPE HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/controllers FILES "${HEADERS_CONTROLLERS}"
 )
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    step::gui_application
-    step::gui_resources
+    step::gui_interfaces
 )
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    STEPKIT_MODULE_NAME="STEP_GUI_UI"
+    STEPKIT_MODULE_NAME="STEP_GUI_APPLICATION"
     PUBLIC
     BUILD_WITH_EASY_PROFILER
 )

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QObject>
+#include <QMainWindow>
 
 #include <memory>
 
@@ -20,11 +20,10 @@ public:
     MainWindow& operator=(MainWindow&&) = delete;
 
 public:
-    bool load();
-    bool is_loaded();
+    operator QMainWindow*() const;
 
-    void show();
-    void hide();
+private slots:
+    void on_set_qml_window_in_main_window_slot();
 
 private:
     struct Impl;

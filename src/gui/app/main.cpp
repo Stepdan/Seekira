@@ -1,5 +1,10 @@
 #include <core/log/log.hpp>
 
+#include <gui/utils/high_dpi_fix.hpp>
+#include <gui/utils/log_handler.hpp>
+#include <gui/application/application.hpp>
+
+#include <gui/ui/controllers/gui_controller.hpp>
 #include <gui/ui/main_window.hpp>
 
 #include <QApplication>
@@ -21,18 +26,30 @@ int main(int argc, char* argv[])
     int exit_code = -1;
     try
     {
-        QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-        //QCoreApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
-        QCoreApplication::setApplicationName("StepKit");
-        QCoreApplication::setApplicationVersion("1.0.0");
-        QApplication app(argc, argv);
+#ifdef STEPKIT_DEBUG
+        step::log::Logger::instance().set_log_level(L_TRACE);
+#endif
 
-        std::shared_ptr<step::gui::MainWindow> main_window = std::make_shared<step::gui::MainWindow>();
-        if (!main_window->load())
-            return exit_code;
+        step::gui::utils::high_dpi_fix();
+        qInstallMessageHandler(step::gui::utils::qt_log_handler);
 
-        main_window->show();
+        step::gui::Application app(argc, argv);
+        STEP_LOG(L_INFO, "Application created");
 
+        step::gui::MainWindow main_window;
+        STEP_LOG(L_INFO, "MainWindow created");
+
+        step::gui::GuiController gui_cotroller;
+        STEP_LOG(L_INFO, "GuiController created");
+
+        gui_cotroller.show_main_window_slot();
+
+        if (!step_app->is_started())
+            step_app->start();
+
+        STEP_LOG(L_INFO, "Application started");
+
+        STEP_LOG(L_INFO, "Trying to exec application");
         exit_code = app.exec();
     }
     catch (const std::exception& ex)
