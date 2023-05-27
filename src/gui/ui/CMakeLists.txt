@@ -4,13 +4,15 @@ set(PROJECT_ALIAS gui_ui)
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)
     file(GLOB HEADERS_CONTROLLERS controllers/*.hpp)
-    set(HEADERS ${HEADERS_BASE} ${HEADERS_CONTROLLERS})
+    file(GLOB HEADERS_VIDEO video/*.hpp)
+    set(HEADERS ${HEADERS_BASE} ${HEADERS_CONTROLLERS} ${HEADERS_VIDEO})
 endif()
 
 if(NOT DEFINED SOURCES)
     file(GLOB SOURCES
         *.cpp
         controllers/*.cpp
+        video/*.cpp
     )
 endif()
 
@@ -26,10 +28,12 @@ target_sources(${PROJECT_NAME}
     PUBLIC
     FILE_SET headers_base TYPE HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} FILES "${HEADERS_BASE}"
     FILE_SET headers_controllers TYPE HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/controllers FILES "${HEADERS_CONTROLLERS}"
+    FILE_SET headers_video TYPE HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/video FILES "${HEADERS_VIDEO}"
 )
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
+    step::ff_reader
     step::gui_application
     step::gui_resources
 )

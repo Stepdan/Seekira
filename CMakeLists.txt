@@ -54,6 +54,7 @@ if(WITH_GUI)
                 qt:qtdeclarative=True
                 qt:qtquickcontrols=True
                 qt:qtquickcontrols2=True
+                qt:qtmultimedia=True
                 qt:qtwebengine=False
                 qt:with_zstd=True
                 qt:with_pq=False
@@ -161,7 +162,7 @@ if(WITH_GUI)
     set(QT "Qt${QT_VERSION}")
     set(${QT}_DIR "${QT_DIR}/bin")
 
-    set(QT_COMPONENTS "Core;Gui;Widgets;Qml;Quick;QuickControls2")
+    set(QT_COMPONENTS "Core;Gui;Widgets;Qml;Quick;QuickControls2;Multimedia")
     find_package(${QT} COMPONENTS ${QT_COMPONENTS} REQUIRED)
     if(USE_EXTERNAL_QT)
         set(QML_IMPORT_PATH "${QT_DIR}/qml")
