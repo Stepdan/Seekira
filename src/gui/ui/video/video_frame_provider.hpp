@@ -8,14 +8,18 @@
 
 namespace step::gui {
 
-class VideoFrameProvider : public QObject, video::IFrameSourceObserver
+class VideoFrameProvider : public QObject, public video::IFrameSourceObserver
 {
     Q_OBJECT
-    Q_PROPERTY(QAbstractVideoSurface* videoSurface READ videoSurface WRITE setVideoSurface)
 
 public:
-    VideoFrameProvider(QObject* parent);
+    static void register_qml_type();
+
+public:
+    VideoFrameProvider(QObject* parent = nullptr);
     ~VideoFrameProvider();
+
+    Q_PROPERTY(QAbstractVideoSurface* videoSurface READ videoSurface WRITE setVideoSurface)
 
 public:
     QAbstractVideoSurface* videoSurface() const;

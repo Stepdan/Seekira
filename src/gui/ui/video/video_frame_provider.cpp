@@ -4,11 +4,18 @@
 
 #include <gui/utils/qimage_utils.hpp>
 
+#include <QtQml/qqml.h>
+
 namespace step::gui {
 
-VideoFrameProvider::VideoFrameProvider(QObject* parent) : QObject(parent), m_surface(nullptr) { closeSurface(); }
+void VideoFrameProvider::register_qml_type()
+{
+    qmlRegisterType<VideoFrameProvider>("step.VideoFrameProvider", 1, 0, "VideoFrameProvider");
+}
 
-VideoFrameProvider::~VideoFrameProvider() {}
+VideoFrameProvider::VideoFrameProvider(QObject* parent /*= nullptr*/) : QObject(parent), m_surface(nullptr) {}
+
+VideoFrameProvider::~VideoFrameProvider() { closeSurface(); }
 
 QAbstractVideoSurface* VideoFrameProvider::videoSurface() const { return m_surface; }
 
@@ -40,10 +47,20 @@ void VideoFrameProvider::process_frame(video::FramePtr frame_ptr)
     if (image.size() != m_format.frameSize() || pixel_format != m_format.pixelFormat())
     {
         closeSurface();
-        m_format = QVideoSurfaceFormat(image.size(), pixel_format);
-        m_surface->start(m_format);
+        auto format = QVideoSurfaceFormat(image.size(), pixel_format);
+        if (format.isValid())
+        {
+            m_format = format;
+            m_surface->start(m_format);
+        }
+        else
+        {
+            STEP_LOG(L_ERROR, "Invalid surface format: {}", m_format.pixelFormat());
+            return;
+        }
     }
 
+    STEP_LOG(L_INFO, "Frame processing: {}", frame_ptr);
     //передадим полученный кадр на отрисовку
     m_surface->present(QVideoFrame(image));
 }

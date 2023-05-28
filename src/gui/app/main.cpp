@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     try
     {
 #ifdef STEPKIT_DEBUG
-        step::log::Logger::instance().set_log_level(L_TRACE);
+        step::log::Logger::instance().set_log_level(L_DEBUG);
 #endif
 
         step::gui::utils::high_dpi_fix();
