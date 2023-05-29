@@ -47,6 +47,9 @@ GuiController::GuiController(QObject* parent) : QObject(parent), m_impl(std::mak
 {
     register_qml_types();
 
+    connect(&m_impl->m_video_frame_provider, &VideoFrameProvider::frame_updated_signal, this,
+            &GuiController::on_video_frame_updated_slot);
+
     STEP_LOG(L_INFO, "GuiController has been created!");
 }
 
@@ -79,10 +82,13 @@ void GuiController::show_main_window_slot()
     show_windows_on_start();
 }
 
+void GuiController::on_video_frame_updated_slot() {}
+
 void GuiController::register_qml_types()
 {
     //регистрация всех классов C++, требующих доступа из QML
     VideoFrameProvider::register_qml_type();
+    m_impl->m_video_frame_provider.setObjectName("videoFrameProvider");
 
     qmlRegisterInterface<QAbstractItemModel>("QAbstractItemModel");
 }
@@ -100,6 +106,7 @@ void GuiController::set_main_qml_engine()
     qml_context->setContextProperty("cpGuiController", this);
     qml_context->setContextProperty("cpObjectsConnectorID", new step::gui::ObjectsConnectorID(this));
     qml_context->setContextProperty("cpObjectsConnector", new step::gui::utils::ObjectsConnector(this));
+    qml_context->setContextProperty("cpVideoFrameProvider", &m_impl->m_video_frame_provider);
     STEP_LOG(L_DEBUG, "qml_context setContextProperty done");
 
     m_impl->m_engine->load(QUrl(QStringLiteral("qrc:/qml/main.qml")));

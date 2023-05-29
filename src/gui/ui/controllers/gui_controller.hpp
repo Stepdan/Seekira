@@ -27,6 +27,8 @@ public:
 public slots:
     void show_main_window_slot();
 
+    void on_video_frame_updated_slot();
+
 private:
     void register_qml_types();
     void set_main_qml_engine();

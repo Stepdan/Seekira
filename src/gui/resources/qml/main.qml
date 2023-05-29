@@ -26,6 +26,8 @@ ApplicationWindow {
     Component.onCompleted: {
         cpObjectsConnector.register_emitter(cpObjectsConnectorID.SET_QML_IN_MAIN_WINDOW, this, "setQmlWindowInQMainWindowSignal()")
 
+        //cpObjectsConnector.register_receiver(cpObjectsConnectorID.VIDEO_FRAME_UPDATED, this, "onVideoFrameUpdated()")
+
         setQmlWindowInQMainWindowSignal()
     }
 
@@ -53,26 +55,32 @@ ApplicationWindow {
         id: start_video_button
         anchors { top: parent.top; right: parent.right; topMargin: 10; rightMargin: 10 }
 
-        onClicked: start_video_button_clicked()
+        onClicked: startVideoButtonClicked()
     }
 
     // Callback's
-    function start_video_button_clicked() {
+    function startVideoButtonClicked() {
         Functions.startVideo();
     }
 
     Rectangle {
+        id: videoOutputRectangle
         width: parent.width - parent.width * 0.1
         height: parent.height
         //color: "#ff0000"
 
-        VideoFrameProvider {
-            id: videoFrameProvider;
+        VideoOutput {
+            id: videoOutput
+            anchors.fill: parent;
+            source: cpVideoFrameProvider;
         }
 
-        VideoOutput {
-            anchors.fill: parent;
-            source: videoFrameProvider;
+        Component.onCompleted: {
+            //cpObjectsConnector.register_receiver(cpObjectsConnectorID.VIDEO_FRAME_UPDATED, this, "onVideoFrameUpdated()", true)
+        }
+
+        function onVideoFrameUpdated() {
+            update()
         }
     }
 }

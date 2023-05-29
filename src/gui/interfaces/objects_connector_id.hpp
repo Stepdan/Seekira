@@ -25,6 +25,8 @@ class ObjectsConnectorID : public QObject
     // ObjectName главного QML окна
     ADD_PROPERTY(QML_MAIN_WINDOW)
 
+    ADD_PROPERTY(VIDEO_FRAME_UPDATED)
+
 public:
     explicit ObjectsConnectorID(QObject* parent = nullptr) : QObject(parent) {}
 };
