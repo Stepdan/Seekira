@@ -5,7 +5,9 @@ import QtQuick.Layouts 1.4
 import QtQuick.Window 2.15
 import QtMultimedia 5.15
 
-import step.VideoFrameProvider 1.0
+import step.gui.VideoFrameProvider 1.0
+
+import "player"
 
 import "common/functions.js" as Functions
 
@@ -14,8 +16,8 @@ ApplicationWindow {
     flags: Qt.Window
     objectName: cpObjectsConnectorID.QML_MAIN_WINDOW
 
-    width: 1280
-    height: availableHeight.windowAvailableHeight
+    width: 640
+    height: 480
     visible: true
     //color: "transparent"
 
@@ -25,8 +27,6 @@ ApplicationWindow {
 
     Component.onCompleted: {
         cpObjectsConnector.register_emitter(cpObjectsConnectorID.SET_QML_IN_MAIN_WINDOW, this, "setQmlWindowInQMainWindowSignal()")
-
-        //cpObjectsConnector.register_receiver(cpObjectsConnectorID.VIDEO_FRAME_UPDATED, this, "onVideoFrameUpdated()")
 
         setQmlWindowInQMainWindowSignal()
     }
@@ -51,36 +51,24 @@ ApplicationWindow {
         return outputData
     }
 
-    Button {
-        id: start_video_button
-        anchors { top: parent.top; right: parent.right; topMargin: 10; rightMargin: 10 }
+    //---------------Player---------------
 
-        onClicked: startVideoButtonClicked()
+    Loader {
+        id: playerWindowLoader
+    }
+
+    Button {
+        id: playerButton
+        anchors { top: parent.top; right: parent.right; topMargin: 10; rightMargin: 10 }
+        text: "Player"
+
+        onClicked: playerButtonClicked()
     }
 
     // Callback's
-    function startVideoButtonClicked() {
-        Functions.startVideo();
-    }
-
-    Rectangle {
-        id: videoOutputRectangle
-        width: parent.width - parent.width * 0.1
-        height: parent.height
-        //color: "#ff0000"
-
-        VideoOutput {
-            id: videoOutput
-            anchors.fill: parent;
-            source: cpVideoFrameProvider;
-        }
-
-        Component.onCompleted: {
-            //cpObjectsConnector.register_receiver(cpObjectsConnectorID.VIDEO_FRAME_UPDATED, this, "onVideoFrameUpdated()", true)
-        }
-
-        function onVideoFrameUpdated() {
-            update()
-        }
+    function playerButtonClicked() {
+        playerWindowLoader.source = "player/PlayerWindow.qml"
+        playerWindowLoader.item.show()
+        cpPlayerController.open_file("C:/Work/test_video/IMG_5903.MOV")
     }
 }

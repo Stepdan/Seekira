@@ -19,8 +19,10 @@ public:
     ReaderFF();
     ~ReaderFF();
 
-    void open_file(const std::string& filename);
+    bool open_file(const std::string& filename);
     TimeFF get_duration() const;
+    TimeFF get_frame_duration() const;
+    TimestampFF get_position() const;
 
     ReaderState get_state() const;
 
@@ -30,6 +32,7 @@ public:
     void seek(TimestampFF pos);
 
     void request_read();
+    void request_read_prev();
 
 public:
     void register_observer(IFrameSourceObserver* observer) override;
@@ -65,6 +68,10 @@ private:
 
     mutable std::mutex m_read_guard;
     std::condition_variable m_request_read_finished_cnd;
+
+    // Не придумал ничего лучше для позиционирования на один кадр назад
+    // запоминаем длину последнего кадра и делаем seek(position - last_frame_position)
+    TimeFF m_last_frame_duration{AV_NOPTS_VALUE};
 };
 
 }  // namespace step::video::ff

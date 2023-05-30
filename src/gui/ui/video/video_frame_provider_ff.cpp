@@ -1,4 +1,4 @@
-#include "video_frame_provider.hpp"
+#include "video_frame_provider_ff.hpp"
 
 #include <core/log/log.hpp>
 
@@ -8,56 +8,30 @@
 #include <gui/interfaces/declare_metatype.hpp>
 #include <gui/interfaces/objects_connector_id.hpp>
 
-#include <QtQml/qqml.h>
-
 namespace step::gui {
 
-void VideoFrameProvider::register_qml_type()
-{
-    qmlRegisterType<VideoFrameProvider>("step.VideoFrameProvider", 1, 0, "VideoFrameProvider");
-}
-
-VideoFrameProvider::VideoFrameProvider(QObject* parent /*= nullptr*/) : QObject(parent), m_surface(nullptr)
+VideoFrameProviderFF::VideoFrameProviderFF(QObject* parent /*= nullptr*/) : IVideoFrameProvider(parent)
 {
     // QueuedConnection, чтобы выполнить обработку в GUI потоке
-    connect(this, &VideoFrameProvider::frame_updated_signal, this, &VideoFrameProvider::on_process_frame_slot,
+    connect(this, &VideoFrameProviderFF::frame_updated_signal, this, &VideoFrameProviderFF::on_process_frame_slot,
             Qt::ConnectionType::QueuedConnection);
 }
 
-VideoFrameProvider::~VideoFrameProvider() { close_surface(); }
+VideoFrameProviderFF::~VideoFrameProviderFF() {}
 
-QAbstractVideoSurface* VideoFrameProvider::video_surface() const
-{
-    std::scoped_lock(m_guard);
-    return m_surface;
-}
-
-void VideoFrameProvider::set_video_surface(QAbstractVideoSurface* surface)
-{
-    std::scoped_lock(m_guard);
-    close_surface();
-    m_surface = surface;
-}
-
-void VideoFrameProvider::close_surface()
-{
-    if (m_surface && m_surface->isActive())
-        m_surface->stop();
-}
-
-void VideoFrameProvider::process_frame(step::video::FramePtr frame_ptr)
+void VideoFrameProviderFF::process_frame(step::video::FramePtr frame_ptr)
 {
     // Шлем сигнал, чтобы выполнить обработку в GUI потоке
     emit frame_updated_signal(frame_ptr);
 }
 
-void VideoFrameProvider::on_process_frame_slot(const step::video::FramePtr& frame_ptr)
+void VideoFrameProviderFF::on_process_frame_slot(const step::video::FramePtr& frame_ptr)
 {
     try
     {
         if (!frame_ptr)
         {
-            STEP_LOG(L_ERROR, "Empty frame in VideoFrameProvider::process_frame");
+            STEP_LOG(L_ERROR, "Empty frame in VideoFrameProviderFF::process_frame");
             return;
         }
 
@@ -94,7 +68,7 @@ void VideoFrameProvider::on_process_frame_slot(const step::video::FramePtr& fram
             }
         }
 
-        STEP_LOG(L_TRACE, "VideoFrameProvider: Frame processing: {}", frame_ptr);
+        STEP_LOG(L_TRACE, "VideoFrameProviderFF: Frame processing: {}", frame_ptr);
         if (!m_surface->present(QVideoFrame(image)))
         {
             STEP_LOG(L_ERROR, "Failed to present frame");
@@ -103,12 +77,12 @@ void VideoFrameProvider::on_process_frame_slot(const step::video::FramePtr& fram
     }
     catch (std::exception& e)
     {
-        STEP_LOG(L_ERROR, "Catch exception during VideoFrameProvider::process_frame: {}", e.what());
+        STEP_LOG(L_ERROR, "Catch exception during VideoFrameProviderFF::process_frame: {}", e.what());
         m_exception = std::current_exception();
     }
     catch (...)
     {
-        STEP_LOG(L_ERROR, "Catch unknown exception during VideoFrameProvider::process_frame:");
+        STEP_LOG(L_ERROR, "Catch unknown exception during VideoFrameProviderFF::process_frame:");
         m_exception = std::current_exception();
     }
 }

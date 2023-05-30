@@ -25,6 +25,9 @@ class ObjectsConnectorID : public QObject
     // ObjectName главного QML окна
     ADD_PROPERTY(QML_MAIN_WINDOW)
 
+    // ObjectName QML окна плеера
+    ADD_PROPERTY(QML_PLAYER_WINDOW)
+
     ADD_PROPERTY(VIDEO_FRAME_UPDATED)
 
 public:

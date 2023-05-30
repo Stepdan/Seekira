@@ -1,14 +1,11 @@
 #include "gui_controller.hpp"
+#include "player_controller_ff.hpp"
 
 #include <core/log/log.hpp>
 
 #include <core/exception/assert.hpp>
 
 #include <gui/interfaces/objects_connector_id.hpp>
-
-#include <gui/ui/video/video_frame_provider.hpp>
-
-#include <video/ffmpeg/reader/reader.hpp>
 
 #include <QAbstractItemModel>
 #include <QTimer>
@@ -20,7 +17,10 @@ namespace step::gui {
 
 struct GuiController::Impl
 {
-    Impl(GuiController& gc) : m_gui_controller(gc) { m_video_frame_provider.setParent(&m_gui_controller); }
+    Impl(GuiController& gc) : m_gui_controller(gc)
+    {
+        m_player_controller = std::make_unique<PlayerControllerFF>(&m_gui_controller);
+    }
 
     ~Impl()
     {
@@ -31,8 +31,7 @@ struct GuiController::Impl
 public:
     std::unique_ptr<QQmlApplicationEngine> m_engine;
 
-    VideoFrameProvider m_video_frame_provider;
-    std::unique_ptr<video::ff::ReaderFF> m_video_reader;
+    std::unique_ptr<IPlayerController> m_player_controller;
 
 private:
     GuiController& m_gui_controller;
@@ -47,26 +46,12 @@ GuiController::GuiController(QObject* parent) : QObject(parent), m_impl(std::mak
 {
     register_qml_types();
 
-    connect(&m_impl->m_video_frame_provider, &VideoFrameProvider::frame_updated_signal, this,
-            &GuiController::on_video_frame_updated_slot);
-
     STEP_LOG(L_INFO, "GuiController has been created!");
 }
 
 GuiController::~GuiController() {}
 
-video::IFrameSourceObserver* GuiController::get_frame_observer() const { return &(m_impl->m_video_frame_provider); }
-
 bool GuiController::main_window_closing() { return true; }
-
-void GuiController::start_video()
-{
-    STEP_LOG(L_DEBUG, "GuiController: Start video");
-    m_impl->m_video_reader = std::make_unique<video::ff::ReaderFF>();
-    m_impl->m_video_reader->open_file("C:/Work/test_video/IMG_5903.MOV");
-    m_impl->m_video_reader->register_observer(get_frame_observer());
-    m_impl->m_video_reader->start(video::ff::ReadingMode::Continuously);
-}
 
 void GuiController::show_main_window_slot()
 {
@@ -82,15 +67,15 @@ void GuiController::show_main_window_slot()
     show_windows_on_start();
 }
 
-void GuiController::on_video_frame_updated_slot() {}
-
 void GuiController::register_qml_types()
 {
     //регистрация всех классов C++, требующих доступа из QML
-    VideoFrameProvider::register_qml_type();
-    m_impl->m_video_frame_provider.setObjectName("videoFrameProvider");
+    register_qml_enums();
+
+    IVideoFrameProvider::register_qml_type();
 
     qmlRegisterInterface<QAbstractItemModel>("QAbstractItemModel");
+    qmlRegisterInterface<IPlayerController>("IPlayerController");
 }
 
 void GuiController::set_main_qml_engine()
@@ -106,7 +91,8 @@ void GuiController::set_main_qml_engine()
     qml_context->setContextProperty("cpGuiController", this);
     qml_context->setContextProperty("cpObjectsConnectorID", new step::gui::ObjectsConnectorID(this));
     qml_context->setContextProperty("cpObjectsConnector", new step::gui::utils::ObjectsConnector(this));
-    qml_context->setContextProperty("cpVideoFrameProvider", &m_impl->m_video_frame_provider);
+    qml_context->setContextProperty("cpVideoFrameProvider", m_impl->m_player_controller->get_video_frame_provider());
+    qml_context->setContextProperty("cpPlayerController", m_impl->m_player_controller.get());
     STEP_LOG(L_DEBUG, "qml_context setContextProperty done");
 
     m_impl->m_engine->load(QUrl(QStringLiteral("qrc:/qml/main.qml")));

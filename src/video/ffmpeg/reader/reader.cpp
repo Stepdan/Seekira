@@ -14,10 +14,14 @@ ReaderFF::~ReaderFF()
     stop();
 }
 
-void ReaderFF::open_file(const std::string& filename)
+bool ReaderFF::open_file(const std::string& filename)
 {
     m_parser = std::make_shared<ParserFF>();
-    m_parser->open_file(filename);
+    if (!m_parser->open_file(filename))
+    {
+        STEP_LOG(L_ERROR, "Failed to open file {}", filename);
+        return false;
+    }
 
     m_demuxer = std::make_shared<DemuxerQueue>(m_parser);
     m_stream_reader = std::make_shared<StreamReader>(m_demuxer);
@@ -27,14 +31,31 @@ void ReaderFF::open_file(const std::string& filename)
     set_reader_state(ReaderState::Ready);
 
     m_filename = filename;
+
+    return true;
 }
 
 TimeFF ReaderFF::get_duration() const
 {
-    if (!m_stream)
-        STEP_THROW_RUNTIME("ReaderFF can't provide duration: empty stream!");
-
+    std::scoped_lock lock(m_read_guard);
+    STEP_ASSERT(m_stream, "ReaderFF can't provide duration: empty stream!");
     return m_stream->get_duration();
+}
+
+TimeFF ReaderFF::get_frame_duration() const
+{
+    std::scoped_lock lock(m_read_guard);
+    STEP_ASSERT(m_last_frame_duration != AV_NOPTS_VALUE,
+                "ReaderFF can't provide frame duration: m_last_frame_duration is empty!");
+    return m_last_frame_duration;
+}
+
+TimestampFF ReaderFF::get_position() const
+{
+    std::scoped_lock lock(m_read_guard);
+    STEP_ASSERT(m_stream, "ReaderFF can't provide position: empty stream!");
+
+    return m_stream->get_position();
 }
 
 ReaderState ReaderFF::get_state() const
@@ -76,6 +97,8 @@ void ReaderFF::stop()
     // release request_read
     m_need_read_cnd.set_value(false);
     m_request_read_finished_cnd.notify_all();
+
+    m_state = ReaderState::Ready;
 }
 
 void ReaderFF::seek(TimestampFF pos)
@@ -84,10 +107,10 @@ void ReaderFF::seek(TimestampFF pos)
 
     STEP_LOG(L_INFO, "Try to seek to {}", pos);
     const auto prev_state = m_state;
-    set_reader_state(ReaderState::TryToSeek);
 
     stop();
 
+    set_reader_state(ReaderState::TryToSeek);
     m_stream->request_seek(pos, nullptr);
     m_stream->do_seek();
     if (!m_stream->get_last_seek_result())
@@ -135,6 +158,42 @@ void ReaderFF::request_read()
     m_request_read_finished_cnd.wait(lock, [this]() { return !m_need_read_cnd.get_value(); });
 }
 
+void ReaderFF::request_read_prev()
+{
+    // TODO recursive lock?
+    {
+        std::unique_lock lock(m_read_guard);
+
+        if (m_read_mode != ReadingMode::ByRequest)
+        {
+            STEP_LOG(L_ERROR, "Can't do request_read_prev: read mode is {}", step::utils::to_string(m_read_mode));
+            return;
+        }
+
+        if (m_state != ReaderState::ReadingByRequest)
+        {
+            STEP_LOG(L_WARN, "Can't do request_read_prev: reader state is {}", step::utils::to_string(m_state));
+            return;
+        }
+
+        if (m_need_read_cnd.get_value())
+        {
+            STEP_THROW_RUNTIME("request_read_prev has m_need_read = true instead of false");
+        }
+
+        if (m_last_frame_duration == AV_NOPTS_VALUE)
+        {
+            STEP_LOG(L_ERROR, "Can't do request_read_prev: m_last_frame_duration is invalid");
+            return;
+        }
+    }
+
+    // TODO recursive lock?
+    STEP_LOG(L_TRACE, "Request read prev");
+    seek(m_stream->get_position() - m_last_frame_duration);
+    request_read();
+}
+
 void ReaderFF::set_reader_state(ReaderState state)
 {
     m_state = state;
@@ -170,6 +229,7 @@ void ReaderFF::worker_thread()
                 auto frame_ptr = m_stream->read_frame();
                 if (frame_ptr)
                 {
+                    m_last_frame_duration = frame_ptr->duration;
                     m_frame_observers.perform_for_each_event_handler(
                         std::bind(&IFrameSourceObserver::process_frame, std::placeholders::_1, frame_ptr));
 
