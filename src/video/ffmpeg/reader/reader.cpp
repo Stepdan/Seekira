@@ -37,14 +37,12 @@ bool ReaderFF::open_file(const std::string& filename)
 
 TimeFF ReaderFF::get_duration() const
 {
-    std::scoped_lock lock(m_read_guard);
     STEP_ASSERT(m_stream, "ReaderFF can't provide duration: empty stream!");
     return m_stream->get_duration();
 }
 
 TimeFF ReaderFF::get_frame_duration() const
 {
-    std::scoped_lock lock(m_read_guard);
     STEP_ASSERT(m_last_frame_duration != AV_NOPTS_VALUE,
                 "ReaderFF can't provide frame duration: m_last_frame_duration is empty!");
     return m_last_frame_duration;
@@ -52,17 +50,11 @@ TimeFF ReaderFF::get_frame_duration() const
 
 TimestampFF ReaderFF::get_position() const
 {
-    std::scoped_lock lock(m_read_guard);
     STEP_ASSERT(m_stream, "ReaderFF can't provide position: empty stream!");
-
-    return m_stream->get_position();
+    return m_last_frame_ts;
 }
 
-ReaderState ReaderFF::get_state() const
-{
-    std::scoped_lock lock(m_read_guard);
-    return m_state;
-}
+ReaderState ReaderFF::get_state() const { return m_state; }
 
 void ReaderFF::start(ReadingMode mode)
 {
@@ -101,15 +93,86 @@ void ReaderFF::stop()
     m_state = ReaderState::Ready;
 }
 
-void ReaderFF::seek(TimestampFF pos)
+void ReaderFF::set_position(TimestampFF pos)
 {
-    std::scoped_lock lock(m_read_guard);
+    STEP_LOG(L_DEBUG, "Try to set position {} to {}", get_position(), pos);
 
-    STEP_LOG(L_INFO, "Try to seek to {}", pos);
-    const auto prev_state = m_state;
+    // Фиксим выходы за временные границы
+    if (pos < 0)
+        pos = 0;
+
+    if (pos > get_duration())
+        pos = get_duration();
+
+    const auto prev_read_mode = m_read_mode;
+
+    // Отключаем обзерверов, чтобы не летели кадры и статусы
+    m_frame_observers.disable();
+    m_reader_observers.disable();
+
+    // TODO Краевые условия
 
     stop();
 
+    seek(pos);
+
+    if (m_state != ReaderState::SuccessfulSeek)
+        return;
+
+    // После seek мы стоим на ключевом кадре, надо дочитать до нужного места, если требуется
+
+    // Читаем по одному кадру, пока следующий для чтения кадр не будет нужным
+    start(ReadingMode::ByRequest);
+    auto next_frame_ts = m_stream->get_position();
+    // duration следующего кадра: m_stream->get_pkt_duration();
+    auto after_next_frame_ts = next_frame_ts + m_stream->get_pkt_duration();
+
+    // Проверяем, что дошли по таймштампам до нужного кадра (следующий при чтении - нужный)
+    const auto check_ts = [&pos, &next_frame_ts, &after_next_frame_ts]() {
+        return next_frame_ts != pos && after_next_frame_ts < pos;
+    };
+
+    // Состояние должно быть валидным после чтения кадра
+    const auto check_state = [this]() {
+        return m_state == ReaderState::ReadingByRequest || m_state == ReaderState::SuccessfulSeek;
+    };
+
+    while (check_state() && check_ts())
+    {
+        request_read();
+        next_frame_ts = m_stream->get_position();
+        after_next_frame_ts = next_frame_ts + m_stream->get_pkt_duration();
+    }
+
+    // Дошли до нужного места (или не дошли из-за ошибки) - включаем обзерверов
+    m_frame_observers.enable();
+    m_reader_observers.enable();
+
+    if (!check_state())
+    {
+        STEP_LOG(L_DEBUG, "Invalid set_position to {} because of invalid state: {}", pos,
+                 step::utils::to_string(m_state));
+        // перезапишем состояние, чтобы оно улетело подписчикам
+        set_reader_state(m_state);
+        return;
+    }
+
+    // Читаем нужный нам кадр
+    STEP_LOG(L_DEBUG, "Read frame with desired position");
+    request_read();
+
+    STEP_LOG(L_DEBUG, "Position has been setted to {} [{}]", m_last_frame_ts, pos);
+
+    // Если предыдущий режим был Continiously - принудительно включаем
+    if (prev_read_mode == ReadingMode::Continuously)
+    {
+        stop();
+        start(ReadingMode::Continuously);
+    }
+}
+
+void ReaderFF::seek(TimestampFF pos)
+{
     set_reader_state(ReaderState::TryToSeek);
     m_stream->request_seek(pos, nullptr);
     m_stream->do_seek();
@@ -122,11 +185,6 @@ void ReaderFF::seek(TimestampFF pos)
 
     STEP_LOG(L_INFO, "Succesful seek to {} [{}]", m_stream->get_position(), pos);
     set_reader_state(ReaderState::SuccessfulSeek);
-
-    if (prev_state == ReaderState::ReadingContiniously || prev_state == ReaderState::ReadingByRequest)
-    {
-        start(m_read_mode);
-    }
 }
 
 void ReaderFF::request_read()
@@ -139,7 +197,7 @@ void ReaderFF::request_read()
         return;
     }
 
-    if (m_state != ReaderState::ReadingByRequest)
+    if (m_state != ReaderState::ReadingByRequest && m_state != ReaderState::SuccessfulSeek)
     {
         STEP_LOG(L_WARN, "Can't do request_read: reader state is {}", step::utils::to_string(m_state));
         return;
@@ -156,42 +214,37 @@ void ReaderFF::request_read()
 
     // Wait until reading finish
     m_request_read_finished_cnd.wait(lock, [this]() { return !m_need_read_cnd.get_value(); });
+
+    STEP_LOG(L_DEBUG, "Read frame with ts {}, duration {}", m_last_frame_ts, m_last_frame_duration);
 }
 
 void ReaderFF::request_read_prev()
 {
-    // TODO recursive lock?
+    if (m_read_mode != ReadingMode::ByRequest)
     {
-        std::unique_lock lock(m_read_guard);
+        STEP_LOG(L_ERROR, "Can't do request_read_prev: read mode is {}", step::utils::to_string(m_read_mode));
+        return;
+    }
 
-        if (m_read_mode != ReadingMode::ByRequest)
-        {
-            STEP_LOG(L_ERROR, "Can't do request_read_prev: read mode is {}", step::utils::to_string(m_read_mode));
-            return;
-        }
+    if (m_state != ReaderState::ReadingByRequest && m_state != ReaderState::SuccessfulSeek)
+    {
+        STEP_LOG(L_WARN, "Can't do request_read_prev: reader state is {}", step::utils::to_string(m_state));
+        return;
+    }
 
-        if (m_state != ReaderState::ReadingByRequest)
-        {
-            STEP_LOG(L_WARN, "Can't do request_read_prev: reader state is {}", step::utils::to_string(m_state));
-            return;
-        }
+    if (m_need_read_cnd.get_value())
+    {
+        STEP_THROW_RUNTIME("request_read_prev has m_need_read = true instead of false");
+    }
 
-        if (m_need_read_cnd.get_value())
-        {
-            STEP_THROW_RUNTIME("request_read_prev has m_need_read = true instead of false");
-        }
-
-        if (m_last_frame_duration == AV_NOPTS_VALUE)
-        {
-            STEP_LOG(L_ERROR, "Can't do request_read_prev: m_last_frame_duration is invalid");
-            return;
-        }
+    if (m_last_frame_duration == AV_NOPTS_VALUE)
+    {
+        STEP_LOG(L_ERROR, "Can't do request_read_prev: m_last_frame_duration is invalid");
+        return;
     }
 
     // TODO recursive lock?
-    STEP_LOG(L_TRACE, "Request read prev");
-    seek(m_stream->get_position() - m_last_frame_duration);
-    request_read();
+    set_position(get_position() - m_last_frame_duration);
 }
 
 void ReaderFF::set_reader_state(ReaderState state)
@@ -224,12 +277,18 @@ void ReaderFF::worker_thread()
 
             {
                 if (break_predicate())
+                {
+                    // Освобождаем "ждуна" в request_read
+                    m_request_read_finished_cnd.notify_all();
                     break;
+                }
 
                 auto frame_ptr = m_stream->read_frame();
                 if (frame_ptr)
                 {
+                    m_last_frame_ts = frame_ptr->ts.count();
                     m_last_frame_duration = frame_ptr->duration;
+
                     m_frame_observers.perform_for_each_event_handler(
                         std::bind(&IFrameSourceObserver::process_frame, std::placeholders::_1, frame_ptr));
 
@@ -260,7 +319,7 @@ void ReaderFF::worker_thread()
     // Smth happened during read, reset need_read flag, no valid frame here
     if (m_read_mode == ReadingMode::ByRequest)
     {
-        STEP_LOG(L_INFO, "Set need_read to 'false' during finishing ReaderFF thread worker");
+        STEP_LOG(L_DEBUG, "Set need_read to 'false' during finishing ReaderFF thread worker");
         m_need_read_cnd.set_value(false);
         m_request_read_finished_cnd.notify_all();
     }

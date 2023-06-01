@@ -29,7 +29,7 @@ public:
     void start(ReadingMode mode);
     void stop();
 
-    void seek(TimestampFF pos);
+    void set_position(TimestampFF);
 
     void request_read();
     void request_read_prev();
@@ -42,6 +42,8 @@ public:
     void unregister_observer(IReaderEventObserver* observer) override;
 
 private:
+    void seek(TimestampFF pos);
+
     void run_worker() override;
     void stop_worker() override;
     void worker_thread() override;
@@ -71,7 +73,8 @@ private:
 
     // Не придумал ничего лучше для позиционирования на один кадр назад
     // запоминаем длину последнего кадра и делаем seek(position - last_frame_position)
-    TimeFF m_last_frame_duration{AV_NOPTS_VALUE};
+    TimeFF m_last_frame_duration{0};
+    TimestampFF m_last_frame_ts{0};
 };
 
 }  // namespace step::video::ff

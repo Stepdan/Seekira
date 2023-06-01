@@ -2,6 +2,8 @@
 
 #include "event_publisher.hpp"
 
+#include <core/log/log.hpp>
+
 #include <algorithm>
 #include <functional>
 #include <mutex>
@@ -27,10 +29,38 @@ protected:
     using EventHandler = typename EventPublisher<IHandler>::Handler;
 
 public:
+    void disable()
+    {
+        if (!m_enabled)
+            return;
+
+        std::unique_lock<std::recursive_mutex> lock(m_access_guard);
+        m_cache.clear();
+        swap_cache();
+        m_enabled = false;
+    }
+
+    void enable()
+    {
+        if (m_enabled)
+            return;
+
+        std::unique_lock<std::recursive_mutex> lock(m_access_guard);
+        swap_cache();
+        m_enabled = true;
+    }
+
+public:
     virtual void register_event_handler(EventHandler* handler) override
     {
         if (!handler)
             return;
+
+        if (!m_enabled)
+        {
+            STEP_LOG(L_WARN, "Can't register event handler: disabled!");
+            return;
+        }
 
         std::unique_lock<std::recursive_mutex> lock(m_access_guard);
 
@@ -43,6 +73,12 @@ public:
         if (!handler)
             return;
 
+        if (!m_enabled)
+        {
+            STEP_LOG(L_WARN, "Can't unregister event handler: disabled!");
+            return;
+        }
+
         std::unique_lock<std::recursive_mutex> lock(m_access_guard);
 
         if (auto it = std::find(m_subscribers.begin(), m_subscribers.end(), handler); it != m_subscribers.end())
@@ -52,6 +88,9 @@ public:
     template <typename FunctorType>
     void perform_for_each_event_handler(FunctorType functor)
     {
+        if (!m_enabled)
+            STEP_LOG(L_WARN, "EventHandlerList is disabled!");
+
         std::vector<EventHandler*> subscribersCopy;
 
         {
@@ -76,10 +115,16 @@ public:
     }
 
 private:
+    void swap_cache() { m_subscribers.swap(m_cache); }
+
+private:
     std::vector<EventHandler*> m_subscribers;
     std::recursive_mutex m_access_guard;
     std::recursive_mutex m_notification_guard;
     DeliveryPolicy m_exec_policy;
+
+    std::vector<EventHandler*> m_cache;
+    bool m_enabled{true};
 };
 
 }  // namespace step

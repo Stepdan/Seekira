@@ -216,6 +216,15 @@ bool DemuxedStream::is_terminated() const { return m_terminated; }
 
 bool DemuxedStream::is_eof_reached() { return m_reader->is_eof_reached(); }
 
+TimeFF DemuxedStream::get_pkt_duration()
+{
+    std::scoped_lock lock(m_read_pkt_mutex);
+    if (!m_buffered_packet)
+        return AV_NOPTS_VALUE;
+
+    return m_buffered_packet->duration();
+}
+
 void DemuxedStream::release_internal_data()
 {
     std::scoped_lock lock(m_read_pkt_mutex, m_read_frame_mutex);

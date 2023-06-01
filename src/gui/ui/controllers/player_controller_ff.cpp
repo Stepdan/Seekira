@@ -61,9 +61,8 @@ bool PlayerControllerFF::open_file(const QString& filename)
         m_is_loaded = true;
     }
 
-    // Прочитаем первый кадр, чтобы показать на экране
+    // Прочитаем первый кадр, чтобы показать на экране и встать в 0
     step_frame(Enums::PLAYER_DIRECTION_FORWARD);
-    step_frame(Enums::PLAYER_DIRECTION_BACKWARD);
 
     return true;
 }
@@ -97,7 +96,7 @@ void PlayerControllerFF::play_state_switch()
         }
         case QMediaPlayer::State::StoppedState: {
             m_video_reader->stop();
-            m_video_reader->seek(0);
+            m_video_reader->set_position(0);
             break;
         }
     }
@@ -116,7 +115,7 @@ void PlayerControllerFF::step_rewind(Enums::PlayerDirection direction)
     // Иначе делаем seek и проигрываем дальше
 
     const auto sign = (direction == Enums::PLAYER_DIRECTION_BACKWARD) ? -1 : 1;
-    m_video_reader->seek(m_video_reader->get_position() + sign);
+    m_video_reader->set_position(m_video_reader->get_position() + sign * STEP_VALUE);
 }
 
 void PlayerControllerFF::step_frame(Enums::PlayerDirection direction)

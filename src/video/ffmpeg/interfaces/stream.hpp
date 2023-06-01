@@ -16,8 +16,8 @@ public:
     virtual DataPacketPtr read() = 0;
     virtual void request_seek(TimestampFF time, const std::shared_ptr<IStream>& result_checker) = 0;
     virtual void do_seek() = 0;
-    virtual bool
-    get_seek_result() = 0;  // Используется StreamReader'ом, для обычной проверки успешности последнего Seek использовать get_last_seek_result
+    virtual bool get_seek_result() = 0;  // Используется StreamReader'ом, для обычной проверки успешности
+                                         // последнего Seekиспользовать get_last_seek_result
 
     virtual bool get_last_seek_result() const = 0;
 
@@ -30,6 +30,7 @@ public:
     virtual MediaType get_media_type() const = 0;
     virtual FramePtr read_frame() = 0;  // *STEP
     virtual bool is_eof_reached() = 0;
+    virtual TimeFF get_pkt_duration() = 0;
 };
 
 using StreamPtr = std::shared_ptr<IStream>;

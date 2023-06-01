@@ -154,7 +154,7 @@ TEST_F(FFTest, ff_reader_single_seek)
     m_reader->register_observer(this);
 
     EXPECT_NO_THROW(m_reader->start(ReadingMode::ByRequest));
-    EXPECT_NO_THROW(m_reader->seek(m_reader->get_duration() / 2));
+    EXPECT_NO_THROW(m_reader->set_position(m_reader->get_duration() / 2));
     EXPECT_NO_THROW(m_reader->request_read());
 }
 
@@ -169,9 +169,9 @@ TEST_F(FFTest, ff_reader_seek_to_zero)
     m_reader->register_observer(this);
 
     EXPECT_NO_THROW(m_reader->start(ReadingMode::ByRequest));
-    EXPECT_NO_THROW(m_reader->seek(m_reader->get_duration() / 2));
+    EXPECT_NO_THROW(m_reader->set_position(m_reader->get_duration() / 2));
     EXPECT_NO_THROW(m_reader->request_read());
-    EXPECT_NO_THROW(m_reader->seek(0));
+    EXPECT_NO_THROW(m_reader->set_position(0));
     EXPECT_NO_THROW(m_reader->request_read());
 }
 
@@ -186,7 +186,7 @@ TEST_F(FFTest, ff_reader_seek_to_end)
     m_reader->register_observer(this);
 
     EXPECT_NO_THROW(m_reader->start(ReadingMode::ByRequest));
-    EXPECT_NO_THROW(m_reader->seek(m_reader->get_duration()));
+    EXPECT_NO_THROW(m_reader->set_position(m_reader->get_duration()));
     EXPECT_NO_THROW(m_reader->request_read());
 
     ASSERT_EQ(ReaderState::EndOfFile, m_reader->get_state());
@@ -203,7 +203,7 @@ TEST_F(FFTest, ff_reader_seek_over_the_end)
     m_reader->register_observer(this);
 
     EXPECT_NO_THROW(m_reader->start(ReadingMode::ByRequest));
-    EXPECT_NO_THROW(m_reader->seek(m_reader->get_duration() + m_reader->get_duration() / 10));
+    EXPECT_NO_THROW(m_reader->set_position(m_reader->get_duration() + m_reader->get_duration() / 10));
     EXPECT_NO_THROW(m_reader->request_read());
 
     ASSERT_EQ(ReaderState::EndOfFile, m_reader->get_state());

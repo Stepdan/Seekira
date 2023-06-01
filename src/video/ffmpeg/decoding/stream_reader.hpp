@@ -33,6 +33,7 @@ public:
 
     FramePtr read_frame() override;  // *STEP
     bool is_eof_reached() override;
+    TimeFF get_pkt_duration() override;
 
     void unlink_from_reader();
 
