@@ -89,7 +89,7 @@ public:
     void perform_for_each_event_handler(FunctorType functor)
     {
         if (!m_enabled)
-            STEP_LOG(L_WARN, "EventHandlerList is disabled!");
+            STEP_LOG(L_TRACE, "EventHandlerList is disabled!");
 
         std::vector<EventHandler*> subscribersCopy;
 

@@ -117,7 +117,8 @@ TEST_F(FFTest, ff_reader_continuously_reading)
     m_reader->register_observer(m_frame_observer.get());
     m_reader->register_observer(this);
 
-    EXPECT_NO_THROW(m_reader->start(ReadingMode::Continuously));
+    EXPECT_NO_THROW(m_reader->start());
+    EXPECT_NO_THROW(m_reader->play());
     while (!m_is_reading_finished)
         std::this_thread::sleep_for(50ms);
 }
@@ -132,7 +133,7 @@ TEST_F(FFTest, ff_reader_request_reading)
     m_reader->register_observer(m_frame_observer.get());
     m_reader->register_observer(this);
 
-    EXPECT_NO_THROW(m_reader->start(ReadingMode::ByRequest));
+    EXPECT_NO_THROW(m_reader->start());
 
     for (size_t i = 0; i < 10; ++i)
     {
@@ -153,7 +154,7 @@ TEST_F(FFTest, ff_reader_single_seek)
     m_reader->register_observer(m_frame_observer.get());
     m_reader->register_observer(this);
 
-    EXPECT_NO_THROW(m_reader->start(ReadingMode::ByRequest));
+    EXPECT_NO_THROW(m_reader->start());
     EXPECT_NO_THROW(m_reader->set_position(m_reader->get_duration() / 2));
     EXPECT_NO_THROW(m_reader->request_read());
 }
@@ -168,7 +169,7 @@ TEST_F(FFTest, ff_reader_seek_to_zero)
     m_reader->register_observer(m_frame_observer.get());
     m_reader->register_observer(this);
 
-    EXPECT_NO_THROW(m_reader->start(ReadingMode::ByRequest));
+    EXPECT_NO_THROW(m_reader->start());
     EXPECT_NO_THROW(m_reader->set_position(m_reader->get_duration() / 2));
     EXPECT_NO_THROW(m_reader->request_read());
     EXPECT_NO_THROW(m_reader->set_position(0));
@@ -185,7 +186,7 @@ TEST_F(FFTest, ff_reader_seek_to_end)
     m_reader->register_observer(m_frame_observer.get());
     m_reader->register_observer(this);
 
-    EXPECT_NO_THROW(m_reader->start(ReadingMode::ByRequest));
+    EXPECT_NO_THROW(m_reader->start());
     EXPECT_NO_THROW(m_reader->set_position(m_reader->get_duration()));
     EXPECT_NO_THROW(m_reader->request_read());
 
@@ -202,7 +203,7 @@ TEST_F(FFTest, ff_reader_seek_over_the_end)
     m_reader->register_observer(m_frame_observer.get());
     m_reader->register_observer(this);
 
-    EXPECT_NO_THROW(m_reader->start(ReadingMode::ByRequest));
+    EXPECT_NO_THROW(m_reader->start());
     EXPECT_NO_THROW(m_reader->set_position(m_reader->get_duration() + m_reader->get_duration() / 10));
     EXPECT_NO_THROW(m_reader->request_read());
 

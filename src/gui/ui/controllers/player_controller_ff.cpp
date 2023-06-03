@@ -8,7 +8,7 @@
 #include <gui/ui/video/video_frame_provider_ff.hpp>
 
 namespace {
-constexpr step::video::ff::TimestampFF STEP_VALUE = 10 * step::video::ff::AV_SECOND;
+constexpr step::video::ff::TimestampFF STEP_VALUE = 2 * step::video::ff::AV_SECOND;
 }
 
 namespace step::gui {
@@ -62,6 +62,7 @@ bool PlayerControllerFF::open_file(const QString& filename)
     }
 
     // Прочитаем первый кадр, чтобы показать на экране и встать в 0
+    m_video_reader->start();
     step_frame(Enums::PLAYER_DIRECTION_FORWARD);
 
     return true;
@@ -86,15 +87,17 @@ void PlayerControllerFF::play_state_switch()
     switch (state)
     {
         case QMediaPlayer::State::PlayingState: {
-            m_video_reader->stop();
-            m_video_reader->start(video::ff::ReadingMode::Continuously);
+            STEP_LOG(L_DEBUG, "PLAY");
+            m_video_reader->play();
             break;
         }
         case QMediaPlayer::State::PausedState: {
-            m_video_reader->stop();
+            STEP_LOG(L_DEBUG, "PAUSE");
+            m_video_reader->pause();
             break;
         }
         case QMediaPlayer::State::StoppedState: {
+            STEP_LOG(L_DEBUG, "STOP");
             m_video_reader->stop();
             m_video_reader->set_position(0);
             break;
@@ -115,6 +118,7 @@ void PlayerControllerFF::step_rewind(Enums::PlayerDirection direction)
     // Иначе делаем seek и проигрываем дальше
 
     const auto sign = (direction == Enums::PLAYER_DIRECTION_BACKWARD) ? -1 : 1;
+    STEP_LOG(L_DEBUG, "STEP REWIND {}", sign);
     m_video_reader->set_position(m_video_reader->get_position() + sign * STEP_VALUE);
 }
 
@@ -125,12 +129,11 @@ void PlayerControllerFF::step_frame(Enums::PlayerDirection direction)
     if (m_state == QMediaPlayer::State::StoppedState)
         return;
 
-    // принудительно останавливаем чтение и настраиваем в режим чтения по запросу
-    m_video_reader->stop();
+    // принудительно останавливаем чтение
+    m_video_reader->pause();
     m_state = QMediaPlayer::State::PausedState;
 
-    m_video_reader->start(video::ff::ReadingMode::ByRequest);
-
+    STEP_LOG(L_DEBUG, "STEP FRAME {}", (direction == Enums::PLAYER_DIRECTION_BACKWARD) ? -1 : 1);
     if (direction == Enums::PLAYER_DIRECTION_FORWARD)
         m_video_reader->request_read();
     else

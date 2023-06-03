@@ -24,9 +24,11 @@ public:
     void notify_one() { cnd.notify_one(); }
     void notify_all() { cnd.notify_all(); }
 
+public:
+    std::mutex mutex;
+
 private:
     std::atomic_bool param;
-    std::mutex mutex;
     std::condition_variable cnd;
 };
 
