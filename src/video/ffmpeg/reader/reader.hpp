@@ -1,5 +1,6 @@
 #pragma once
 
+#include "reader_event.hpp"
 #include "reader_event_handler.hpp"
 
 #include <core/threading/thread_worker.hpp>
@@ -8,36 +9,34 @@
 
 #include <video/frame/interfaces/frame_interfaces.hpp>
 
+#include <video/ffmpeg/interfaces/reader.hpp>
 #include <video/ffmpeg/decoding/stream_reader.hpp>
 #include <video/ffmpeg/decoding/decoder_video.hpp>
 
-#include <shared_mutex>
+#include <queue>
 
 namespace step::video::ff {
 
-class ReaderFF : public step::threading::ThreadWorker, public IFrameSource, public IReaderEventSource
+class ReaderFF : public IReader, public IFrameSource, public IReaderEventSource, public threading::ThreadWorker
 {
 public:
     ReaderFF();
     ~ReaderFF();
 
-    bool open_file(const std::string& filename);
-    TimeFF get_duration() const;
-    TimeFF get_frame_duration() const;
-    TimestampFF get_position() const;
+public:
+    bool open_file(const std::string& filename) override;
+    void start() override;
+    TimeFF get_duration() const override;
+    TimestampFF get_position() const override;
 
-    ReaderState get_state() const;
-
-    void start();
-    void stop();
-
-    void play();
-    void pause();
-
-    void set_position(TimestampFF);
-
-    void request_read();
-    void request_read_prev();
+    void play() override;
+    void pause() override;
+    void stop() override;
+    void step_forward() override;
+    void step_backward() override;
+    void rewind_forward() override;
+    void rewind_backward() override;
+    void set_position(TimestampFF) override;
 
 public:
     void register_observer(IFrameSourceObserver* observer) override;
@@ -47,37 +46,41 @@ public:
     void unregister_observer(IReaderEventObserver* observer) override;
 
 private:
-    void seek(TimestampFF pos);
+    void play_impl();
+    void pause_impl();
+    void stop_impl();
+    void step_forward_impl();
+    void step_backward_impl();
+    void rewind_forward_impl();
+    void rewind_backward_impl();
+    void set_position_impl(TimestampFF);
 
+private:
+    //void run_worker() override;
+    //void stop_worker() override;
     void worker_thread() override;
     void thread_worker_stop_impl() override;
 
-    void read_frame();
-
     void set_reader_state(ReaderState);
+    void seek(TimestampFF pos);
+    void read_frame();
+    bool need_break_reading(bool verbose = false) const;
 
-    bool is_correct_state() const;
-
-    bool is_paused() const;
-
-    bool need_break_reading();
+private:
+    void add_reader_event(ReaderEvent);
+    void handle_event(ReaderEvent);
+    bool has_event() const;
 
 private:
     std::shared_ptr<ParserFF> m_parser{nullptr};
     std::shared_ptr<IDemuxer> m_demuxer{nullptr};
     std::shared_ptr<IStreamReader> m_stream_reader{nullptr};
-
     StreamPtr m_stream{nullptr};
 
     std::string m_filename;
 
-    step::EventHandlerList<IFrameSourceObserver, threading::ThreadPoolExecutePolicy<0>> m_frame_observers;
-    step::EventHandlerList<IReaderEventObserver, threading::ThreadPoolExecutePolicy<0>> m_reader_observers;
-
-    TimestampFF m_read_position{AV_NOPTS_VALUE};
-
-    ReadingMode m_read_mode{ReadingMode::Undefined};
-    ReaderState m_state{ReaderState::Undefined};
+    mutable std::mutex m_event_guard;
+    std::queue<ReaderEvent> m_event_queue;
 
     // Не придумал ничего лучше для позиционирования на один кадр назад
     // запоминаем длину последнего кадра и делаем seek(position - last_frame_position)
@@ -85,15 +88,15 @@ private:
     TimeFF m_prev_duration{0};
     size_t m_invalid_counter{0};
 
-    std::shared_mutex m_data_guard;
+    step::EventHandlerList<IFrameSourceObserver, threading::ThreadPoolExecutePolicy<0>> m_frame_observers;
+    step::EventHandlerList<IReaderEventObserver, threading::ThreadPoolExecutePolicy<0>> m_reader_observers;
 
-    std::atomic_bool m_need_read{false};
-    std::mutex m_read_guard;
+    ReaderState m_state{ReaderState::Undefined};
+
+    mutable std::mutex m_read_guard;
     std::condition_variable m_read_cnd;
 
-    std::atomic_bool m_read_stopped{false};
-    std::mutex m_read_stopped_guard;
-    std::condition_variable m_read_stopped_cnd;
+    std::atomic_bool m_continue_reading{false};
 };
 
 }  // namespace step::video::ff

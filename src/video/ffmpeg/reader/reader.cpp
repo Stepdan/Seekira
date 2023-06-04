@@ -1,8 +1,15 @@
 #include "reader.hpp"
 
 #include <core/log/log.hpp>
+#include <core/exception/assert.hpp>
 
 #include <core/base/utils/string_utils.hpp>
+
+namespace {
+
+constexpr size_t MAX_INVALID_THRESHOLD = 10;
+
+}  // namespace
 
 namespace step::video::ff {
 
@@ -28,13 +35,28 @@ bool ReaderFF::open_file(const std::string& filename)
 
     m_stream = m_stream_reader->get_best_video_stream();
 
-    set_reader_state(ReaderState::Ready);
+    set_reader_state(ReaderState::Reading);
 
     m_filename = filename;
-
     m_invalid_counter = 0;
 
     return true;
+}
+
+void ReaderFF::start()
+{
+    if (is_running())
+    {
+        STEP_LOG(L_WARN, "Reader already started");
+        return;
+    }
+
+    m_continue_reading.store(false);
+    set_reader_state(ReaderState::Reading);
+
+    run_worker();
+
+    STEP_LOG(L_INFO, "Start ReaderFF");
 }
 
 TimeFF ReaderFF::get_duration() const
@@ -43,159 +65,79 @@ TimeFF ReaderFF::get_duration() const
     return m_stream->get_duration();
 }
 
-TimeFF ReaderFF::get_frame_duration() const
-{
-    STEP_ASSERT(m_last_valid_frame && m_last_valid_frame->duration != AV_NOPTS_VALUE,
-                "ReaderFF can't provide frame duration: m_last_frame_duration is empty!");
-    return m_last_valid_frame->duration;
-}
-
 TimestampFF ReaderFF::get_position() const
 {
     STEP_ASSERT(m_last_valid_frame, "ReaderFF can't provide position: invalid last frame!");
     return m_last_valid_frame->ts.count();
 }
 
-ReaderState ReaderFF::get_state() const { return m_state; }
-
-void ReaderFF::start()
+void ReaderFF::add_reader_event(ReaderEvent event)
 {
-    if (is_running())
-    {
-        STEP_LOG(L_WARN, "Reader already started, current mode {}", step::utils::to_string(m_read_mode));
-        return;
-    }
-
-    m_read_mode = ReadingMode::ByRequest;
-    m_need_read.store(false);
-    set_reader_state(ReaderState::ReadingByRequest);
-
-    run_worker();
-
-    STEP_LOG(L_INFO, "Start ReaderFF with params: state {}, mode {}", step::utils::to_string(m_state),
-             step::utils::to_string(m_read_mode));
-}
-
-void ReaderFF::play()
-{
-    if (!m_read_stopped)
-        return;
-
-    m_read_mode = ReadingMode::Continuously;
-    m_read_stopped.store(false);
-    m_need_read.store(true);
+    std::scoped_lock lock(m_event_guard);
+    m_event_queue.push(event);
+    STEP_LOG(L_INFO, "Reader event has been queued: {}", step::utils::to_string(event.get_type()));
     m_read_cnd.notify_all();
 }
 
-void ReaderFF::pause()
+bool ReaderFF::has_event() const
 {
-    if (is_paused())
-        return;
-
-    STEP_LOG(L_DEBUG, "Wait for reader stop");
-
-    m_need_read.store(false);
-
-    // ждем сигнала от цикла чтения, что цикл висит на m_read_cnd.wait
-    std::unique_lock lock(m_read_stopped_guard);
-    m_read_stopped_cnd.wait(lock, [this]() { return !is_running() || !is_correct_state() || is_paused(); });
-    if (!is_running() || !is_correct_state())
-    {
-        STEP_LOG(L_INFO, "Reader stop aborted: is_running {}, state {}", is_running(), step::utils::to_string(m_state));
-        return;
-    }
-
-    m_read_mode = ReadingMode::ByRequest;
-    STEP_LOG(L_DEBUG, "Reader stopped");
+    std::scoped_lock lock(m_event_guard);
+    return !m_event_queue.empty();
 }
 
-void ReaderFF::stop()
+void ReaderFF::handle_event(ReaderEvent event)
 {
-    pause();
-    stop_worker();
+    switch (event.get_type())
+    {
+        case ReaderEvent::Type::Pause:
+            pause_impl();
+            break;
+        case ReaderEvent::Type::Play:
+            play_impl();
+            break;
+        case ReaderEvent::Type::RewindBackward:
+            rewind_backward_impl();
+            break;
+        case ReaderEvent::Type::RewindForward:
+            rewind_forward_impl();
+            break;
+        case ReaderEvent::Type::SetPosition:
+            set_position_impl(event.get_timestamp());
+            break;
+        case ReaderEvent::Type::StepBackward:
+            step_backward_impl();
+            break;
+        case ReaderEvent::Type::StepForward:
+            step_forward_impl();
+            break;
+        case ReaderEvent::Type::Stop:
+            stop_impl();
+            break;
+        default:
+            STEP_UNDEFINED("Invalid reader event type");
+            break;
+    }
+
+    m_read_cnd.notify_all();
 }
 
-void ReaderFF::set_position(TimestampFF pos)
+/* clang-format off */
+void ReaderFF::play             () { add_reader_event(ReaderEvent(ReaderEvent::Type::Play           )); }
+void ReaderFF::pause            () { add_reader_event(ReaderEvent(ReaderEvent::Type::Pause          )); }
+void ReaderFF::stop             () { add_reader_event(ReaderEvent(ReaderEvent::Type::Stop           )); }
+void ReaderFF::step_forward     () { add_reader_event(ReaderEvent(ReaderEvent::Type::StepForward    )); }
+void ReaderFF::step_backward    () { add_reader_event(ReaderEvent(ReaderEvent::Type::StepBackward   )); }
+void ReaderFF::rewind_forward   () { add_reader_event(ReaderEvent(ReaderEvent::Type::RewindForward  )); }
+void ReaderFF::rewind_backward  () { add_reader_event(ReaderEvent(ReaderEvent::Type::RewindBackward )); }
+
+void ReaderFF::set_position(TimestampFF ts) { add_reader_event(ReaderEvent(ReaderEvent::Type::SetPosition, ts)); }
+/* clang-format on */
+
+void ReaderFF::set_reader_state(ReaderState state)
 {
-    // Фиксим выходы за временные границы
-    if (pos < 0)
-    {
-        STEP_LOG(L_WARN, "Set position: pos < 0, fix set to 0");
-        pos = 0;
-    }
-
-    // Если выходим за конец - не делаем set_position
-    // Потому что последний валидный кадр не обязан быть на метке get_duration() и мы начнем читать невалидные кадры
-    if (pos >= get_duration())
-    {
-        STEP_LOG(L_WARN, "Can't set position: over the end!");
-        return;
-    }
-
-    STEP_LOG(L_DEBUG, "Try to set position {} to {}", get_position(), pos);
-
-    // Отключаем обзерверов, чтобы не летели кадры и статусы
-    m_frame_observers.disable();
-    m_reader_observers.disable();
-
-    // TODO Краевые условия
-
-    // останавливаем чтение
-    pause();
-
-    // Делаем seek на нужную позицию
-    seek(pos);
-
-    if (m_state != ReaderState::SuccessfulSeek)
-    {
-        STEP_LOG(L_ERROR, "Unsuccsessful seek to {}", pos);
-        return;
-    }
-
-    // После seek мы стоим на ключевом кадре, надо дочитать до нужного места, если требуется
-    // Читаем по одному кадру, пока следующий для чтения кадр не будет нужным
-    auto next_frame_ts = m_stream->get_position();
-    // duration следующего кадра: m_stream->get_pkt_duration();
-    auto after_next_frame_ts = next_frame_ts + m_stream->get_pkt_duration();
-
-    // Проверяем, что дошли по таймштампам до нужного кадра (следующий при чтении - нужный)
-    const auto check_ts = [&pos, &next_frame_ts, &after_next_frame_ts]() {
-        return next_frame_ts != pos && after_next_frame_ts < pos;
-    };
-
-    while (!need_break_reading() && check_ts())
-    {
-        read_frame();
-        next_frame_ts = m_stream->get_position();
-        after_next_frame_ts = next_frame_ts + m_stream->get_pkt_duration();
-    }
-
-    // Дошли до нужного места (или не дошли из-за ошибки) - включаем обзерверов
-    m_frame_observers.enable();
-    m_reader_observers.enable();
-
-    if (need_break_reading())
-    {
-        if (!is_correct_state())
-        {
-            STEP_LOG(L_DEBUG, "Invalid set_position to {} because of invalid state: {}", pos,
-                     step::utils::to_string(m_state));
-            // перезапишем состояние, чтобы оно улетело подписчикам
-            set_reader_state(m_state);
-        }
-        STEP_LOG(L_DEBUG, "Invalid set_position to {}", pos);
-        return;
-    }
-
-    // Читаем нужный нам кадр
-    STEP_LOG(L_DEBUG, "Read frame with desired position");
-    read_frame();
-
-    STEP_LOG(L_DEBUG, "Position has been setted to {} [{}]", m_last_valid_frame->ts.count(), pos);
-
-    // Если предыдущий режим был Continiously - принудительно включаем
-    if (m_read_mode == ReadingMode::Continuously)
-        play();
+    m_state = state;
+    m_reader_observers.perform_for_each_event_handler(
+        std::bind(&IReaderEventObserver::on_reader_state_changed, std::placeholders::_1, m_state));
 }
 
 void ReaderFF::seek(TimestampFF pos)
@@ -210,48 +152,8 @@ void ReaderFF::seek(TimestampFF pos)
         return;
     }
 
-    STEP_LOG(L_INFO, "Succesful seek to {} [{}]", m_stream->get_position(), pos);
+    STEP_LOG(L_DEBUG, "Succesful seek to {} [{}]", m_stream->get_position(), pos);
     set_reader_state(ReaderState::SuccessfulSeek);
-}
-
-void ReaderFF::request_read()
-{
-    if (!m_read_stopped)
-    {
-        STEP_LOG(L_WARN, "Can't request read: reading not stopped!");
-        return;
-    }
-
-    m_read_mode = ReadingMode::ByRequest;
-    read_frame();
-}
-
-void ReaderFF::request_read_prev()
-{
-    if (!m_read_stopped)
-    {
-        STEP_LOG(L_WARN, "Can't request read: reading not stopped!");
-        return;
-    }
-
-    m_read_mode = ReadingMode::ByRequest;
-    set_position(get_position() - m_prev_duration);
-}
-
-void ReaderFF::set_reader_state(ReaderState state)
-{
-    m_state = state;
-    m_reader_observers.perform_for_each_event_handler(
-        std::bind(&IReaderEventObserver::on_reader_state_changed, std::placeholders::_1, m_state));
-}
-
-void ReaderFF::thread_worker_stop_impl()
-{
-    // m_need_stop already 'true' (see ThreadWorker::stop())
-    // Делаем notify для всех кондишнов
-    m_read_cnd.notify_all();
-
-    m_read_stopped_cnd.notify_all();
 }
 
 void ReaderFF::read_frame()
@@ -279,27 +181,80 @@ void ReaderFF::read_frame()
              m_last_valid_frame->ts.count(), m_last_valid_frame->duration);
 }
 
+bool ReaderFF::need_break_reading(bool verbose /*= false*/) const
+{
+    bool need_break = false;
+
+    need_break = need_break || m_need_stop;
+
+    /* clang-format off */
+    const auto is_valid_state = false
+        //|| m_state == ReaderState::Ready
+        || m_state == ReaderState::Reading
+        || m_state == ReaderState::SuccessfulSeek
+        || m_state == ReaderState::EndOfFile
+    ;
+    /* clang-format on */
+
+    need_break = need_break || !is_valid_state;
+
+    const auto invalid_threshold = m_invalid_counter > MAX_INVALID_THRESHOLD;
+    need_break = need_break || invalid_threshold;
+
+    if (verbose)
+    {
+        STEP_LOG(L_INFO, "Check need break: state {}, invalid counter {}", step::utils::to_string(m_state),
+                 m_invalid_counter);
+    }
+
+    return need_break;
+}
+
+/* clang-format off */
+void ReaderFF::register_observer(IFrameSourceObserver* observer) { m_frame_observers.register_event_handler(observer); }
+void ReaderFF::register_observer(IReaderEventObserver* observer) { m_reader_observers.register_event_handler(observer); }
+void ReaderFF::unregister_observer(IFrameSourceObserver* observer) { m_frame_observers.unregister_event_handler(observer); }
+void ReaderFF::unregister_observer(IReaderEventObserver* observer) { m_reader_observers.unregister_event_handler(observer); }
+/* clang-format on */
+
+}  // namespace step::video::ff
+
+namespace step::video::ff {
+
 void ReaderFF::worker_thread()
 {
-    while (!need_break_reading() && !m_stream->is_eof_reached())
+    while (!need_break_reading())
     {
         try
         {
             std::unique_lock lock(m_read_guard);
 
-            // Перед wait помечаем, что чтение на паузе
-            m_read_stopped.store(true);
-            m_read_stopped_cnd.notify_all();
-
-            m_read_cnd.wait(lock, [this]() { return need_break_reading() || m_need_read; });
-
-            {
-                if (need_break_reading())
-                    break;
-
-                m_read_stopped.store(false);
-                read_frame();
+            {  // Если есть необработанный эвент - обрабатываем, кадр не читаем
+                std::scoped_lock event_lock(m_event_guard);
+                if (!m_event_queue.empty())
+                {
+                    auto event = m_event_queue.back();
+                    m_event_queue.pop();
+                    handle_event(event);
+                    continue;
+                }
             }
+
+            if (m_stream->is_eof_reached())
+            {
+                m_continue_reading = false;
+                set_reader_state(ReaderState::EndOfFile);
+            }
+
+            m_read_cnd.wait(lock, [this]() { return need_break_reading() || has_event() || m_continue_reading; });
+
+            if (need_break_reading())
+                break;
+
+            if (has_event())
+                continue;
+
+            read_frame();
         }
         catch (const std::exception& e)
         {
@@ -315,48 +270,18 @@ void ReaderFF::worker_thread()
         }
     }
 
-    m_need_read.store(false);
-    m_read_stopped.store(true);
-    m_read_stopped_cnd.notify_all();
+    m_continue_reading.store(false);
 
-    if (!m_need_stop && m_exception_ptr)
+    if (!m_need_stop && need_break_reading())
+    {
         set_reader_state(ReaderState::Error);
-    else if (m_invalid_counter > 10)
-        set_reader_state(ReaderState::Error);
-
-    if (!m_need_stop && m_stream->is_eof_reached())
-        set_reader_state(ReaderState::EndOfFile);
+        STEP_LOG(L_ERROR, "ReaderFF worker thread finished by error! State {}", step::utils::to_string(m_state));
+        return;
+    }
 
     STEP_LOG(L_INFO, "ReaderFF worker thread finished!");
 }
 
-bool ReaderFF::is_correct_state() const
-{
-    /* clang-format off */
-    return false
-        || m_state == ReaderState::Ready
-        || m_state == ReaderState::ReadingByRequest
-        || m_state == ReaderState::ReadingContiniously
-        || m_state == ReaderState::SuccessfulSeek
-    ;
-    /* clang-format on */
-}
-
-bool ReaderFF::is_paused() const { return !m_need_read && m_read_stopped; }
-
-bool ReaderFF::need_break_reading()
-{
-    if (!is_correct_state())
-        return true;
-
-    return m_need_stop || m_invalid_counter > 10;
-}
-
-/* clang-format off */
-void ReaderFF::register_observer(IFrameSourceObserver* observer) { m_frame_observers.register_event_handler(observer); }
-void ReaderFF::register_observer(IReaderEventObserver* observer) { m_reader_observers.register_event_handler(observer); }
-void ReaderFF::unregister_observer(IFrameSourceObserver* observer) { m_frame_observers.unregister_event_handler(observer); }
-void ReaderFF::unregister_observer(IReaderEventObserver* observer) { m_reader_observers.unregister_event_handler(observer); }
-/* clang-format on */
+void ReaderFF::thread_worker_stop_impl() {}
 
 }  // namespace step::video::ff

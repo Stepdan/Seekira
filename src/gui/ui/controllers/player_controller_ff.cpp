@@ -53,7 +53,7 @@ bool PlayerControllerFF::open_file(const QString& filename)
         STEP_ASSERT(frame_observer, "Invalid cast to VideoFrameProviderFF*");
 
         m_video_reader->register_observer(frame_observer);
-        m_video_reader->register_observer(this);
+        //m_video_reader->register_observer(this);
 
         // Открыли файл - ставим на паузу
         m_state = QMediaPlayer::State::PausedState;
@@ -99,7 +99,6 @@ void PlayerControllerFF::play_state_switch()
         case QMediaPlayer::State::StoppedState: {
             STEP_LOG(L_DEBUG, "STOP");
             m_video_reader->stop();
-            m_video_reader->set_position(0);
             break;
         }
     }
@@ -116,10 +115,8 @@ void PlayerControllerFF::step_rewind(Enums::PlayerDirection direction)
 
     // Не меняем m_state, так как если мы на паузе, то просто сделаем seek
     // Иначе делаем seek и проигрываем дальше
-
-    const auto sign = (direction == Enums::PLAYER_DIRECTION_BACKWARD) ? -1 : 1;
-    STEP_LOG(L_DEBUG, "STEP REWIND {}", sign);
-    m_video_reader->set_position(m_video_reader->get_position() + sign * STEP_VALUE);
+    direction == Enums::PlayerDirection::PLAYER_DIRECTION_FORWARD ? m_video_reader->rewind_forward()
+                                                                  : m_video_reader->rewind_backward();
 }
 
 void PlayerControllerFF::step_frame(Enums::PlayerDirection direction)
@@ -133,11 +130,8 @@ void PlayerControllerFF::step_frame(Enums::PlayerDirection direction)
     m_video_reader->pause();
     m_state = QMediaPlayer::State::PausedState;
 
-    STEP_LOG(L_DEBUG, "STEP FRAME {}", (direction == Enums::PLAYER_DIRECTION_BACKWARD) ? -1 : 1);
-    if (direction == Enums::PLAYER_DIRECTION_FORWARD)
-        m_video_reader->request_read();
-    else
-        m_video_reader->request_read_prev();
+    direction == Enums::PlayerDirection::PLAYER_DIRECTION_FORWARD ? m_video_reader->step_forward()
+                                                                  : m_video_reader->step_backward();
 }
 
 void PlayerControllerFF::on_reader_state_changed(video::ff::ReaderState state)
