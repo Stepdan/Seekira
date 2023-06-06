@@ -1,5 +1,4 @@
-project(step_proc_interfaces)
-set(PROJECT_ALIAS proc_interfaces)
+project(step_proc_types)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)
@@ -16,7 +15,7 @@ source_group("Headers" FILES ${HEADERS})
 source_group("Sources" FILES ${SOURCES})
 
 add_library(${PROJECT_NAME} STATIC)
-add_library(step::${PROJECT_ALIAS} ALIAS ${PROJECT_NAME})
+add_library(step::proc_types ALIAS ${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME}
     PRIVATE
@@ -27,14 +26,12 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    step::core_task
-    step::frame_interface
-    step::proc_types
+    step::core_base
 )
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    STEPKIT_MODULE_NAME="PROC_INTERFACES"
+    STEPKIT_MODULE_NAME="PROC_TYPES"
     PUBLIC
     BUILD_WITH_EASY_PROFILER
 )
