@@ -13,6 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_GENERATOR "Ninja") 
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/sdk)
 
 set(STEPKIT_INSTALL_DIR .)
 set(STEPKIT_INSTALL_BIN_DIR bin)
@@ -70,11 +71,14 @@ conan_cmake_run(
     REQUIRES
         fmt/9.1.0
         spdlog/1.11.0
-        opencv/4.5.5
+        nlohmann_json/3.11.2
         poco/1.12.4
         boost/1.81.0
-        ${CONAN_Qt}
         ffmpeg/5.1
+        protobuf/3.21.9
+        #onnx/1.14.0 #TODO Ждем onnxruntime, для винды нет: https://conan.io/center/onnxruntime
+        opencv/4.5.5
+        ${CONAN_Qt}
     BASIC_SETUP
     CMAKE_TARGETS
     UPDATE
@@ -183,6 +187,7 @@ endif()
 find_package(Boost REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(nlohmann_json REQUIRED)
 find_package(fmt REQUIRED)
 find_package(Poco REQUIRED)
 find_package(gtest REQUIRED)
@@ -190,6 +195,8 @@ find_package(ffmpeg REQUIRED)
 
 find_package(OpenCV REQUIRED)
 include_directories ("/usr/include/opencv4/")
+
+include(onnxruntime)
 
 set(INSTALL_TARGET_NAME "stepkit-targets")
 

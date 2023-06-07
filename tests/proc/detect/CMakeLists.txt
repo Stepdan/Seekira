@@ -1,0 +1,1 @@
+add_subdirectory(face_detector_tests)

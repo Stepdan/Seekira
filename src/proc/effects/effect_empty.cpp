@@ -9,7 +9,7 @@ class EffectEmpty : public BaseEffect<SettingsEmpty>
 public:
     EffectEmpty(const std::shared_ptr<task::BaseSettings>& settings) { set_settings(*settings); }
 
-    video::Frame process(EffectMultiInput input) override
+    video::Frame process(EffectMultiInput& input) override
     {
         STEP_LOG(L_INFO, "EffectEmpty process");
         return video::Frame();
