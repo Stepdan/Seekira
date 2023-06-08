@@ -2,14 +2,12 @@ project(step_proc_detect)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)
-    file(GLOB HEADERS_FASE face/*.hpp)
     set(HEADERS ${HEADERS_BASE} ${HEADERS_FASE})
 endif()
 
 if(NOT DEFINED SOURCES)
     file(GLOB SOURCES
-        face/*.cpp
-        #*.cpp
+        *.cpp
     ) 
 endif()
 
@@ -24,13 +22,11 @@ target_sources(${PROJECT_NAME}
     ${SOURCES}
     PUBLIC
     FILE_SET headers_base TYPE HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} FILES "${HEADERS_BASE}"
-    FILE_SET headers_fase TYPE HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/face FILES "${HEADERS_FASE}"
 )
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    step::thirdparty_tdv
-    step::proc_interfaces
+    step::face_engine
     step::proc_settings
 )
 

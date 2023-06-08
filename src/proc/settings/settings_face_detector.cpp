@@ -8,8 +8,9 @@ bool SettingsFaceDetector::operator==(const SettingsFaceDetector& rhs) const noe
 {
     /* clang-format off */
     return true
-        && m_alg_type == rhs.m_alg_type
+        && m_face_engine_type == rhs.m_face_engine_type
         && m_model_path == rhs.m_model_path
+        && m_mode == rhs.m_mode
     ;
     /* clang-format on */
 }

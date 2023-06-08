@@ -37,7 +37,8 @@ protected:
     {
         frame = video::utils::open_file(TestDataProvider::frame_path());
         auto settings_ptr = std::make_shared<proc::SettingsFaceDetector>();
-        settings_ptr->set_algorithm(proc::SettingsFaceDetector::Algorithm::TDV);
+        settings_ptr->set_face_engine_type(proc::FaceEngineType::TDV);
+        settings_ptr->set_mode(proc::IFaceEngine::Mode::FE_DETECTION);
         settings_ptr->set_model_path("C:/Work/StepTech/SDK/models/");
         m_detector = proc::create_face_detector(settings_ptr);
     }
@@ -54,6 +55,6 @@ TEST_F(FaceDetectorTest, face_detection_test)
     ASSERT_EQ(bboxes.size(), 3);
     for (const auto& bbox : bboxes)
     {
-        STEP_LOG(L_INFO, "BBox: ({}, {}) - ({}, {})", bbox.x0, bbox.y0, bbox.x1, bbox.y1);
+        STEP_LOG(L_INFO, "Face bbox: {}", bbox);
     }
 }

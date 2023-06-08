@@ -29,7 +29,6 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC
     step::core_task
     step::frame_interface
-    step::proc_types
 )
 
 target_compile_definitions(${PROJECT_NAME}

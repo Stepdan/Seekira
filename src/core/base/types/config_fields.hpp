@@ -27,6 +27,14 @@ public:
     static const std::string Y;
     static const std::string Z;
     static const std::string W;
+    static const std::string X0;
+    static const std::string Y0;
+    static const std::string X1;
+    static const std::string Y1;
+    static const std::string POINT;
+    static const std::string POINT0;
+    static const std::string POINT1;
+    static const std::string RECT;
 
     /* Pose */
     static const std::string P;

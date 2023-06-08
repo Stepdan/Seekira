@@ -1,4 +1,4 @@
-project(step_face_sdk_1)
+project(step_thirdparty_tdv)
 
 if(NOT DEFINED HEADERS)
     #file(GLOB HEADERS_BASE *.hpp)
@@ -18,6 +18,7 @@ if(NOT DEFINED SOURCES)
         modules/*.cpp
         modules/detection_modules/*.cpp
         utils/recognizer_utils/*.cpp
+        #*.cpp
     )
 endif()
 
@@ -54,7 +55,7 @@ link_onnxruntime()
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    STEPKIT_MODULE_NAME="STEP_FACE_SDK_1"
+    STEPKIT_MODULE_NAME="STEP_THIRDPARTY_TDV"
     PUBLIC
     BUILD_WITH_EASY_PROFILER
 )

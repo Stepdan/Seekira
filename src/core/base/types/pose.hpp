@@ -59,7 +59,7 @@ Pose noise_pose(const Pose& pose, const NoiseSettings& noise);
 }  // namespace step
 
 template <>
-struct fmt::formatter<Eigen::Affine3d> : formatter<string_view>
+struct fmt::formatter<Eigen::Affine3d> : fmt::formatter<string_view>
 {
     template <typename FormatContext>
     auto format(const Eigen::Affine3d& affine, FormatContext& ctx)

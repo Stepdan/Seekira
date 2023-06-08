@@ -1,4 +1,4 @@
-add_subdirectory(types)
+add_subdirectory(face_engine)
 add_subdirectory(interfaces)
 add_subdirectory(settings)
 add_subdirectory(effects)
