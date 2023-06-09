@@ -3,6 +3,7 @@
 #include <core/log/log.hpp>
 
 #include <proc/detect/registrator.hpp>
+#include <proc/settings/settings_face_detector.hpp>
 
 #include <gtest/gtest.h>
 

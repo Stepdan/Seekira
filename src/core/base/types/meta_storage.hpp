@@ -12,7 +12,7 @@ class MetaStorage
 {
 public:
     void set_attachment(const std::string& id, std::any&& attachment);
-    std::optional<std::any> get_attachment(const std::string& id);
+    std::optional<std::any> get_attachment(const std::string& id) const;
 
 private:
     std::unordered_map<std::string, std::any> m_storage;

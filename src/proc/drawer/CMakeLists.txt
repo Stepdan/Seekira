@@ -1,4 +1,4 @@
-project(step_proc_detect)
+project(step_proc_drawer)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)
@@ -11,28 +11,28 @@ if(NOT DEFINED SOURCES)
     ) 
 endif()
 
-source_group("Headers" FILES ${HEADERS})
+#source_group("Headers" FILES ${HEADERS})
 source_group("Sources" FILES ${SOURCES})
 
 add_library(${PROJECT_NAME} STATIC)
-add_library(step::proc_detect ALIAS ${PROJECT_NAME})
+add_library(step::proc_drawer ALIAS ${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME}
     PRIVATE
     ${SOURCES}
     PUBLIC
-    FILE_SET headers_base TYPE HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} FILES "${HEADERS_BASE}"
+    #FILE_SET headers_base TYPE HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} FILES "${HEADERS_BASE}"
 )
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    step::face_engine
     step::proc_settings
+    step::frame_utils
 )
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    STEPKIT_MODULE_NAME="PROC_DETECT"
+    STEPKIT_MODULE_NAME="PROC_DRAWERS"
     PUBLIC
     BUILD_WITH_EASY_PROFILER
 

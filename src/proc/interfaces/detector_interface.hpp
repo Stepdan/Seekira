@@ -28,6 +28,7 @@ private:
 };
 
 using IDetector = task::ITask<video::Frame&, DetectionResult>;
+using DetectorPtr = std::unique_ptr<IDetector>;
 
 template <typename TSettings>
 using BaseDetector = task::BaseTask<TSettings, video::Frame&, DetectionResult>;

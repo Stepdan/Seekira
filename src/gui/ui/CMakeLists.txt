@@ -36,6 +36,8 @@ target_link_libraries(${PROJECT_NAME}
     step::ff_reader
     step::gui_application
     step::gui_resources
+    step::proc_detect
+    step::proc_drawer
 )
 
 target_compile_definitions(${PROJECT_NAME}
