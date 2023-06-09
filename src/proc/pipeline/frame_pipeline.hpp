@@ -3,16 +3,16 @@
 #include <core/pipeline/pipeline.hpp>
 #include <video/frame/interfaces/frame_interfaces.hpp>
 
-namespace step::video {
+namespace step::proc {
 
-class FramePipeline : public pipeline::Pipeline<Frame>, public video::IFrameSourceObserver
+class FramePipeline : public pipeline::Pipeline<video::Frame>, public video::IFrameSourceObserver
 {
 public:
     FramePipeline(const ObjectPtrJSON& config);
 
     // IFrameSourceObserver
 private:
-    void process_frame(FramePtr) override;
+    void process_frame(video::FramePtr) override;
 };
 
-}  // namespace step::video
+}  // namespace step::proc

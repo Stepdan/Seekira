@@ -1,4 +1,4 @@
-project(step_tests_multi_branch_frame_pipeline)
+project(step_tests_invalid_frame_pipeline)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp)
@@ -18,12 +18,12 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     gtest
     gtest_main
     step::frame_utils
-    step::frame_pipeline
+    step::proc_pipeline
     step::application
 )
 target_compile_definitions(${PROJECT_NAME} PRIVATE
-    MULTI_BRANCH_FRAME_PIPELINE_TESTS_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/"
-    STEPKIT_MODULE_NAME="T_MULTIBRANCH_PIPELINE"
+    INVALID_FRAME_PIPELINE_TESTS_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/"
+    STEPKIT_MODULE_NAME="T_INVALID_PIPELINE"
 )
 
 gtest_discover_tests(${PROJECT_NAME} WORKING_DIRECTORY ${STEPKIT_BUILD_BIN_DIR})

@@ -1,6 +1,6 @@
 #include <core/base/json/json_utils.hpp>
 
-#include <video/pipeline/frame_pipeline.hpp>
+#include <proc/pipeline/frame_pipeline.hpp>
 
 #include <core/log/log.hpp>
 
@@ -12,6 +12,7 @@
 using namespace step;
 using namespace step::video;
 using namespace step::video::utils;
+using namespace step::proc;
 
 using namespace std::literals;
 
