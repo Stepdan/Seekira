@@ -66,6 +66,8 @@ public:
         video::utils::convert_colorspace(copied, video::PixFmt::RGB);
         auto mat = video::utils::to_mat(copied);
 
+        cv::resize(mat, mat, cv::Size(copied.size.width, copied.size.height));
+
         auto io_data = m_service->createContext();
         auto img_ctx = m_service->createContext();
 
@@ -82,10 +84,10 @@ public:
 
             auto face = FaceTDV::create_face();
             const api::Context& rect_ctx = obj.at("bbox");
-            face->set_rect(Rect({static_cast<int>(rect_ctx[0].getDouble() * mat.cols),
-                                 static_cast<int>(rect_ctx[1].getDouble() * mat.rows),
-                                 static_cast<int>(rect_ctx[2].getDouble() * mat.cols),
-                                 static_cast<int>(rect_ctx[3].getDouble() * mat.rows)}));
+            face->set_rect(Rect({static_cast<int>(rect_ctx[0].getDouble() * frame.size.width),
+                                 static_cast<int>(rect_ctx[1].getDouble() * frame.size.height),
+                                 static_cast<int>(rect_ctx[2].getDouble() * frame.size.width),
+                                 static_cast<int>(rect_ctx[3].getDouble() * frame.size.height)}));
 
             face->set_impl_data(std::make_shared<api::Context>(obj));
 

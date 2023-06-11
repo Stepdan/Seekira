@@ -69,6 +69,11 @@ ApplicationWindow {
     function playerButtonClicked() {
         playerWindowLoader.source = "player/PlayerWindow.qml"
         playerWindowLoader.item.show()
-        cpPlayerController.open_file("C:/Work/test_video/IMG_5903.MOV")
+        //cpPlayerController.open_file("C:/Work/test_video/IMG_5903.MOV")
+        //cpPlayerController.open_file("C:/Work/test_video/family.avi")
+        //cpPlayerController.open_file("C:/Work/test_video/video1.avi")
+        //cpPlayerController.open_file("C:/Work/test_video/video2.avi")
+        //cpPlayerController.open_file("C:/Work/test_video/video3.mp4")
+        cpPlayerController.open_file("C:/Work/test_video/video4.avi")
     }
 }

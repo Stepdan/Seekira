@@ -130,7 +130,10 @@ FramePtr DemuxedStream::read_frame()
         /// если pPkt == NULL, то все нормально, этот NULL уходит в декодер для извлечения закэшированных данных
         m_video_decoder->decode(pkt).swap(m_buffered_data);
         if (m_buffered_data)
+        {
+            m_last_key_frame = pkt->is_key_frame();
             continue;
+        }
 
         if (!pkt)
             return nullptr;
@@ -223,6 +226,12 @@ TimeFF DemuxedStream::get_pkt_duration()
         return AV_NOPTS_VALUE;
 
     return m_buffered_packet->duration();
+}
+
+bool DemuxedStream::is_last_key_frame()
+{
+    std::scoped_lock lock(m_read_pkt_mutex, m_read_frame_mutex);
+    return m_last_key_frame;
 }
 
 void DemuxedStream::release_internal_data()

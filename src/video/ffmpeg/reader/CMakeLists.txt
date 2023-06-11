@@ -29,6 +29,8 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC
     step::core_threading
     step::ff_decoding
+    step::proc_detect
+    step::proc_drawer
 )
 
 target_compile_definitions(${PROJECT_NAME}

@@ -25,9 +25,10 @@ public:
 
 public:
     bool open_file(const std::string& filename) override;
-    void start() override;
+    void start(ReaderMode mode = ReaderMode::All) override;
     TimeFF get_duration() const override;
     TimestampFF get_position() const override;
+    ReaderState get_state() const override;
 
     void play() override;
     void pause() override;
@@ -65,6 +66,7 @@ private:
     void seek(TimestampFF pos);
     void read_frame();
     bool need_break_reading(bool verbose = false) const;
+    bool need_handle_frame();
 
 private:
     void add_reader_event(ReaderEvent);
@@ -91,12 +93,22 @@ private:
     step::EventHandlerList<IFrameSourceObserver, threading::ThreadPoolExecutePolicy<0>> m_frame_observers;
     step::EventHandlerList<IReaderEventObserver, threading::ThreadPoolExecutePolicy<0>> m_reader_observers;
 
+    ReaderMode m_mode{ReaderMode::Undefined};
     ReaderState m_state{ReaderState::Undefined};
 
     mutable std::mutex m_read_guard;
     std::condition_variable m_read_cnd;
-
     std::atomic_bool m_continue_reading{false};
+
+    // Need handle frame
+    bool m_skip_frame_handle{false};  // Насильно отключает handle кадров
+    bool m_need_handle_after_force_set_pos{
+        false};  // После любого специального set_position/read_frame надо обработать кадр
+    bool m_is_last_key_frame{false};  // Является ли след. кадр в стриме ключевым
+
+    //-----------
+    struct Impl;
+    std::unique_ptr<Impl> m_impl;
 };
 
 }  // namespace step::video::ff

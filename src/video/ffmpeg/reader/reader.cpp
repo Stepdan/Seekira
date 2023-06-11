@@ -5,6 +5,11 @@
 
 #include <core/base/utils/string_utils.hpp>
 
+#include <proc/drawer/drawer.hpp>
+#include <proc/interfaces/detector_interface.hpp>
+#include <proc/detect/registrator.hpp>
+#include <proc/settings/settings_face_detector.hpp>
+
 namespace {
 
 constexpr size_t MAX_INVALID_THRESHOLD = 10;
@@ -13,7 +18,37 @@ constexpr size_t MAX_INVALID_THRESHOLD = 10;
 
 namespace step::video::ff {
 
-ReaderFF::ReaderFF() {}
+struct ReaderFF::Impl
+{
+    Impl()
+    {
+        auto settings_ptr = std::make_shared<proc::SettingsFaceDetector>();
+        settings_ptr->set_face_engine_type(proc::FaceEngineType::TDV);
+        settings_ptr->set_mode(proc::IFaceEngine::Mode::FE_DETECTION);
+        settings_ptr->set_model_path("C:/Work/StepTech/SDK/models/");
+        m_detector = proc::create_face_detector(settings_ptr);
+    }
+
+    void process(const FramePtr& frame_ptr)
+    {
+        auto result = m_detector->process(*frame_ptr);
+
+        auto faces_opt = result.data().get_attachment("faces");
+        if (!faces_opt.has_value())
+            return;
+
+        auto faces = std::any_cast<proc::Faces>(faces_opt.value());
+        for (const auto& face : faces)
+        {
+            proc::draw(*frame_ptr, face);
+        }
+    }
+
+    proc::DetectorPtr m_detector;
+};
+
+ReaderFF::ReaderFF() : m_impl(std::make_unique<Impl>()) {}
+//ReaderFF::ReaderFF() {}
 
 ReaderFF::~ReaderFF()
 {
@@ -43,7 +78,7 @@ bool ReaderFF::open_file(const std::string& filename)
     return true;
 }
 
-void ReaderFF::start()
+void ReaderFF::start(ReaderMode mode)
 {
     if (is_running())
     {
@@ -55,6 +90,8 @@ void ReaderFF::start()
     set_reader_state(ReaderState::Reading);
 
     run_worker();
+
+    m_mode = mode;
 
     STEP_LOG(L_INFO, "Start ReaderFF");
 }
@@ -70,6 +107,8 @@ TimestampFF ReaderFF::get_position() const
     STEP_ASSERT(m_last_valid_frame, "ReaderFF can't provide position: invalid last frame!");
     return m_last_valid_frame->ts.count();
 }
+
+ReaderState ReaderFF::get_state() const { return m_state; }
 
 void ReaderFF::add_reader_event(ReaderEvent event)
 {
@@ -142,34 +181,37 @@ void ReaderFF::set_reader_state(ReaderState state)
 
 void ReaderFF::seek(TimestampFF pos)
 {
-    set_reader_state(ReaderState::TryToSeek);
     m_stream->request_seek(pos, nullptr);
     m_stream->do_seek();
     if (!m_stream->get_last_seek_result())
     {
         STEP_LOG(L_ERROR, "Invalid seek to {}", pos);
-        set_reader_state(ReaderState::InvalidSeek);
+        set_reader_state(ReaderState::Error);
         return;
     }
 
     STEP_LOG(L_DEBUG, "Succesful seek to {} [{}]", m_stream->get_position(), pos);
-    set_reader_state(ReaderState::SuccessfulSeek);
 }
 
 void ReaderFF::read_frame()
 {
-    // TODO L_TRACE
-    STEP_LOG(L_DEBUG, "Try read frame");
-
     auto frame_ptr = m_stream->read_frame();
+
+    m_is_last_key_frame = m_stream->is_last_key_frame();
+    const bool need_handle = need_handle_frame();
+
     if (frame_ptr)
     {
         m_invalid_counter = 0;
         m_prev_duration = m_last_valid_frame ? m_last_valid_frame->duration : 0;
         m_last_valid_frame = frame_ptr;
 
-        m_frame_observers.perform_for_each_event_handler(
-            std::bind(&IFrameSourceObserver::process_frame, std::placeholders::_1, frame_ptr));
+        if (need_handle)
+        {
+            m_impl->process(frame_ptr);
+            m_frame_observers.perform_for_each_event_handler(
+                std::bind(&IFrameSourceObserver::process_frame, std::placeholders::_1, frame_ptr));
+        }
     }
     else
     {
@@ -177,8 +219,8 @@ void ReaderFF::read_frame()
         STEP_LOG(L_WARN, "Read invalid frame, count {}", m_invalid_counter);
     }
 
-    STEP_LOG(L_DEBUG, "Read {} frame with ts {}, duration {}", frame_ptr ? "valid" : "invalid",
-             m_last_valid_frame->ts.count(), m_last_valid_frame->duration);
+    STEP_LOG(L_DEBUG, "Read {} frame ({}handled) with ts {}, duration {}", frame_ptr ? "valid" : "invalid",
+             need_handle ? "" : "not ", m_last_valid_frame->ts.count(), m_last_valid_frame->duration);
 }
 
 bool ReaderFF::need_break_reading(bool verbose /*= false*/) const
@@ -188,11 +230,10 @@ bool ReaderFF::need_break_reading(bool verbose /*= false*/) const
     need_break = need_break || m_need_stop;
 
     /* clang-format off */
-    const auto is_valid_state = false
-        //|| m_state == ReaderState::Ready
-        || m_state == ReaderState::Reading
-        || m_state == ReaderState::SuccessfulSeek
-        || m_state == ReaderState::EndOfFile
+    const auto is_valid_state = true
+        && m_state != ReaderState::Error
+        && m_state != ReaderState::Stopped
+        && m_state != ReaderState::Undefined
     ;
     /* clang-format on */
 
@@ -210,6 +251,20 @@ bool ReaderFF::need_break_reading(bool verbose /*= false*/) const
     return need_break;
 }
 
+bool ReaderFF::need_handle_frame()
+{
+    if (m_skip_frame_handle)
+        return false;
+
+    /* clang-format off */
+    return false
+        || m_mode == ReaderMode::All
+        || m_is_last_key_frame
+        || m_need_handle_after_force_set_pos
+    ;
+    /* clang-format on */
+}
+
 /* clang-format off */
 void ReaderFF::register_observer(IFrameSourceObserver* observer) { m_frame_observers.register_event_handler(observer); }
 void ReaderFF::register_observer(IReaderEventObserver* observer) { m_reader_observers.register_event_handler(observer); }
@@ -223,6 +278,7 @@ namespace step::video::ff {
 
 void ReaderFF::worker_thread()
 {
+    set_reader_state(ReaderState::Reading);
     while (!need_break_reading())
     {
         try
@@ -241,10 +297,10 @@ void ReaderFF::worker_thread()
             }
 
             if (m_stream->is_eof_reached())
-            {
                 m_continue_reading = false;
-                set_reader_state(ReaderState::EndOfFile);
-            }
+
+            if (!m_continue_reading)
+                set_reader_state(ReaderState::Paused);
 
             m_read_cnd.wait(lock, [this]() { return need_break_reading() || has_event() || m_continue_reading; });
 
@@ -254,6 +310,7 @@ void ReaderFF::worker_thread()
             if (has_event())
                 continue;
 
+            set_reader_state(ReaderState::Reading);
             read_frame();
         }
         catch (const std::exception& e)
@@ -277,6 +334,11 @@ void ReaderFF::worker_thread()
         set_reader_state(ReaderState::Error);
         STEP_LOG(L_ERROR, "ReaderFF worker thread finished by error! State {}", step::utils::to_string(m_state));
         return;
+    }
+
+    if (m_state == ReaderState::EndOfFile)
+    {
+        pause();
     }
 
     STEP_LOG(L_INFO, "ReaderFF worker thread finished!");

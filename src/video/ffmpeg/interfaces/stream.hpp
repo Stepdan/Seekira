@@ -31,6 +31,7 @@ public:
     virtual FramePtr read_frame() = 0;  // *STEP
     virtual bool is_eof_reached() = 0;
     virtual TimeFF get_pkt_duration() = 0;
+    virtual bool is_last_key_frame() = 0;
 };
 
 using StreamPtr = std::shared_ptr<IStream>;

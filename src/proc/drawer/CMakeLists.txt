@@ -11,7 +11,7 @@ if(NOT DEFINED SOURCES)
     ) 
 endif()
 
-#source_group("Headers" FILES ${HEADERS})
+source_group("Headers" FILES ${HEADERS})
 source_group("Sources" FILES ${SOURCES})
 
 add_library(${PROJECT_NAME} STATIC)
@@ -21,12 +21,12 @@ target_sources(${PROJECT_NAME}
     PRIVATE
     ${SOURCES}
     PUBLIC
-    #FILE_SET headers_base TYPE HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} FILES "${HEADERS_BASE}"
+    FILE_SET headers_base TYPE HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} FILES "${HEADERS_BASE}"
 )
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    step::proc_settings
+    step::proc_interfaces
     step::frame_utils
 )
 

@@ -1,4 +1,5 @@
-#include <proc/interfaces/drawer_interface.hpp>
+#include "drawer.hpp"
+
 #include <proc/interfaces/face.hpp>
 
 #include <core/exception/assert.hpp>

@@ -26,7 +26,7 @@ public:
     void request_seek(TimestampFF time, const StreamPtr& result_checker) override;
     void do_seek() override;
     bool get_seek_result() override;
-    bool get_last_seek_result() const;
+    bool get_last_seek_result() const override;
     void terminate() override;
     bool is_terminated() const override;
     void release_internal_data() override;
@@ -34,6 +34,7 @@ public:
     FramePtr read_frame() override;  // *STEP
     bool is_eof_reached() override;
     TimeFF get_pkt_duration() override;
+    bool is_last_key_frame() override;
 
     void unlink_from_reader();
 
@@ -56,6 +57,7 @@ private:
     size_t m_processed_frame_count;                   // *STEP
     std::mutex m_read_frame_mutex;                    // *STEP
     bool m_last_seek_result{false};                   // *STEP
+    bool m_last_key_frame{false};                     // *STEP
 };
 
 class StreamReader : public IStreamReader, public std::enable_shared_from_this<StreamReader>

@@ -59,7 +59,7 @@ public:
         if (state == ReaderState::EndOfFile)
             m_is_reading_finished = true;
 
-        if (state == ReaderState::Error || state == ReaderState::InvalidSeek || state == ReaderState::Undefined)
+        if (state == ReaderState::Error || state == ReaderState::Undefined)
         {
             STEP_LOG(L_ERROR, "Invalid state, break!");
             m_is_reading_finished = true;

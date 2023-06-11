@@ -1,10 +1,9 @@
 #pragma once
 
-#include "reader_types.hpp"
-
 #include <core/base/interfaces/event_handler_list.hpp>
-
 #include <core/exception/assert.hpp>
+
+#include <video/ffmpeg/interfaces/reader.hpp>
 
 namespace step::video::ff {
 

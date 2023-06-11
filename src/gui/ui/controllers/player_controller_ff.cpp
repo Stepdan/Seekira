@@ -53,7 +53,7 @@ bool PlayerControllerFF::open_file(const QString& filename)
         STEP_ASSERT(frame_observer, "Invalid cast to VideoFrameProviderFF*");
 
         m_video_reader->register_observer(frame_observer);
-        //m_video_reader->register_observer(this);
+        m_video_reader->register_observer(this);
 
         // Открыли файл - ставим на паузу
         m_state = QMediaPlayer::State::PausedState;
@@ -62,7 +62,7 @@ bool PlayerControllerFF::open_file(const QString& filename)
     }
 
     // Прочитаем первый кадр, чтобы показать на экране и встать в 0
-    m_video_reader->start();
+    m_video_reader->start(video::ff::ReaderMode::All);
     step_frame(Enums::PLAYER_DIRECTION_FORWARD);
 
     return true;
@@ -143,6 +143,15 @@ void PlayerControllerFF::on_reader_state_changed(video::ff::ReaderState state)
         STEP_LOG(L_ERROR, "ReaderFF error handled!");
         reset();
     }
+
+    if (state == video::ff::ReaderState::Reading)
+        QMediaPlayer::State::PlayingState;
+
+    if (state == video::ff::ReaderState::Paused)
+        QMediaPlayer::State::PausedState;
+
+    if (state == video::ff::ReaderState::Stopped)
+        QMediaPlayer::State::StoppedState;
 }
 
 }  // namespace step::gui
