@@ -1,7 +1,8 @@
 #include "registrator.hpp"
 
-#include <proc/face_engine/face_engine_factory.hpp>
+#include <core/log/log.hpp>
 
+#include <proc/face_engine/face_engine_factory.hpp>
 #include <proc/settings/settings_face_detector.hpp>
 
 namespace step::proc {

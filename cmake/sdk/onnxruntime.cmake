@@ -1,4 +1,4 @@
-set(ONNXRUNTIME_ROOT "C:/Work/StepTech/SDK/onnxruntime-win-x64-1.10.0")
+set(ONNXRUNTIME_ROOT "C:/Work/StepTech/SDK/onnxruntime-win-x64-gpu-1.10.0")
 
 find_path(ONNXRUNTIME_INCLUDE_DIR NAMES onnxruntime_cxx_api.h HINTS ${ONNXRUNTIME_ROOT} PATH_SUFFIXES include)
 

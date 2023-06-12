@@ -7,7 +7,7 @@
 
 namespace {
 
-constexpr step::video::ff::TimestampFF STEP_VALUE = 2 * step::video::ff::AV_SECOND;
+constexpr step::video::ff::TimestampFF STEP_VALUE = 10 * step::video::ff::AV_SECOND;
 
 }  // namespace
 

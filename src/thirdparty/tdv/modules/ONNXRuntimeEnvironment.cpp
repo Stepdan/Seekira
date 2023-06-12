@@ -1,5 +1,6 @@
 #include <numeric>
 #include <string>
+#include <thread>
 
 #include <thirdparty/tdv/modules/ONNXRuntimeEnvironment.h>
 #include <thirdparty/tdv/utils/rassert/RAssert.h>
@@ -32,9 +33,11 @@ ONNXRuntimeEnvironment::ONNXRuntimeEnvironment(const Context& config)
     : ort_api(OnnxRuntimeAdapter::GetInstance(config)->GetApi()), dynamic_batch(false)
 {
     const bool enable_trace = config.get<bool>("enable_trace", false);
-    const int intra_op_num_threads = config.get<long>("intra_op_num_threads", 1);
+    // const int intra_op_num_threads = config.get<long>("intra_op_num_threads", 1);
+    const int intra_op_num_threads = config.get<long>("intra_op_num_threads", std::thread::hardware_concurrency());
     const int execution_mode = config.get<long>("execution_mode", 0);
-    const int inter_op_num_threads = config.get<long>("inter_op_num_threads", 1);
+    //const int inter_op_num_threads = config.get<long>("inter_op_num_threads", 1);
+    const int inter_op_num_threads = config.get<long>("inter_op_num_threads", std::thread::hardware_concurrency());
     const void* model_buffer = config["model_buffer"].get<char*>();
     const unsigned long model_buffer_size = config["model_buffer_size"].get<unsigned long>();
 
