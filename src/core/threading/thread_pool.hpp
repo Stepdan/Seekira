@@ -78,7 +78,7 @@ protected:
     virtual void thread_pool_stop_impl() = 0;
     virtual void thread_pool_iteration() = 0;
 
-    virtual void on_finished(const IdType& id, ResultDataType data) override
+    virtual void on_finished(const IdType& id, const ResultDataType& data) override
     {
         STEP_UNDEFINED("on_finished is undefined!");
     }

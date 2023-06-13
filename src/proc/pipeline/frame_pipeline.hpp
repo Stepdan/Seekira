@@ -11,7 +11,7 @@ public:
     FramePipeline(const ObjectPtrJSON& config);
 
     // IFrameSourceObserver
-private:
+public:
     void process_frame(video::FramePtr) override;
 };
 

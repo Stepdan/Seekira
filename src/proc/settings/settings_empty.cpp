@@ -9,4 +9,6 @@ std::shared_ptr<task::BaseSettings> create_settings_empty(const ObjectPtrJSON& c
     return std::make_shared<SettingsEmpty>(cfg);
 }
 
+void SettingsEmpty::deserialize(const ObjectPtrJSON& cfg) { STEP_UNDEFINED("SettingsEmpty::deserialize is undefined"); }
+
 }  // namespace step::proc

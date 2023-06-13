@@ -25,7 +25,7 @@ protected:
     const std::string& get_settings_id() const noexcept override { return SETTINGS_ID; }                               \
     virtual BaseSettings* clone() const override { return (BaseSettings*)new ClassName(*this); }                       \
     ClassName(const ObjectPtrJSON& cfg) { deserialize(cfg); }                                                          \
-    void deserialize(const ObjectPtrJSON& cfg) override {}                                                             \
+    void deserialize(const ObjectPtrJSON& cfg) override;                                                               \
     ~ClassName() = default;
 
 }  // namespace step::task

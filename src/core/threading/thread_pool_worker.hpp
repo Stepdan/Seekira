@@ -3,6 +3,7 @@
 #include <core/base/interfaces/event_handler_list.hpp>
 
 #include <core/log/log.hpp>
+#include <core/exception/assert.hpp>
 
 #include <atomic>
 #include <condition_variable>
@@ -20,7 +21,7 @@ class IThreadPoolWorkerEventObserver
 public:
     virtual ~IThreadPoolWorkerEventObserver() = default;
 
-    virtual void on_finished(const IdType& id, TResultData data) = 0;
+    virtual void on_finished(const IdType& id, const TResultData& data) = 0;
 };
 
 template <typename IdType, typename TResultData>
@@ -154,30 +155,33 @@ private:
     {
         while (!m_need_stop)
         {
-            std::unique_lock lock(m_data_guard);
-            m_data_cnd.wait(lock, [this]() { return !m_data.empty() || m_need_stop; });
-
-            if (m_need_stop)
-                continue;
-
-            if (!m_data.empty())
+            try
             {
-                try
+                DataType data;
                 {
-                    auto data = m_data.front();
-                    m_data.pop();
-                    auto result_data = thread_pool_worker_process_data(std::move(data));
+                    std::unique_lock lock(m_data_guard);
+                    m_data_cnd.wait(lock, [this]() { return !m_data.empty() || m_need_stop; });
 
-                    // notify executor
-                    m_event_observers.perform_for_each_event_handler(
-                        std::bind(&IThreadPoolWorkerEventObserver<IdType, ResultDataType>::on_finished,
-                                  std::placeholders::_1, m_id, std::move(result_data)));
+                    if (m_need_stop)
+                        continue;
+
+                    if (m_data.empty())
+                        STEP_THROW_RUNTIME("Empty data in ThreadPoolWorker");
+
+                    data = m_data.front();
+                    m_data.pop();
                 }
-                catch (...)
-                {
-                    std::scoped_lock lock(m_exception_mutex);
-                    m_exception_ptrs.push_back(std::current_exception());
-                }
+                auto result_data = thread_pool_worker_process_data(std::move(data));
+
+                // notify executor
+                m_event_observers.perform_for_each_event_handler(
+                    std::bind(&IThreadPoolWorkerEventObserver<IdType, ResultDataType>::on_finished,
+                              std::placeholders::_1, m_id, result_data));
+            }
+            catch (...)
+            {
+                std::scoped_lock lock(m_exception_mutex);
+                m_exception_ptrs.push_back(std::current_exception());
             }
         }
     }
@@ -209,7 +213,7 @@ private:
     mutable std::mutex m_exception_mutex;
     std::deque<std::exception_ptr> m_exception_ptrs;
 
-    EventHandlerList<IThreadPoolWorkerEventObserver<IdType, DataType>> m_event_observers;
+    EventHandlerList<IThreadPoolWorkerEventObserver<IdType, ResultDataType>> m_event_observers;
 };
 
 }  // namespace step::threading

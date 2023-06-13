@@ -18,36 +18,7 @@ constexpr size_t MAX_INVALID_THRESHOLD = 10;
 
 namespace step::video::ff {
 
-struct ReaderFF::Impl
-{
-    Impl()
-    {
-        auto settings_ptr = std::make_shared<proc::SettingsFaceDetector>();
-        settings_ptr->set_face_engine_type(proc::FaceEngineType::TDV);
-        settings_ptr->set_mode(proc::IFaceEngine::Mode::FE_DETECTION);
-        settings_ptr->set_model_path("C:/Work/StepTech/SDK/models/");
-        m_detector = proc::create_face_detector(settings_ptr);
-    }
-
-    void process(const FramePtr& frame_ptr)
-    {
-        auto result = m_detector->process(*frame_ptr);
-
-        auto faces_opt = result.data().get_attachment("faces");
-        if (!faces_opt.has_value())
-            return;
-
-        auto faces = std::any_cast<proc::Faces>(faces_opt.value());
-        for (const auto& face : faces)
-        {
-            proc::draw(*frame_ptr, face);
-        }
-    }
-
-    proc::DetectorPtr m_detector;
-};
-
-ReaderFF::ReaderFF() : m_impl(std::make_unique<Impl>()) {}
+ReaderFF::ReaderFF() {}
 //ReaderFF::ReaderFF() {}
 
 ReaderFF::~ReaderFF()
@@ -208,7 +179,6 @@ void ReaderFF::read_frame()
 
         if (need_handle)
         {
-            m_impl->process(frame_ptr);
             m_frame_observers.perform_for_each_event_handler(
                 std::bind(&IFrameSourceObserver::process_frame, std::placeholders::_1, frame_ptr));
         }

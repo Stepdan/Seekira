@@ -9,4 +9,9 @@ std::shared_ptr<task::BaseSettings> create_exception_node_settings(const ObjectP
     return std::make_shared<ExceptionNodeSettings>(cfg);
 }
 
+void ExceptionNodeSettings::deserialize(const ObjectPtrJSON& cfg)
+{
+    STEP_UNDEFINED("ExceptionNodeSettings::deserialize is undefined");
+}
+
 }  // namespace step::pipeline

@@ -9,4 +9,9 @@ std::shared_ptr<task::BaseSettings> create_input_node_settings(const ObjectPtrJS
     return std::make_shared<InputNodeSettings>(cfg);
 }
 
+void InputNodeSettings::deserialize(const ObjectPtrJSON& cfg)
+{
+    STEP_UNDEFINED("InputNodeSettings::deserialize is undefined");
+}
+
 }  // namespace step::pipeline

@@ -105,10 +105,6 @@ private:
     bool m_need_handle_after_force_set_pos{
         false};  // После любого специального set_position/read_frame надо обработать кадр
     bool m_is_last_key_frame{false};  // Является ли след. кадр в стриме ключевым
-
-    //-----------
-    struct Impl;
-    std::unique_ptr<Impl> m_impl;
 };
 
 }  // namespace step::video::ff

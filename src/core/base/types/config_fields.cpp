@@ -24,6 +24,15 @@ const std::string CFG_FLD::POINT0 = "point0";
 const std::string CFG_FLD::POINT1 = "point1";
 const std::string CFG_FLD::RECT = "rect";
 
+const std::string CFG_FLD::COLOR_RGB = "color_rgb";
+const std::string CFG_FLD::RED = "red";
+const std::string CFG_FLD::GREEN = "green";
+const std::string CFG_FLD::BLUE = "blue";
+
+const std::string CFG_FLD::FACE_COLOR = "face_color";
+const std::string CFG_FLD::VALID_FACE_COLOR = "valid_face_color";
+const std::string CFG_FLD::INVALID_FACE_COLOR = "invalid_face_color";
+
 const std::string CFG_FLD::P = "p";
 const std::string CFG_FLD::Q = "q";
 const std::string CFG_FLD::POSE = "pose";

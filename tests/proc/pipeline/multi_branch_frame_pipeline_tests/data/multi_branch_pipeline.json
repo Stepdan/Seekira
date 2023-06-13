@@ -1,88 +1,86 @@
 {
-    "pipeline": {
-        "settings": {
-            "name": "multi_branch_pipeline",
-            "sync_mode": "parallel_no_wait"
-        },
-        "nodes": [
-            {
-                "node": "input_node",
-                "settings": {
-                    "id": "InputNodeSettings"
-                }
-            },
-            {
-                "node": "empty_node_1",
-                "settings": {
-                    "id": "EmptyNodeSettings"
-                }
-            },
-            {
-                "node": "empty_node_2",
-                "settings": {
-                    "id": "EmptyNodeSettings"
-                }
-            },
-            {
-                "node": "empty_node_3",
-                "settings": {
-                    "id": "EmptyNodeSettings"
-                }
-            },
-            {
-                "node": "empty_node_4",
-                "settings": {
-                    "id": "EmptyNodeSettings"
-                }
-            },
-            {
-                "node": "empty_node_5",
-                "settings": {
-                    "id": "EmptyNodeSettings"
-                }
-            },
-            {
-                "node": "empty_node_6",
-                "settings": {
-                    "id": "EmptyNodeSettings"
-                }
-            },
-            {
-                "node": "empty_node_7",
-                "settings": {
-                    "id": "EmptyNodeSettings"
-                }
+    "settings": {
+        "name": "multi_branch_pipeline",
+        "sync_mode": "parallel_no_wait"
+    },
+    "nodes": [
+        {
+            "node": "input_node",
+            "settings": {
+                "id": "InputNodeSettings"
             }
+        },
+        {
+            "node": "empty_node_1",
+            "settings": {
+                "id": "EmptyNodeSettings"
+            }
+        },
+        {
+            "node": "empty_node_2",
+            "settings": {
+                "id": "EmptyNodeSettings"
+            }
+        },
+        {
+            "node": "empty_node_3",
+            "settings": {
+                "id": "EmptyNodeSettings"
+            }
+        },
+        {
+            "node": "empty_node_4",
+            "settings": {
+                "id": "EmptyNodeSettings"
+            }
+        },
+        {
+            "node": "empty_node_5",
+            "settings": {
+                "id": "EmptyNodeSettings"
+            }
+        },
+        {
+            "node": "empty_node_6",
+            "settings": {
+                "id": "EmptyNodeSettings"
+            }
+        },
+        {
+            "node": "empty_node_7",
+            "settings": {
+                "id": "EmptyNodeSettings"
+            }
+        }
+    ],
+    "links": [
+        [
+            "input_node",
+            "empty_node_1"
         ],
-        "links": [
-            [
-                "input_node",
-                "empty_node_1"
-            ],
-            [
-                "empty_node_1",
-                "empty_node_3"
-            ],
-            [
-                "empty_node_1",
-                "empty_node_4"
-            ],
-            [
-                "input_node",
-                "empty_node_2"
-            ],
-            [
-                "empty_node_2",
-                "empty_node_5"
-            ],
-            [
-                "empty_node_2",
-                "empty_node_6"
-            ],
-            [
-                "empty_node_6",
-                "empty_node_7"
-            ]
+        [
+            "empty_node_1",
+            "empty_node_3"
+        ],
+        [
+            "empty_node_1",
+            "empty_node_4"
+        ],
+        [
+            "input_node",
+            "empty_node_2"
+        ],
+        [
+            "empty_node_2",
+            "empty_node_5"
+        ],
+        [
+            "empty_node_2",
+            "empty_node_6"
+        ],
+        [
+            "empty_node_6",
+            "empty_node_7"
         ]
-    }
+    ]
 }

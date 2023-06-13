@@ -9,4 +9,9 @@ std::shared_ptr<task::BaseSettings> create_empty_node_settings(const ObjectPtrJS
     return std::make_shared<EmptyNodeSettings>(cfg);
 }
 
+void EmptyNodeSettings::deserialize(const ObjectPtrJSON& cfg)
+{
+    STEP_UNDEFINED("EmptyNodeSettings::deserialize is undefined");
+}
+
 }  // namespace step::pipeline

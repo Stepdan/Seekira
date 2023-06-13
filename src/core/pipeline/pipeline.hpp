@@ -3,6 +3,7 @@
 #include "pipeline_branch.hpp"
 #include "pipeline_settings.hpp"
 
+#include <core/threading/thread_pool_execute_policy.hpp>
 #include <core/threading/thread_pool.hpp>
 
 #include <core/graph/graph.hpp>
@@ -12,14 +13,39 @@
 namespace step::pipeline {
 
 template <typename TData>
+using PipelineResultMap = robin_hood::unordered_map<IdType, TData>;
+
+template <typename TData>
+class IPipelineEventObserver
+{
+public:
+    virtual ~IPipelineEventObserver() = default;
+
+    virtual void on_pipeline_data_update(const PipelineResultMap<TData>& data) = 0;
+};
+
+template <typename TData>
+class IPipelineEventSource
+{
+public:
+    virtual ~IPipelineEventSource() = default;
+
+    virtual void register_observer(IPipelineEventObserver<TData>* observer) = 0;
+    virtual void unregister_observer(IPipelineEventObserver<TData>* observer) = 0;
+};
+
+template <typename TData>
 class Pipeline : public graph::BaseGraph,
                  public threading::ThreadPool<IdType, PipelineDataTypePtr<TData>, PipelineDataTypePtr<TData>>,
+                 public IPipelineEventSource<std::shared_ptr<PipelineData<TData>>>,
                  public ISerializable
 {
 protected:
     using ThreadPoolDataType = PipelineDataTypePtr<TData>;
     using ThreadPoolResultDataType = ThreadPoolDataType;
     using ThreadPoolType = step::threading::ThreadPool<IdType, PipelineDataTypePtr<TData>, PipelineDataTypePtr<TData>>;
+
+    using OutputDataMapType = robin_hood::unordered_map<IdType, std::shared_ptr<PipelineData<TData>>>;
 
 public:
     Pipeline(const ObjectPtrJSON& config)
@@ -51,6 +77,8 @@ public:
 
         return add_process_data(get_root_id(), std::move(data));
     }
+
+    pipeline::SyncPolicy get_sync_policy() const { return m_settings.sync_policy; }
 
 private:
     bool add_process_data(const IdType& id, PipelineDataTypePtr<TData>&& data)
@@ -101,6 +129,7 @@ private:
                 {
                     STEP_LOG(L_ERROR, "Pipeline {}: Branch {} exception: {}", m_settings.name, id, e.what());
                     m_branches_data[id] = {nullptr, BranchStatus::Finished};
+                    m_output_branches_data[id].reset();
                 }
             }
             // TODO exception handling
@@ -145,16 +174,16 @@ private:
 
             ThreadPoolType::m_threads[id]->add_data(std::move(branch_data.data_to_process));
             branch_data = {nullptr, BranchStatus::Running};
+            m_output_branches_data[id].reset();
         }
     }
 
     // Data parsing
 private:
-    void deserialize(const ObjectPtrJSON& config)
+    void deserialize(const ObjectPtrJSON& pipeline_json)
     {
         STEP_LOG(L_INFO, "Start pipeline deserializing");
         m_root.reset();
-        auto pipeline_json = json::get_object(config, CFG_FLD::PIPELINE);
 
         auto settings_json = json::get_object(pipeline_json, CFG_FLD::SETTINGS);
         m_settings = PipelineSettings(settings_json);
@@ -224,7 +253,7 @@ private:
 
     // IThreadPoolWorkerEventObserver
 private:
-    void on_finished(const IdType& id, ThreadPoolResultDataType data) override
+    void on_finished(const IdType& id, const ThreadPoolResultDataType& data) override
     {
         STEP_LOG(L_INFO, "on_finished branch {}", id);
         if (ThreadPoolType::need_stop())
@@ -246,6 +275,44 @@ private:
             if (branch_data.status == BranchStatus::Finished)
                 branch_data = {clone_pipeline_data_shared(data), BranchStatus::Ready};
         }
+
+        m_output_branches_data[id] = clone_pipeline_data_shared(data);
+        // Отправляем данные подписчикам
+        decltype(m_output_branches_data) output;
+        if (m_settings.sync_policy == SyncPolicy::ParallelNoWait)
+        {
+            output[id] = clone_pipeline_data_shared(data);
+        }
+        else if (m_settings.sync_policy == SyncPolicy::ParallelWait)
+        {
+            // В режиме ожидания надо убедиться, что у нас полностью заполнена мапа с результатами
+            bool is_all_ready = std::all_of(ThreadPoolType::m_threads.cbegin(), ThreadPoolType::m_threads.cend(),
+                                            [this](const std::pair<IdType, ThreadPoolType::ThreadPoolWorkerPtr>& item) {
+                                                return m_output_branches_data.contains(item.first);
+                                            });
+
+            if (is_all_ready)
+            {
+                for (const auto& [output_id, output_data] : m_output_branches_data)
+                    output[output_id] = clone_pipeline_data_shared(output_data);
+            }
+        }
+
+        m_pipeline_observers.perform_for_each_event_handler(
+            std::bind(&IPipelineEventObserver<std::shared_ptr<PipelineData<TData>>>::on_pipeline_data_update,
+                      std::placeholders::_1, output));
+    }
+
+    // IPipelineEventSource<std::shared_ptr<PipelineData<TData>>>
+public:
+    void register_observer(IPipelineEventObserver<std::shared_ptr<PipelineData<TData>>>* observer) override
+    {
+        m_pipeline_observers.register_event_handler(observer);
+    }
+
+    void unregister_observer(IPipelineEventObserver<std::shared_ptr<PipelineData<TData>>>* observer) override
+    {
+        m_pipeline_observers.unregister_event_handler(observer);
     }
 
 private:
@@ -272,7 +339,18 @@ private:
         BranchStatus status{BranchStatus::Finished};
     };
     mutable std::mutex m_branches_data_guard;
+    // Здесь входные данные для каждой ветви пайплайна
     robin_hood::unordered_map<IdType, BranchProcessData<std::shared_ptr<PipelineData<TData>>>> m_branches_data;
+
+    /*
+        Здесь выходные данные каждой ветви пайплайна.
+        При синхронном режиме - отправляем полностью всю мапу, когда все ветви пайплайна отработали
+        При режиме без ожидания - отправляем данные только той ветви, которая закончила работу
+    */
+    PipelineResultMap<std::shared_ptr<PipelineData<TData>>> m_output_branches_data;
+    EventHandlerList<IPipelineEventObserver<std::shared_ptr<PipelineData<TData>>>,
+                     threading::ThreadPoolExecutePolicy<0>>
+        m_pipeline_observers;
 };
 
 }  // namespace step::pipeline

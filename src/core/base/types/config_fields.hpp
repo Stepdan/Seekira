@@ -36,6 +36,16 @@ public:
     static const std::string POINT1;
     static const std::string RECT;
 
+    /* Color */
+    static const std::string COLOR_RGB;
+    static const std::string RED;
+    static const std::string GREEN;
+    static const std::string BLUE;
+
+    static const std::string FACE_COLOR;
+    static const std::string VALID_FACE_COLOR;
+    static const std::string INVALID_FACE_COLOR;
+
     /* Pose */
     static const std::string P;
     static const std::string Q;

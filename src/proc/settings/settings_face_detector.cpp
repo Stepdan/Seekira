@@ -15,4 +15,9 @@ bool SettingsFaceDetector::operator==(const SettingsFaceDetector& rhs) const noe
     /* clang-format on */
 }
 
+void SettingsFaceDetector::deserialize(const ObjectPtrJSON& cfg)
+{
+    STEP_UNDEFINED("SettingsFaceDetector::deserialize is undefined");
+}
+
 }  // namespace step::proc

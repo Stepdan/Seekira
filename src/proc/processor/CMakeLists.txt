@@ -1,5 +1,4 @@
-project(step_proc_interfaces)
-set(PROJECT_ALIAS proc_interfaces)
+project(step_proc_video_processor)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)
@@ -9,14 +8,14 @@ endif()
 if(NOT DEFINED SOURCES)
     file(GLOB SOURCES
         *.cpp
-    )
+    ) 
 endif()
 
 source_group("Headers" FILES ${HEADERS})
 source_group("Sources" FILES ${SOURCES})
 
 add_library(${PROJECT_NAME} STATIC)
-add_library(step::${PROJECT_ALIAS} ALIAS ${PROJECT_NAME})
+add_library(step::proc_video_processor ALIAS ${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME}
     PRIVATE
@@ -27,16 +26,17 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    step::core_task
-    step::core_threading
-    step::frame_interface
+    robin_hood::robin_hood
+    step::ff_reader
+    step::proc_detect
 )
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    STEPKIT_MODULE_NAME="PROC_INTERFACES"
+    STEPKIT_MODULE_NAME="PROC_VIDEO_PROCESSOR"
     PUBLIC
     BUILD_WITH_EASY_PROFILER
+
 )
 
 # install(TARGETS ${PROJECT_NAME} EXPORT ${INSTALL_TARGET_NAME}

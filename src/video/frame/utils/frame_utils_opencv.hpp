@@ -1,5 +1,7 @@
 #pragma once
 
+#include <core/base/types/color.hpp>
+
 #include <video/frame/interfaces/frame.hpp>
 
 #include <opencv2/core/mat.hpp>

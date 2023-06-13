@@ -1,42 +1,40 @@
 {
-    "pipeline": {
-        "settings": {
-            "name": "duplicate_links_pipeline",
-            "sync_mode": "parallel_no_wait"
-        },
-        "nodes": [
-            {
-                "node": "input_node",
-                "settings": {
-                    "id": "InputNodeSettings"
-                }
-            },
-            {
-                "node": "empty_node_1",
-                "settings": {
-                    "id": "EmptyNodeSettings"
-                }
-            },
-            {
-                "node": "empty_node_2",
-                "settings": {
-                    "id": "EmptyNodeSettings"
-                }
+    "settings": {
+        "name": "duplicate_links_pipeline",
+        "sync_mode": "parallel_no_wait"
+    },
+    "nodes": [
+        {
+            "node": "input_node",
+            "settings": {
+                "id": "InputNodeSettings"
             }
+        },
+        {
+            "node": "empty_node_1",
+            "settings": {
+                "id": "EmptyNodeSettings"
+            }
+        },
+        {
+            "node": "empty_node_2",
+            "settings": {
+                "id": "EmptyNodeSettings"
+            }
+        }
+    ],
+    "links": [
+        [
+            "input_node",
+            "empty_node_1"
         ],
-        "links": [
-            [
-                "input_node",
-                "empty_node_1"
-            ],
-            [
-                "input_node",
-                "empty_node_1"
-            ],
-            [
-                "input_node",
-                "empty_node_2"
-            ]
+        [
+            "input_node",
+            "empty_node_1"
+        ],
+        [
+            "input_node",
+            "empty_node_2"
         ]
-    }
+    ]
 }
