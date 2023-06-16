@@ -22,7 +22,7 @@ public:
         deserialize(config);
     }
 
-    ~BasePipeline() { STEP_LOG(L_TRACE, "BasePipeline {} destruction", m_settings.name); }
+    virtual ~BasePipeline() { STEP_LOG(L_TRACE, "BasePipeline {} destruction", m_settings.name); }
 
     PipelineIdType get_root_id() const
     {
@@ -86,7 +86,8 @@ private:
             auto processed_id = id;
             auto node = get_node(processed_id);
 
-            create_branch(std::dynamic_pointer_cast<PipelineNode<TData>>(node));
+            auto pipeline_node = std::dynamic_pointer_cast<PipelineNode<TData>>(node);
+            this->create_branch(pipeline_node);
 
             if (node->get_children_ids().empty())
                 continue;
@@ -96,7 +97,7 @@ private:
             while (!branch_ids.contains(processed_id))
             {
                 auto node = get_node(processed_id);
-                add_node_to_branch(list_front_id, std::dynamic_pointer_cast<PipelineNode<TData>>(node));
+                this->add_node_to_branch(list_front_id, std::dynamic_pointer_cast<PipelineNode<TData>>(node));
 
                 if (node->get_children_ids().empty())
                     break;

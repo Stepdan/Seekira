@@ -13,7 +13,7 @@ public:
 
     ExceptionNodeSettings() = default;
 
-    bool operator==(const ExceptionNodeSettings& rhs) const noexcept { return true; }
+    bool operator==(const ExceptionNodeSettings& rhs) const noexcept { return false; }
     bool operator!=(const ExceptionNodeSettings& rhs) const noexcept { return !(*this == rhs); }
 };
 

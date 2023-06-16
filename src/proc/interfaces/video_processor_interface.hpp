@@ -14,39 +14,26 @@ using VideoProcessorInfo = PipelineData<video::Frame>;
 using VideoProcessorInfoList = std::vector<VideoProcessorInfo>;
 using VideoProcessorInfoPtr = std::shared_ptr<VideoProcessorInfo>;
 
-class IVideoProcessorSourceObserver
-{
-public:
-    virtual ~IVideoProcessorSourceObserver() = default;
-
-    virtual void process_video_info(VideoProcessorInfoPtr) { STEP_UNDEFINED("process_video_info is undefined!"); }
-};
-
-class IVideoProcessorSource
-{
-public:
-    virtual ~IVideoProcessorSource() = default;
-
-    virtual void register_observer(IVideoProcessorSourceObserver* observer) = 0;
-    virtual void unregister_observer(IVideoProcessorSourceObserver* observer) = 0;
-};
-
 using IVideoProcessorTask = task::ITask<video::FramePtr, VideoProcessorInfo>;
-using VideoProcessorTaskPtr = std::unique_ptr<IVideoProcessorTask>();
+using VideoProcessorTaskPtr = std::unique_ptr<IVideoProcessorTask>;
 
 template <typename TSettings>
 using BaseVideoProcessorTask = task::BaseTask<TSettings, video::FramePtr, VideoProcessorInfo>;
 
 using VideoProcessorId = std::string;
 
-using IVideoProcessorObserver = threading::IThreadPoolWorkerEventObserver<VideoProcessorId, VideoProcessorInfoPtr>;
+using IVideoProcessorObserver = threading::IThreadPoolWorkerEventObserver<VideoProcessorId, VideoProcessorInfo>;
 
 class IVideoProcessor : public threading::ThreadPoolWorker<VideoProcessorId, video::FramePtr, VideoProcessorInfo>,
-                        public IVideoProcessorSource,
                         public video::IFrameSourceObserver
 {
+    using ThreadPoolWorkerType = threading::ThreadPoolWorker<VideoProcessorId, video::FramePtr, VideoProcessorInfo>;
+
 public:
     virtual ~IVideoProcessor() = default;
+
+protected:
+    IVideoProcessor(const VideoProcessorId& id) : ThreadPoolWorkerType(id) {}
 };
 
 }  // namespace step::proc

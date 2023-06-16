@@ -22,8 +22,7 @@ public:
         VideoProcessorInfo result;
 
         {
-            auto copied_frame = *frame;
-            auto data = VideoProcessorInfo::create(std::move(copied_frame));
+            auto data = VideoProcessorInfo::create(std::move(*frame));
 
             m_frame_pipeline->process(data);
 
@@ -39,7 +38,7 @@ private:
 
 std::unique_ptr<IVideoProcessorTask> create_video_processor_task(const std::shared_ptr<task::BaseSettings>& settings)
 {
-    return nullptr;
+    return std::make_unique<VideoProcessorTask>(settings);
 }
 
 }  // namespace step::proc

@@ -39,10 +39,10 @@ private:
     {
         m_id = json::get<PipelineIdType>(container, CFG_FLD::NODE);
 
-        const auto task_settings = json::get_object(container, CFG_FLD::SETTINGS);
-        auto base_task_settings = task::TaskSettingsFactory::instance().create(task_settings);
+        const auto task_settings_json = json::get_object(container, CFG_FLD::SETTINGS);
+        auto base_task_settings = task::TaskSettingsFactory::instance().create(task_settings_json);
 
-        m_task = task::TaskFactory<PipelineDataPtr<TData>>::instance().create_unique(base_task_settings);
+        m_task = IPipelineNodeTask<TData>::from_abstract(CREATE_TASK_UNIQUE(base_task_settings));
     }
 
 private:

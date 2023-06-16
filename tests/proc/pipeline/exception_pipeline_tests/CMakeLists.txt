@@ -19,6 +19,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     gtest_main
     step::frame_utils
     step::proc_pipeline
+    step::proc_interfaces
     step::application
 )
 target_compile_definitions(${PROJECT_NAME} PRIVATE

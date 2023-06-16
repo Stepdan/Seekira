@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
+        <file>video_processing/video_processing_manager.json</file>
         <file>fonts/RobotoMono-Medium.ttf</file>
         <file>qml/common/constants.js</file>
         <file>qml/common/functions.js</file>

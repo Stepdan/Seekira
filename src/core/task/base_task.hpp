@@ -6,15 +6,37 @@
 
 namespace step::task {
 
-template <typename TData, typename TReturnData = void>
-class ITask
+class IAbstractTask
 {
 public:
-    virtual ~ITask() = default;
+    virtual ~IAbstractTask() = default;
 
     virtual const BaseSettings& get_base_settings() const noexcept = 0;
     virtual void set_settings(const BaseSettings& settings) = 0;
     virtual void reset() = 0;
+};
+
+template <typename TData, typename TReturnData = void>
+class ITask : public IAbstractTask
+{
+public:
+    static std::unique_ptr<ITask<TData, TReturnData>> from_abstract(std::unique_ptr<IAbstractTask>&& abstract_task)
+    {
+        ITask<TData, TReturnData>* p = dynamic_cast<ITask<TData, TReturnData>*>(abstract_task.get());
+        if (p)
+            abstract_task.release();
+        return std::unique_ptr<ITask<TData, TReturnData>>(p);
+    }
+
+    static std::shared_ptr<ITask<TData, TReturnData>> from_abstract(std::shared_ptr<IAbstractTask> abstract_task)
+    {
+        auto task_ptr = std::dynamic_pointer_cast<ITask<TData, TReturnData>>(abstract_task);
+        STEP_ASSERT(task_ptr, "Invalid shared dynamic_pointer_cast from_abstract");
+        return task_ptr;
+    }
+
+public:
+    virtual ~ITask() = default;
 
     virtual TReturnData process(TData) = 0;
 };

@@ -12,13 +12,13 @@ void MetaStorage::set_attachment(const std::string& id, std::any&& attachment)
     m_storage[id] = std::move(attachment);
 }
 
-std::optional<std::any> MetaStorage::get_attachment(const std::string& id) const
+std::any MetaStorage::get_attachment_impl(const std::string& id) const
 {
     if (auto it = m_storage.find(id); it != m_storage.cend())
         return it->second;
 
     STEP_LOG(L_TRACE, "MetaStorage doesn't has {}", id);
-    return std::nullopt;
+    return std::any();
 }
 
 }  // namespace step

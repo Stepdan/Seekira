@@ -163,7 +163,7 @@ private:
     }
 
 private:
-    void create_branch(const PipelineNodePtr<TData>& branch_root) override
+    virtual void create_branch(const PipelineNodePtr<TData>& branch_root) override
     {
         auto id = branch_root->get_id();
         ThreadPoolType::add_thread_worker(std::make_shared<AsyncPipelineBranch<TData>>(branch_root));
@@ -173,7 +173,7 @@ private:
         m_branches_data[id] = {nullptr, BranchStatus::Finished};
     }
 
-    void add_node_to_branch(const PipelineIdType& branch_id, const PipelineNodePtr<TData>& node) override
+    virtual void add_node_to_branch(const PipelineIdType& branch_id, const PipelineNodePtr<TData>& node) override
     {
         STEP_ASSERT(node, "Can't add node to branch {}: empty node", branch_id);
         STEP_ASSERT(ThreadPoolType::m_threads.contains(branch_id), "AsyncPipeline doesn't have branch {}", branch_id);

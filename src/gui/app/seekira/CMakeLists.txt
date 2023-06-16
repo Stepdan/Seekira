@@ -3,6 +3,7 @@ project(Seekira)
 add_executable(Seekira main.cpp)
 target_link_libraries(Seekira
     PRIVATE
+    step::application
     step::gui_ui
 )
 

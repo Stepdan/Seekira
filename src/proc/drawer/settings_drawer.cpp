@@ -9,7 +9,11 @@ SettingsDrawer::SettingsDrawer()
 {
 }
 
-SettingsDrawer::SettingsDrawer(const ObjectPtrJSON& cfg) {}
+SettingsDrawer::SettingsDrawer(const ObjectPtrJSON& cfg)
+    : m_face_color(COLOR_RGB::Blue), m_valid_face_color(COLOR_RGB::Green), m_invalid_face_color(COLOR_RGB::Red)
+{
+    deserialize(cfg);
+}
 
 void SettingsDrawer::serialize(ObjectPtrJSON& container)
 {
@@ -28,7 +32,8 @@ void SettingsDrawer::deserialize(const ObjectPtrJSON& container)
 {
     const auto deserialize_color = [&container](const std::string& key, ColorRGB& color) {
         auto obj_json = json::get_object(container, key);
-        color.deserialize(obj_json);
+        if (obj_json)
+            color.deserialize(obj_json);
     };
 
     deserialize_color(CFG_FLD::FACE_COLOR, m_face_color);

@@ -3,18 +3,28 @@
 #include <core/log/log.hpp>
 #include <core/exception/assert.hpp>
 
+#include <core/base/json/json_utils.hpp>
+
 #include <gui/utils/log_handler.hpp>
 
 #include <gui/ui/video/video_frame_provider_ff.hpp>
 
+#include <QUrl>
+
 namespace {
 constexpr step::video::ff::TimestampFF STEP_VALUE = 2 * step::video::ff::AV_SECOND;
-}
+
+const std::string VIDEO_PROCESSING_CONFIG_PATH =
+    "C:/Work/StepTech/StepKit/src/gui/resources/video_processing/video_processing_manager.json";
+}  // namespace
 
 namespace step::gui {
 
 PlayerControllerFF::PlayerControllerFF(QObject* parent /*= nullptr*/)
-    : m_video_frame_provider(std::make_unique<VideoFrameProviderFF>(this)), m_state(QMediaPlayer::State::StoppedState)
+    : m_video_frame_provider(std::make_unique<VideoFrameProviderFF>(this))
+    , m_video_proc_manager(
+          std::make_unique<proc::VideoProcessingManager>(json::utils::from_file(VIDEO_PROCESSING_CONFIG_PATH)))
+    , m_state(QMediaPlayer::State::StoppedState)
 {
 }
 
@@ -52,7 +62,9 @@ bool PlayerControllerFF::open_file(const QString& filename)
         auto* frame_observer = dynamic_cast<step::gui::VideoFrameProviderFF*>(m_video_frame_provider.get());
         STEP_ASSERT(frame_observer, "Invalid cast to VideoFrameProviderFF*");
 
-        m_video_reader->register_observer(frame_observer);
+        m_video_proc_manager->register_observer(frame_observer);
+
+        m_video_reader->register_observer(m_video_proc_manager->get_video_processor());
         m_video_reader->register_observer(this);
 
         // Открыли файл - ставим на паузу

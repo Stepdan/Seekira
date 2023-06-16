@@ -1,4 +1,4 @@
-project(step_proc_video_processor)
+project(step_proc_processing_manager)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)
@@ -15,7 +15,7 @@ source_group("Headers" FILES ${HEADERS})
 source_group("Sources" FILES ${SOURCES})
 
 add_library(${PROJECT_NAME} STATIC)
-add_library(step::proc_video_processor ALIAS ${PROJECT_NAME})
+add_library(step::proc_processing_manager ALIAS ${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME}
     PRIVATE
@@ -26,15 +26,12 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    robin_hood::robin_hood
-    step::ff_reader
-    step::proc_detect
-    step::proc_drawer
+    step::proc_video_processor
 )
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    STEPKIT_MODULE_NAME="PROC_VIDEO_PROCESSOR"
+    STEPKIT_MODULE_NAME="PROC_PROCESSING_MANAGER"
     PUBLIC
     BUILD_WITH_EASY_PROFILER
 

@@ -2,6 +2,8 @@
 
 #include "base_settings.hpp"
 
+#include <core/log/log.hpp>
+
 #include <core/base/types/config_fields.hpp>
 #include <core/base/json/json_utils.hpp>
 
@@ -35,6 +37,7 @@ public:
         const auto id = json::get<std::string>(json_obj, CFG_FLD::TASK_SETTINGS_ID);
         STEP_ASSERT(m_creators.contains(id), "Task settings creator with id {} was not registered!", id);
 
+        STEP_LOG(L_INFO, "Try create settings shared: {}", id);
         return m_creators[id](json_obj);
     }
 
@@ -54,3 +57,5 @@ private:
 
 #define REGISTER_TASK_SETTINGS_CREATOR(ID, CREATOR)                                                                    \
     step::task::TaskSettingsFactory::instance().register_creator(ID, CREATOR);
+
+#define CREATE_SETTINGS(JSON_OBJ) step::task::TaskSettingsFactory::instance().create(JSON_OBJ)

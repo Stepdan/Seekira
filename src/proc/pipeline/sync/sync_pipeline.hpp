@@ -12,7 +12,7 @@ class SyncPipeline : public BasePipeline<TData>
 public:
     SyncPipeline(const ObjectPtrJSON& config) : BasePipeline<TData>(config) {}
 
-    void process(const PipelineDataPtr<TData>& data) override
+    virtual void process(const PipelineDataPtr<TData>& data) override
     {
         std::queue<PipelineIdType> id_queue;
         id_queue.push(BasePipeline<TData>::get_root_id());
@@ -32,7 +32,7 @@ public:
     }
 
 private:
-    void create_branch(const PipelineNodePtr<TData>& branch_root) override
+    virtual void create_branch(const PipelineNodePtr<TData>& branch_root) override
     {
         STEP_ASSERT(branch_root, "Can't create branch: empty root");
         STEP_ASSERT(!m_branches.contains(branch_root->get_id()), "SyncPipeline already has branch {}",
@@ -40,7 +40,7 @@ private:
         m_branches[branch_root->get_id()] = PipelineBranch<TData>(branch_root);
     }
 
-    void add_node_to_branch(const PipelineIdType& branch_id, const PipelineNodePtr<TData>& node) override
+    virtual void add_node_to_branch(const PipelineIdType& branch_id, const PipelineNodePtr<TData>& node) override
     {
         STEP_ASSERT(node, "Can't add node to branch {}: empty node", branch_id);
         STEP_ASSERT(m_branches.contains(branch_id), "SyncPipeline doesn't have branch {}", branch_id);

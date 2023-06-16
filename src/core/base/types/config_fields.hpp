@@ -13,14 +13,18 @@ public:
     static const std::string ID;
     static const std::string NAME;
     static const std::string PATH;
+    static const std::string MODEL_PATH;
 
     static const std::string WIDTH;
     static const std::string HEIGHT;
 
     static const std::string SETTINGS;
+    static const std::string CONFIG;
     static const std::string MODE;
+    static const std::string TYPE;
 
     static const std::string SERIAL_ID;
+    static const std::string CREATE_ID;
 
     /* Coordinates */
     static const std::string X;
@@ -83,6 +87,17 @@ public:
     static const std::string LINK;
     static const std::string LINKS;
     static const std::string SYNC_MODE;
+
+    /* Video processing */
+    static const std::string VIDEO_PROCESSOR;
+
+    /* Face engine */
+    static const std::string FACE;
+    static const std::string FACES;
+    static const std::string FACE_DETECTOR_SETTINGS;
+    static const std::string FACE_DETECTION_RESULT;
+
+    static const std::string DRAWER_SETTINGS;
 };
 
 }  // namespace step

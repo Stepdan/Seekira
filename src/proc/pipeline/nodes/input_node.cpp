@@ -11,7 +11,7 @@ std::shared_ptr<task::BaseSettings> create_input_node_settings(const ObjectPtrJS
 
 void InputNodeSettings::deserialize(const ObjectPtrJSON& cfg)
 {
-    STEP_UNDEFINED("InputNodeSettings::deserialize is undefined");
+    //STEP_UNDEFINED("InputNodeSettings::deserialize is undefined");
 }
 
 }  // namespace step::proc

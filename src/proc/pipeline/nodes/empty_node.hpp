@@ -13,7 +13,7 @@ public:
 
     EmptyNodeSettings() = default;
 
-    bool operator==(const EmptyNodeSettings& rhs) const noexcept { return true; }
+    bool operator==(const EmptyNodeSettings& rhs) const noexcept { return false; }
     bool operator!=(const EmptyNodeSettings& rhs) const noexcept { return !(*this == rhs); }
 };
 

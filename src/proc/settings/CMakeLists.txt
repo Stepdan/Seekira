@@ -27,7 +27,7 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    step::core_task
+    step::proc_interfaces
     step::frame_interface
 )
 

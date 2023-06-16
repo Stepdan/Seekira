@@ -5,11 +5,15 @@ namespace step {
 const std::string CFG_FLD::ID = "id";
 const std::string CFG_FLD::NAME = "name";
 const std::string CFG_FLD::PATH = "path";
+const std::string CFG_FLD::MODEL_PATH = "model_path";
 const std::string CFG_FLD::WIDTH = "width";
 const std::string CFG_FLD::HEIGHT = "height";
 const std::string CFG_FLD::SETTINGS = "settings";
+const std::string CFG_FLD::CONFIG = "config";
 const std::string CFG_FLD::MODE = "mode";
+const std::string CFG_FLD::TYPE = "type";
 const std::string CFG_FLD::SERIAL_ID = "serial_id";
+const std::string CFG_FLD::CREATE_ID = "create_id";
 
 const std::string CFG_FLD::X = "x";
 const std::string CFG_FLD::Y = "y";
@@ -53,7 +57,7 @@ const std::string CFG_FLD::FRAME_RATE = "frame_rate";
 const std::string CFG_FLD::RECONNECT_TIMEOUT = "reconnect_timeout";
 const std::string CFG_FLD::CYCLIC = "cyclic";
 
-const std::string CFG_FLD::TASK_SETTINGS_ID = "id";
+const std::string CFG_FLD::TASK_SETTINGS_ID = "task_settings_id";
 
 const std::string CFG_FLD::PIXEL_FORMAT = "pixel_format";
 
@@ -63,5 +67,14 @@ const std::string CFG_FLD::NODES = "nodes";
 const std::string CFG_FLD::LINK = "link";
 const std::string CFG_FLD::LINKS = "links";
 const std::string CFG_FLD::SYNC_MODE = "sync_mode";
+
+const std::string CFG_FLD::VIDEO_PROCESSOR = "video_processor";
+
+const std::string CFG_FLD::FACE = "face";
+const std::string CFG_FLD::FACES = "faces";
+const std::string CFG_FLD::FACE_DETECTOR_SETTINGS = "face_detector_settings";
+const std::string CFG_FLD::FACE_DETECTION_RESULT = "face_detection_result";
+
+const std::string CFG_FLD::DRAWER_SETTINGS = "drawer_settings";
 
 }  // namespace step

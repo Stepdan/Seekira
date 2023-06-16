@@ -40,6 +40,9 @@ target_link_libraries(${PROJECT_NAME}
     step::core_graph
     step::core_task
     step::core_threading
+    step::proc_detect
+    step::proc_effects
+    step::proc_drawer
 )
 
 target_compile_definitions(${PROJECT_NAME}

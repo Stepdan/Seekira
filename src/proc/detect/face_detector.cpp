@@ -1,6 +1,7 @@
 #include "registrator.hpp"
 
 #include <core/log/log.hpp>
+#include <core/base/types/config_fields.hpp>
 
 #include <proc/face_engine/face_engine_factory.hpp>
 #include <proc/settings/settings_face_detector.hpp>
@@ -37,7 +38,7 @@ public:
         }
 
         MetaStorage storage;
-        storage.set_attachment("faces", std::move(faces));
+        storage.set_attachment(CFG_FLD::FACES, std::move(faces));
 
         return {std::move(bboxes), std::move(storage)};
     }

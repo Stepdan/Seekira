@@ -30,4 +30,6 @@ public:
     std::string m_model_path;
 };
 
+std::shared_ptr<task::BaseSettings> create_face_detector_settings(const ObjectPtrJSON&);
+
 }  // namespace step::proc

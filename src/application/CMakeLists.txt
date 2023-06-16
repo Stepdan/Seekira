@@ -28,8 +28,10 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    step::proc_pipeline
     step::frame_interface
+    step::proc_detect
+    step::proc_pipeline
+    step::proc_video_processor
 )
 
 target_compile_definitions(${PROJECT_NAME}

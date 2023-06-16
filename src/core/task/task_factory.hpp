@@ -2,6 +2,7 @@
 
 #include "base_task.hpp"
 
+#include <core/log/log.hpp>
 #include <core/exception/assert.hpp>
 
 #include <fmt/format.h>
@@ -12,17 +13,16 @@
 
 namespace step::task {
 
-template <typename TData>
 class TaskFactory
 {
 public:
-    using CreatorUnique = std::function<std::unique_ptr<ITask<TData>>(const std::shared_ptr<task::BaseSettings>&)>;
-    using CreatorShared = std::function<std::shared_ptr<ITask<TData>>(const std::shared_ptr<task::BaseSettings>&)>;
+    using CreatorUnique = std::function<std::unique_ptr<IAbstractTask>(const std::shared_ptr<task::BaseSettings>&)>;
+    using CreatorShared = std::function<std::shared_ptr<IAbstractTask>(const std::shared_ptr<task::BaseSettings>&)>;
 
 public:
     static auto& instance()
     {
-        static TaskFactory<TData> obj;
+        static TaskFactory obj;
         return obj;
     }
 
@@ -42,21 +42,23 @@ public:
         m_creators_shared[task_settings_id] = creator;
     }
 
-    std::unique_ptr<ITask<TData>> create_unique(const std::shared_ptr<BaseSettings>& settings)
+    std::unique_ptr<IAbstractTask> create_unique(const std::shared_ptr<BaseSettings>& settings)
     {
         STEP_ASSERT(settings, "Task creator unique can't create from empty settings!");
         STEP_ASSERT(m_creators_unique.contains(settings->get_settings_id()),
                     "Task creator unique with id {} was not registered!", settings->get_settings_id());
 
+        STEP_LOG(L_INFO, "Try create task unique: {}", settings->get_settings_id());
         return m_creators_unique[settings->get_settings_id()](settings);
     }
 
-    std::shared_ptr<ITask<TData>> create_shared(const std::shared_ptr<BaseSettings>& settings)
+    std::shared_ptr<IAbstractTask> create_shared(const std::shared_ptr<BaseSettings>& settings)
     {
         STEP_ASSERT(settings, "Task creator shared can't create from empty settings!");
         STEP_ASSERT(m_creators_shared.contains(settings->get_settings_id()),
                     "Task creator shared with id {} was not registered!", settings->get_settings_id());
 
+        STEP_LOG(L_INFO, "Try create task shared: {}", settings->get_settings_id());
         return m_creators_shared[settings->get_settings_id()](settings);
     }
 
@@ -75,8 +77,11 @@ private:
 
 }  // namespace step::task
 
-#define REGISTER_TASK_CREATOR_UNIQUE(DATA_TYPE, TASK_SETTINGS_ID, CREATOR)                                             \
-    step::task::TaskFactory<DATA_TYPE>::instance().register_creator_unique(TASK_SETTINGS_ID, CREATOR);
+#define REGISTER_TASK_CREATOR_UNIQUE(TASK_SETTINGS_ID, CREATOR)                                                        \
+    step::task::TaskFactory::instance().register_creator_unique(TASK_SETTINGS_ID, CREATOR);
 
 #define REGISTER_TASK_CREATOR_SHARED(DATA_TYPE, TASK_SETTINGS_ID, CREATOR)                                             \
-    step::task::TaskFactory<DATA_TYPE>::instance().register_creator_shared(TASK_SETTINGS_ID, CREATOR);
+    step::task::TaskFactory::instance().register_creator_shared(TASK_SETTINGS_ID, CREATOR);
+
+#define CREATE_TASK_UNIQUE(SETTINGS) step::task::TaskFactory::instance().create_unique(SETTINGS)
+#define CREATE_TASK_SHARED(SETTINGS) step::task::TaskFactory::instance().create_shared(SETTINGS)

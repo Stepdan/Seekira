@@ -1,5 +1,7 @@
 #include <core/log/log.hpp>
 
+#include <application/registrator.hpp>
+
 #include <gui/utils/high_dpi_fix.hpp>
 #include <gui/utils/log_handler.hpp>
 #include <gui/application/application.hpp>
@@ -33,6 +35,8 @@ int main(int argc, char* argv[])
         step::gui::utils::high_dpi_fix();
         qInstallMessageHandler(step::gui::utils::qt_log_handler);
 
+        step::app::Registrator::instance();
+
         step::gui::Application app(argc, argv);
         STEP_LOG(L_INFO, "Application created");
 
@@ -55,12 +59,10 @@ int main(int argc, char* argv[])
     catch (const std::exception& ex)
     {
         STEP_LOG(L_CRITICAL, "Unhandled exception: {}", ex.what());
-        throw;
     }
     catch (...)
     {
         STEP_LOG(L_CRITICAL, "Unknown unhandled exception!");
-        throw;
     }
 
     return exit_code;

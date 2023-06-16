@@ -24,4 +24,6 @@ public:
     ObjectPtrJSON m_pipeline_cfg;
 };
 
+std::shared_ptr<task::BaseSettings> create_video_processor_task_settings(const ObjectPtrJSON&);
+
 }  // namespace step::proc

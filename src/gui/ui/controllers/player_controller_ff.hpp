@@ -3,6 +3,8 @@
 #include <video/frame/interfaces/frame_interfaces.hpp>
 #include <video/ffmpeg/reader/reader.hpp>
 
+#include <proc/processing_manager/video_processing_manager.hpp>
+
 #include <gui/interfaces/player_controller.hpp>
 #include <gui/interfaces/video_frame_provider.hpp>
 
@@ -53,6 +55,7 @@ private:
     std::unique_ptr<IVideoFrameProvider> m_video_frame_provider;
 
     std::unique_ptr<video::ff::ReaderFF> m_video_reader;
+    std::unique_ptr<proc::VideoProcessingManager> m_video_proc_manager;
 
     QMediaPlayer::State m_state;
 

@@ -20,4 +20,12 @@ void SettingsVideoProcessorTask::deserialize(const ObjectPtrJSON& cfg)
     STEP_ASSERT(m_pipeline_cfg, "Invalid pipeline cfg!");
 }
 
+std::shared_ptr<task::BaseSettings> create_video_processor_task_settings(const ObjectPtrJSON& cfg)
+{
+    auto settings = std::make_shared<SettingsVideoProcessorTask>();
+    settings->deserialize(cfg);
+
+    return settings;
+}
+
 }  // namespace step::proc
