@@ -2,7 +2,7 @@
 #include <core/threading/thread_pool_execute_policy.hpp>
 #include <core/base/json/json_utils.hpp>
 
-#include <proc/pipeline/frame_pipeline.hpp>
+#include <proc/pipeline/impl/frame_pipeline.hpp>
 
 #include <application/registrator.hpp>
 
@@ -74,12 +74,14 @@ public:
         m_pipeline = nullptr;
     }
 
-    std::unique_ptr<FramePipeline> m_pipeline{nullptr};
+    std::unique_ptr<FrameAsyncPipeline> m_pipeline{nullptr};
 };
 
 TEST_F(PipelineTest, one_branch_pipeline_constructible_destructible)
 {
-    const auto init_pipeline = [this](const ObjectPtrJSON& cfg) { m_pipeline = std::make_unique<FramePipeline>(cfg); };
+    const auto init_pipeline = [this](const ObjectPtrJSON& cfg) {
+        m_pipeline = std::make_unique<FrameAsyncPipeline>(cfg);
+    };
 
     const auto filename = "one_branch_pipeline.json";
     auto entry_path = TestDataProvider::test_data_dir().append(filename);
@@ -93,7 +95,9 @@ TEST_F(PipelineTest, one_branch_pipeline_constructible_destructible)
 
 TEST_F(PipelineTest, one_branch_pipeline_single_run)
 {
-    const auto init_pipeline = [this](const ObjectPtrJSON& cfg) { m_pipeline = std::make_unique<FramePipeline>(cfg); };
+    const auto init_pipeline = [this](const ObjectPtrJSON& cfg) {
+        m_pipeline = std::make_unique<FrameAsyncPipeline>(cfg);
+    };
 
     const auto filename = "one_branch_pipeline.json";
     auto entry_path = TestDataProvider::test_data_dir().append(filename);

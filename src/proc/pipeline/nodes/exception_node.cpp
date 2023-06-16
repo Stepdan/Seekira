@@ -1,6 +1,6 @@
 #include "exception_node.hpp"
 
-namespace step::pipeline {
+namespace step::proc {
 
 const std::string ExceptionNodeSettings::SETTINGS_ID = "ExceptionNodeSettings";
 
@@ -14,4 +14,4 @@ void ExceptionNodeSettings::deserialize(const ObjectPtrJSON& cfg)
     STEP_UNDEFINED("ExceptionNodeSettings::deserialize is undefined");
 }
 
-}  // namespace step::pipeline
+}  // namespace step::proc

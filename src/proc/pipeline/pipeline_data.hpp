@@ -2,11 +2,10 @@
 
 #include <core/exception/assert.hpp>
 #include <core/base/types/meta_storage.hpp>
-#include <core/task/base_task.hpp>
 
 #include <memory>
 
-namespace step::pipeline {
+namespace step::proc {
 
 template <typename TData>
 struct PipelineData
@@ -21,7 +20,7 @@ struct PipelineData
 };
 
 template <typename TData>
-using PipelineDataTypePtr = std::shared_ptr<PipelineData<TData>>;
+using PipelineDataPtr = std::shared_ptr<PipelineData<TData>>;
 
 template <typename TData>
 inline PipelineData<TData> clone_pipeline_data(const PipelineData<TData>& data)
@@ -35,16 +34,10 @@ inline PipelineData<TData> clone_pipeline_data(const PipelineData<TData>& data)
 }
 
 template <typename TData>
-inline PipelineDataTypePtr<TData> clone_pipeline_data_shared(const PipelineDataTypePtr<TData>& data_ptr)
+inline PipelineDataPtr<TData> clone_pipeline_data(const PipelineDataPtr<TData>& data_ptr)
 {
     STEP_ASSERT(data_ptr, "Can't clone empty pipeline data!");
     return std::make_shared<PipelineData<TData>>(clone_pipeline_data(*data_ptr));
 }
 
-template <typename TData>
-using IPipelineNodeTask = task::ITask<PipelineDataTypePtr<TData>>;
-
-template <typename TData, typename TSettings>
-using PipelineNodeTask = task::BaseTask<TSettings, PipelineDataTypePtr<TData>>;
-
-}  // namespace step::pipeline
+}  // namespace step::proc

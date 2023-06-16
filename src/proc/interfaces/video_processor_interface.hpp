@@ -6,14 +6,11 @@
 
 #include <video/frame/interfaces/frame_interfaces.hpp>
 
+#include <proc/pipeline/pipeline_data.hpp>
+
 namespace step::proc {
 
-struct VideoProcessorInfo
-{
-    video::Frame frame;
-    MetaStorage storage;
-};
-
+using VideoProcessorInfo = PipelineData<video::Frame>;
 using VideoProcessorInfoList = std::vector<VideoProcessorInfo>;
 using VideoProcessorInfoPtr = std::shared_ptr<VideoProcessorInfo>;
 
@@ -22,7 +19,7 @@ class IVideoProcessorSourceObserver
 public:
     virtual ~IVideoProcessorSourceObserver() = default;
 
-    virtual void process_video_info(VideoProcessorInfoList) { STEP_UNDEFINED("process_video_info is undefined!"); }
+    virtual void process_video_info(VideoProcessorInfoPtr) { STEP_UNDEFINED("process_video_info is undefined!"); }
 };
 
 class IVideoProcessorSource
@@ -34,16 +31,17 @@ public:
     virtual void unregister_observer(IVideoProcessorSourceObserver* observer) = 0;
 };
 
-template <typename TSettings>
-using BaseVideoProcessorTask = task::BaseTask<TSettings, video::FramePtr, VideoProcessorInfoList>;
-using IVideoProcessorTask = task::ITask<video::FramePtr, VideoProcessorInfoList>;
+using IVideoProcessorTask = task::ITask<video::FramePtr, VideoProcessorInfo>;
 using VideoProcessorTaskPtr = std::unique_ptr<IVideoProcessorTask>();
+
+template <typename TSettings>
+using BaseVideoProcessorTask = task::BaseTask<TSettings, video::FramePtr, VideoProcessorInfo>;
 
 using VideoProcessorId = std::string;
 
-using IVideoProcessorObserver = threading::IThreadPoolWorkerEventObserver<std::string, VideoProcessorInfoList>;
+using IVideoProcessorObserver = threading::IThreadPoolWorkerEventObserver<VideoProcessorId, VideoProcessorInfoPtr>;
 
-class IVideoProcessor : public threading::ThreadPoolWorker<std::string, video::FramePtr, VideoProcessorInfoList>,
+class IVideoProcessor : public threading::ThreadPoolWorker<VideoProcessorId, video::FramePtr, VideoProcessorInfo>,
                         public IVideoProcessorSource,
                         public video::IFrameSourceObserver
 {

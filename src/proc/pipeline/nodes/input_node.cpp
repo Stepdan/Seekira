@@ -1,6 +1,6 @@
 #include "input_node.hpp"
 
-namespace step::pipeline {
+namespace step::proc {
 
 const std::string InputNodeSettings::SETTINGS_ID = "InputNodeSettings";
 
@@ -14,4 +14,4 @@ void InputNodeSettings::deserialize(const ObjectPtrJSON& cfg)
     STEP_UNDEFINED("InputNodeSettings::deserialize is undefined");
 }
 
-}  // namespace step::pipeline
+}  // namespace step::proc

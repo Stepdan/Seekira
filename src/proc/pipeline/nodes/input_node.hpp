@@ -1,10 +1,10 @@
 #pragma once
 
-#include <core/pipeline/pipeline_task.hpp>
+#include <proc/pipeline/pipeline_task.hpp>
 
 #include <core/log/log.hpp>
 
-namespace step::pipeline {
+namespace step::proc {
 
 class InputNodeSettings : public task::BaseSettings
 {
@@ -31,14 +31,13 @@ public:
 };
 
 template <typename TData>
-std::unique_ptr<task::ITask<std::shared_ptr<PipelineData<TData>>>> create_input_node(
+std::unique_ptr<task::ITask<PipelineDataPtr<TData>>> create_input_node(
     const std::shared_ptr<task::BaseSettings>& settings)
 {
     //const InputNodeSettings& typed_settings = dynamic_cast<const InputNodeSettings&>(settings);
-    std::unique_ptr<task::ITask<std::shared_ptr<PipelineData<TData>>>> node =
-        std::make_unique<InputPipelineNode<TData>>();
+    std::unique_ptr<task::ITask<PipelineDataPtr<TData>>> node = std::make_unique<InputPipelineNode<TData>>();
 
     return node;
 }
 
-}  // namespace step::pipeline
+}  // namespace step::proc

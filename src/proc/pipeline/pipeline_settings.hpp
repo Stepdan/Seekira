@@ -6,9 +6,9 @@
 
 #include <fmt/format.h>
 
-namespace step::pipeline {
+namespace step::proc {
 
-enum class SyncPolicy
+enum class PipelineSyncPolicy
 {
     Undefined,
     Sync,
@@ -19,7 +19,7 @@ enum class SyncPolicy
 struct PipelineSettings : public ISerializable
 {
     std::string name;
-    SyncPolicy sync_policy{SyncPolicy::Undefined};
+    PipelineSyncPolicy sync_policy{PipelineSyncPolicy::Undefined};
 
     PipelineSettings() = default;
     PipelineSettings(const ObjectPtrJSON& config);
@@ -27,13 +27,13 @@ struct PipelineSettings : public ISerializable
     void deserialize(const ObjectPtrJSON& config);
 };
 
-}  // namespace step::pipeline
+}  // namespace step::proc
 
 template <>
-struct fmt::formatter<step::pipeline::PipelineSettings> : fmt::formatter<string_view>
+struct fmt::formatter<step::proc::PipelineSettings> : fmt::formatter<string_view>
 {
     template <typename FormatContext>
-    auto format(const step::pipeline::PipelineSettings& settings, FormatContext& ctx)
+    auto format(const step::proc::PipelineSettings& settings, FormatContext& ctx)
     {
         return fmt::format_to(ctx.out(), "name: {}; sync_mode {};", settings.name,
                               step::utils::to_string(settings.sync_policy));

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <core/pipeline/pipeline_task.hpp>
-
 #include <core/log/log.hpp>
 
-namespace step::pipeline {
+#include <proc/pipeline/pipeline_task.hpp>
+
+namespace step::proc {
 
 class EmptyNodeSettings : public task::BaseSettings
 {
@@ -41,4 +41,4 @@ std::unique_ptr<task::ITask<std::shared_ptr<PipelineData<TData>>>> create_empty_
     return node;
 }
 
-}  // namespace step::pipeline
+}  // namespace step::proc

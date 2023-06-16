@@ -141,7 +141,7 @@ public:
     }
 
 protected:
-    virtual ResultDataType thread_pool_worker_process_data(DataType&& data) = 0;
+    virtual ResultDataType thread_pool_worker_process_data(const DataType& data) = 0;
 
 private:
     void reset_data()

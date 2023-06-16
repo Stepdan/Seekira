@@ -1,19 +1,17 @@
 #pragma once
 
-#include "pipeline_branch.hpp"
-#include "pipeline_settings.hpp"
+#include "async_pipeline_branch.hpp"
 
 #include <core/threading/thread_pool_execute_policy.hpp>
 #include <core/threading/thread_pool.hpp>
-
-#include <core/graph/graph.hpp>
-
 #include <core/log/log.hpp>
 
-namespace step::pipeline {
+#include <proc/pipeline/pipeline.hpp>
+
+namespace step::proc {
 
 template <typename TData>
-using PipelineResultMap = robin_hood::unordered_map<IdType, TData>;
+using PipelineResultMap = robin_hood::unordered_map<PipelineIdType, TData>;
 
 template <typename TData>
 class IPipelineEventObserver
@@ -35,53 +33,37 @@ public:
 };
 
 template <typename TData>
-class Pipeline : public graph::BaseGraph,
-                 public threading::ThreadPool<IdType, PipelineDataTypePtr<TData>, PipelineDataTypePtr<TData>>,
-                 public IPipelineEventSource<std::shared_ptr<PipelineData<TData>>>,
-                 public ISerializable
+class AsyncPipeline : public BasePipeline<TData>,
+                      public threading::ThreadPool<PipelineIdType, PipelineDataPtr<TData>, PipelineDataPtr<TData>>,
+                      public IPipelineEventSource<std::shared_ptr<PipelineData<TData>>>
 {
 protected:
-    using ThreadPoolDataType = PipelineDataTypePtr<TData>;
+    using ThreadPoolDataType = PipelineDataPtr<TData>;
     using ThreadPoolResultDataType = ThreadPoolDataType;
-    using ThreadPoolType = step::threading::ThreadPool<IdType, PipelineDataTypePtr<TData>, PipelineDataTypePtr<TData>>;
+    using ThreadPoolType = step::threading::ThreadPool<PipelineIdType, PipelineDataPtr<TData>, PipelineDataPtr<TData>>;
 
-    using OutputDataMapType = robin_hood::unordered_map<IdType, std::shared_ptr<PipelineData<TData>>>;
+    using OutputDataMapType = robin_hood::unordered_map<PipelineIdType, PipelineDataPtr<TData>>;
 
 public:
-    Pipeline(const ObjectPtrJSON& config)
-    {
-        graph::GraphSettings graph_settings;
-        graph_settings.one_parent = true;
-        set_settings(graph_settings);
+    AsyncPipeline(const ObjectPtrJSON& config) : BasePipeline<TData>(config) {}
 
-        deserialize(config);
-    }
-
-    virtual ~Pipeline()
+    virtual ~AsyncPipeline()
     {
-        STEP_LOG(L_TRACE, "Pipeline {} destruction", m_settings.name);
+        STEP_LOG(L_TRACE, "AsyncPipeline {} destruction", BasePipeline<TData>::m_settings.name);
         ThreadPoolType::stop();
         // Stop (thread_pool_stop_impl) will be called from ThreadPool::stop during ThreadPool destruction
     }
 
-    IdType get_root_id() const
-    {
-        STEP_ASSERT(m_root, "Pipeline {} can'r provide root id: empty root!", m_settings.name);
-        return m_root->get_id();
-    }
-
-    bool add_process_data(PipelineDataTypePtr<TData>&& data)
+    bool add_process_data(PipelineDataPtr<TData>&& data)
     {
         if (!ThreadPoolType::is_running())
             ThreadPoolType::run();
 
-        return add_process_data(get_root_id(), std::move(data));
+        return add_process_data(BasePipeline<TData>::get_root_id(), std::move(data));
     }
 
-    pipeline::SyncPolicy get_sync_policy() const { return m_settings.sync_policy; }
-
 private:
-    bool add_process_data(const IdType& id, PipelineDataTypePtr<TData>&& data)
+    bool add_process_data(const PipelineIdType& id, PipelineDataPtr<TData>&& data)
     {
         std::scoped_lock lock(m_branches_data_guard);
         auto& branch_data = m_branches_data[id];
@@ -97,17 +79,17 @@ private:
         // NO LOCK THERE
         // Under thread_pool mutex m_stop_guard locking.
         // All threads already joined and stopped
-        STEP_LOG(L_INFO, "Stopping pipeline {}", m_settings.name);
+        STEP_LOG(L_INFO, "Stopping pipeline {}", BasePipeline<TData>::m_settings.name);
 
         for (auto& [id, branch_data] : m_branches_data)
             branch_data = {nullptr, BranchStatus::Finished};
 
-        STEP_LOG(L_INFO, "Pipeline {} has been stopped", m_settings.name);
+        STEP_LOG(L_INFO, "Pipeline {} has been stopped", BasePipeline<TData>::m_settings.name);
     }
 
     void thread_pool_iteration() override
     {
-        const auto& root_id = get_root_id();
+        const auto& root_id = BasePipeline<TData>::get_root_id();
         bool is_ready;
 
         std::scoped_lock lock(m_branches_data_guard);
@@ -118,7 +100,8 @@ private:
             if (!branch->has_exceptions())
                 continue;
 
-            STEP_LOG(L_ERROR, "Pipeline {}: Handle exceptions from branch {}", m_settings.name, id);
+            STEP_LOG(L_ERROR, "Pipeline {}: Handle exceptions from branch {}", BasePipeline<TData>::m_settings.name,
+                     id);
             for (auto branch_exception : branch->get_exceptions())
             {
                 try
@@ -127,7 +110,8 @@ private:
                 }
                 catch (const std::exception& e)
                 {
-                    STEP_LOG(L_ERROR, "Pipeline {}: Branch {} exception: {}", m_settings.name, id, e.what());
+                    STEP_LOG(L_ERROR, "Pipeline {}: Branch {} exception: {}", BasePipeline<TData>::m_settings.name, id,
+                             e.what());
                     m_branches_data[id] = {nullptr, BranchStatus::Finished};
                     m_output_branches_data[id].reset();
                 }
@@ -138,7 +122,7 @@ private:
 
         // For ParallelWait we ensure that all branches are stopped and input are ready
         bool ready_for_wait_iteration = true;
-        if (m_settings.sync_policy == SyncPolicy::ParallelWait)
+        if (BasePipeline<TData>::m_settings.sync_policy == PipelineSyncPolicy::ParallelWait)
         {
             ready_for_wait_iteration = std::ranges::all_of(m_branches_data, [&root_id](const auto& item) {
                 return item.first == root_id ? item.second.status == BranchStatus::Ready
@@ -154,7 +138,7 @@ private:
 
             is_ready = branch_data.data_to_process && branch_data.status == BranchStatus::Ready;
 
-            if (m_settings.sync_policy == SyncPolicy::ParallelWait)
+            if (BasePipeline<TData>::m_settings.sync_policy == PipelineSyncPolicy::ParallelWait)
             {
                 // For ParallelWait we should ensure that we are processing input with all stopped other branches
                 is_ready = is_ready && (root_id != id || root_id == id && ready_for_wait_iteration);
@@ -167,7 +151,7 @@ private:
             STEP_ASSERT(branch_data.data_to_process && branch_data.status == BranchStatus::Ready,
                         "Invalid pipeline process data for start!");
 
-            STEP_LOG(L_INFO, "Pipeline {} start branch {}", m_settings.name, id);
+            STEP_LOG(L_INFO, "Pipeline {} start branch {}", BasePipeline<TData>::m_settings.name, id);
 
             // Copy processing data and clear it from storage
             //    to skip next data before finishing
@@ -178,82 +162,29 @@ private:
         }
     }
 
-    // Data parsing
 private:
-    void deserialize(const ObjectPtrJSON& pipeline_json)
+    void create_branch(const PipelineNodePtr<TData>& branch_root) override
     {
-        STEP_LOG(L_INFO, "Start pipeline deserializing");
-        m_root.reset();
+        auto id = branch_root->get_id();
+        ThreadPoolType::add_thread_worker(std::make_shared<AsyncPipelineBranch<TData>>(branch_root));
 
-        auto settings_json = json::get_object(pipeline_json, CFG_FLD::SETTINGS);
-        m_settings = PipelineSettings(settings_json);
-        const auto& pipeline_name = m_settings.name;
-        STEP_LOG(L_INFO, "Pipeline name: {}", pipeline_name);
-
-        auto nodes_collection = json::get_array(pipeline_json, CFG_FLD::NODES);
-        json::for_each_in_array<ObjectPtrJSON>(nodes_collection, [this](const ObjectPtrJSON& node_cfg) {
-            auto node = std::make_shared<PipelineGraphNode<TData>>(node_cfg);
-            add_node(node->get_id(), node);
-        });
-
-        auto links_collection = json::get_array(pipeline_json, CFG_FLD::LINKS);
-        json::for_each_in_array<ArrayPtrJSON>(links_collection, [this, &pipeline_name](const ArrayPtrJSON& link_cfg) {
-            STEP_ASSERT(link_cfg->size() == 2, "Pipeline {}: Invalid link", pipeline_name);
-            std::vector<std::string> ids;
-            json::for_each_in_array<std::string>(link_cfg, [&ids](const std::string& id) { ids.push_back(id); });
-
-            add_edge(ids.front(), ids.back());
-        });
-
-        m_root = std::dynamic_pointer_cast<PipelineGraphNode<TData>>(get_node("input_node"));
-
-        init_branches();
+        auto& branch = ThreadPoolType::m_threads[id];
+        branch->register_observer(this);
+        m_branches_data[id] = {nullptr, BranchStatus::Finished};
     }
 
-    void init_branches()
+    void add_node_to_branch(const PipelineIdType& branch_id, const PipelineNodePtr<TData>& node) override
     {
-        std::set<IdType> branch_ids;
-        for (const auto& id : get_nodes_without_parents())
-            branch_ids.insert(id);
+        STEP_ASSERT(node, "Can't add node to branch {}: empty node", branch_id);
+        STEP_ASSERT(ThreadPoolType::m_threads.contains(branch_id), "AsyncPipeline doesn't have branch {}", branch_id);
 
-        for (const auto& parent_id : get_nodes_with_children())
-            for (const auto& child_id : get_node(parent_id)->get_children_ids())
-                branch_ids.insert(child_id);
-
-        for (const auto& id : branch_ids)
-        {
-            auto list_front_id = id;
-            auto processed_id = id;
-            auto node = get_node(processed_id);
-
-            ThreadPoolType::add_thread_worker(
-                std::make_shared<PipelineBranch<TData>>(std::dynamic_pointer_cast<PipelineGraphNode<TData>>(node)));
-
-            auto& branch = ThreadPoolType::m_threads[processed_id];
-            branch->register_observer(this);
-            m_branches_data[id] = {nullptr, BranchStatus::Finished};
-
-            if (node->get_children_ids().empty())
-                continue;
-
-            processed_id = node->get_children_ids().front();
-
-            while (!branch_ids.contains(processed_id))
-            {
-                auto node = get_node(processed_id);
-                std::dynamic_pointer_cast<PipelineBranch<TData>>(branch)->add_node(
-                    std::dynamic_pointer_cast<PipelineGraphNode<TData>>(node));
-                if (node->get_children_ids().empty())
-                    break;
-
-                processed_id = node->get_children_ids().front();
-            }
-        }
+        auto branch = std::dynamic_pointer_cast<PipelineBranch<TData>>(ThreadPoolType::m_threads[branch_id]);
+        branch->add_node(node);
     }
 
     // IThreadPoolWorkerEventObserver
 private:
-    void on_finished(const IdType& id, const ThreadPoolResultDataType& data) override
+    void on_finished(const PipelineIdType& id, const ThreadPoolResultDataType& data) override
     {
         STEP_LOG(L_INFO, "on_finished branch {}", id);
         if (ThreadPoolType::need_stop())
@@ -265,7 +196,7 @@ private:
         const auto branch_last_id =
             std::dynamic_pointer_cast<PipelineBranch<TData>>(ThreadPoolType::m_threads[id])->get_last_id();
 
-        const auto& children_ids = get_node(branch_last_id)->get_children_ids();
+        const auto& children_ids = BasePipeline<TData>::get_node(branch_last_id)->get_children_ids();
 
         std::scoped_lock lock(m_branches_data_guard);
         m_branches_data[id] = {nullptr, BranchStatus::Finished};
@@ -273,28 +204,29 @@ private:
         {
             auto& branch_data = m_branches_data[child_id];
             if (branch_data.status == BranchStatus::Finished)
-                branch_data = {clone_pipeline_data_shared(data), BranchStatus::Ready};
+                branch_data = {clone_pipeline_data(data), BranchStatus::Ready};
         }
 
-        m_output_branches_data[id] = clone_pipeline_data_shared(data);
+        m_output_branches_data[id] = clone_pipeline_data(data);
         // Отправляем данные подписчикам
         decltype(m_output_branches_data) output;
-        if (m_settings.sync_policy == SyncPolicy::ParallelNoWait)
+        if (BasePipeline<TData>::m_settings.sync_policy == PipelineSyncPolicy::ParallelNoWait)
         {
-            output[id] = clone_pipeline_data_shared(data);
+            output[id] = clone_pipeline_data(data);
         }
-        else if (m_settings.sync_policy == SyncPolicy::ParallelWait)
+        else if (BasePipeline<TData>::m_settings.sync_policy == PipelineSyncPolicy::ParallelWait)
         {
             // В режиме ожидания надо убедиться, что у нас полностью заполнена мапа с результатами
-            bool is_all_ready = std::all_of(ThreadPoolType::m_threads.cbegin(), ThreadPoolType::m_threads.cend(),
-                                            [this](const std::pair<IdType, ThreadPoolType::ThreadPoolWorkerPtr>& item) {
-                                                return m_output_branches_data.contains(item.first);
-                                            });
+            bool is_all_ready =
+                std::all_of(ThreadPoolType::m_threads.cbegin(), ThreadPoolType::m_threads.cend(),
+                            [this](const std::pair<PipelineIdType, ThreadPoolType::ThreadPoolWorkerPtr>& item) {
+                                return m_output_branches_data.contains(item.first);
+                            });
 
             if (is_all_ready)
             {
                 for (const auto& [output_id, output_data] : m_output_branches_data)
-                    output[output_id] = clone_pipeline_data_shared(output_data);
+                    output[output_id] = clone_pipeline_data(output_data);
             }
         }
 
@@ -316,9 +248,6 @@ public:
     }
 
 private:
-    PipelineSettings m_settings;
-    PipelineGraphNode<TData>::Ptr m_root;
-
     /*
         For thread pool iterations
     */
@@ -340,17 +269,16 @@ private:
     };
     mutable std::mutex m_branches_data_guard;
     // Здесь входные данные для каждой ветви пайплайна
-    robin_hood::unordered_map<IdType, BranchProcessData<std::shared_ptr<PipelineData<TData>>>> m_branches_data;
+    robin_hood::unordered_map<PipelineIdType, BranchProcessData<PipelineDataPtr<TData>>> m_branches_data;
 
     /*
         Здесь выходные данные каждой ветви пайплайна.
         При синхронном режиме - отправляем полностью всю мапу, когда все ветви пайплайна отработали
         При режиме без ожидания - отправляем данные только той ветви, которая закончила работу
     */
-    PipelineResultMap<std::shared_ptr<PipelineData<TData>>> m_output_branches_data;
-    EventHandlerList<IPipelineEventObserver<std::shared_ptr<PipelineData<TData>>>,
-                     threading::ThreadPoolExecutePolicy<0>>
+    PipelineResultMap<PipelineDataPtr<TData>> m_output_branches_data;
+    EventHandlerList<IPipelineEventObserver<PipelineDataPtr<TData>>, threading::ThreadPoolExecutePolicy<0>>
         m_pipeline_observers;
 };
 
-}  // namespace step::pipeline
+}  // namespace step::proc

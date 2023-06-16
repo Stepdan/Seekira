@@ -1,10 +1,10 @@
 #pragma once
 
-#include <core/pipeline/pipeline_task.hpp>
+#include <proc/pipeline/pipeline_task.hpp>
 
 #include <core/exception/assert.hpp>
 
-namespace step::pipeline {
+namespace step::proc {
 
 class ExceptionNodeSettings : public task::BaseSettings
 {
@@ -41,4 +41,4 @@ std::unique_ptr<task::ITask<std::shared_ptr<PipelineData<TData>>>> create_except
     return node;
 }
 
-}  // namespace step::pipeline
+}  // namespace step::proc

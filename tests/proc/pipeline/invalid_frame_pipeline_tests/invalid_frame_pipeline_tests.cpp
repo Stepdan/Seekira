@@ -1,6 +1,6 @@
 #include <core/base/json/json_utils.hpp>
 
-#include <proc/pipeline/frame_pipeline.hpp>
+#include <proc/pipeline/impl/frame_pipeline.hpp>
 
 #include <core/log/log.hpp>
 
@@ -39,7 +39,7 @@ class PipelineTest : public ::testing::Test
 public:
     void SetUp() { m_pipeline = nullptr; }
 
-    std::unique_ptr<FramePipeline> m_pipeline{nullptr};
+    std::unique_ptr<FrameAsyncPipeline> m_pipeline{nullptr};
 };
 
 #define STRING(s) #s
@@ -48,7 +48,7 @@ public:
     TEST_F(PipelineTest, pipeline_file_and_test_name)                                                                  \
     {                                                                                                                  \
         const auto init_pipeline = [this](const ObjectPtrJSON& cfg) {                                                  \
-            m_pipeline = std::make_unique<FramePipeline>(cfg);                                                         \
+            m_pipeline = std::make_unique<FrameAsyncPipeline>(cfg);                                                    \
         };                                                                                                             \
                                                                                                                        \
         const auto filename = std::string(STRING(pipeline_file_and_test_name)) + ".json";                              \

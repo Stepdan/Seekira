@@ -1,6 +1,6 @@
 #include "empty_node.hpp"
 
-namespace step::pipeline {
+namespace step::proc {
 
 const std::string EmptyNodeSettings::SETTINGS_ID = "EmptyNodeSettings";
 
@@ -14,4 +14,4 @@ void EmptyNodeSettings::deserialize(const ObjectPtrJSON& cfg)
     STEP_UNDEFINED("EmptyNodeSettings::deserialize is undefined");
 }
 
-}  // namespace step::pipeline
+}  // namespace step::proc
