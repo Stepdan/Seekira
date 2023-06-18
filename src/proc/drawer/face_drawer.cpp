@@ -19,7 +19,7 @@ void Drawer::draw(video::Frame& frame, const FacePtr& face)
 
     auto mat = video::utils::to_mat(frame);
     cv::rectangle(mat, cv::Rect(rect.p0.x, rect.p0.y, std::abs(rect.p1.x - rect.p0.x), std::abs(rect.p1.y - rect.p0.y)),
-                  get_cv_color(m_settings.get_face_color()), 2);
+                  get_cv_color(m_settings.get_face_color(), frame.pix_fmt), 2);
 }
 
 }  // namespace step::proc

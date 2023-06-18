@@ -47,9 +47,7 @@ public:
 #define INVALID_PIPELINE_TEST(pipeline_file_and_test_name)                                                             \
     TEST_F(PipelineTest, pipeline_file_and_test_name)                                                                  \
     {                                                                                                                  \
-        const auto init_pipeline = [this](const ObjectPtrJSON& cfg) {                                                  \
-            m_pipeline = std::make_unique<FrameAsyncPipeline>(cfg);                                                    \
-        };                                                                                                             \
+        const auto init_pipeline = [this](const ObjectPtrJSON& cfg) { m_pipeline = FrameAsyncPipeline::create(cfg); }; \
                                                                                                                        \
         const auto filename = std::string(STRING(pipeline_file_and_test_name)) + ".json";                              \
         auto entry_path = TestDataProvider::test_data_dir().append(filename);                                          \

@@ -45,8 +45,6 @@ protected:
     using OutputDataMapType = robin_hood::unordered_map<PipelineIdType, PipelineDataPtr<TData>>;
 
 public:
-    AsyncPipeline(const ObjectPtrJSON& config) : BasePipeline<TData>(config) {}
-
     virtual ~AsyncPipeline()
     {
         STEP_LOG(L_TRACE, "AsyncPipeline {} destruction", BasePipeline<TData>::m_settings.name);

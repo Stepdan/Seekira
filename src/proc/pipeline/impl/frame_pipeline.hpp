@@ -6,13 +6,16 @@
 
 namespace step::proc {
 
-using FrameSyncPipeline = SyncPipeline<video::Frame>;
+class FrameSyncPipeline : public SyncPipeline<video::Frame>
+{
+public:
+    static std::unique_ptr<FrameSyncPipeline> create(const ObjectPtrJSON& pipeline_json);
+};
 
 class FrameAsyncPipeline : public AsyncPipeline<video::Frame>, public video::IFrameSourceObserver
 {
 public:
-    FrameAsyncPipeline(const ObjectPtrJSON& config);
-
+    static std::unique_ptr<FrameAsyncPipeline> create(const ObjectPtrJSON& pipeline_json);
     // IFrameSourceObserver
 public:
     void process_frame(video::FramePtr) override;

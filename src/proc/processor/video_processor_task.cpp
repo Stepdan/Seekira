@@ -12,7 +12,7 @@ public:
     VideoProcessorTask(const std::shared_ptr<task::BaseSettings>& settings)
     {
         set_settings(*settings);
-        m_frame_pipeline = std::make_unique<FrameSyncPipeline>(m_typed_settings.get_pipeline_cfg());
+        m_frame_pipeline = FrameSyncPipeline::create(m_typed_settings.get_pipeline_cfg());
     }
 
     VideoProcessorInfo process(video::FramePtr frame)

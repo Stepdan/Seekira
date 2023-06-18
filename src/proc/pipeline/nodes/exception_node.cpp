@@ -11,7 +11,7 @@ std::shared_ptr<task::BaseSettings> create_exception_node_settings(const ObjectP
 
 void ExceptionNodeSettings::deserialize(const ObjectPtrJSON& cfg)
 {
-    STEP_UNDEFINED("ExceptionNodeSettings::deserialize is undefined");
+    //STEP_UNDEFINED("ExceptionNodeSettings::deserialize is undefined");
 }
 
 }  // namespace step::proc

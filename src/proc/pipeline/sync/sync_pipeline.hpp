@@ -10,8 +10,6 @@ template <typename TData>
 class SyncPipeline : public BasePipeline<TData>
 {
 public:
-    SyncPipeline(const ObjectPtrJSON& config) : BasePipeline<TData>(config) {}
-
     virtual void process(const PipelineDataPtr<TData>& data) override
     {
         std::queue<PipelineIdType> id_queue;
@@ -22,6 +20,7 @@ public:
         {
             const auto id = id_queue.front();
             STEP_LOG(L_DEBUG, "Process node {}", id);
+            STEP_ASSERT(m_branches.contains(id), "No {} in branch", id);
             auto& branch = m_branches[id];
             branch.process(data);
             id_queue.pop();

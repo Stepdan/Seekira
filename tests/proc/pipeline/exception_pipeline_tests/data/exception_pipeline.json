@@ -7,49 +7,49 @@
         {
             "node": "input_node",
             "settings": {
-                "id": "InputNodeSettings"
+                "task_settings_id": "InputNodeSettings"
             }
         },
         {
             "node": "empty_node_1",
             "settings": {
-                "id": "EmptyNodeSettings"
+                "task_settings_id": "EmptyNodeSettings"
             }
         },
         {
             "node": "empty_node_2",
             "settings": {
-                "id": "EmptyNodeSettings"
+                "task_settings_id": "EmptyNodeSettings"
             }
         },
         {
             "node": "empty_node_3",
             "settings": {
-                "id": "EmptyNodeSettings"
+                "task_settings_id": "EmptyNodeSettings"
             }
         },
         {
             "node": "exception_node_4",
             "settings": {
-                "id": "ExceptionNodeSettings"
+                "task_settings_id": "ExceptionNodeSettings"
             }
         },
         {
             "node": "empty_node_5",
             "settings": {
-                "id": "EmptyNodeSettings"
+                "task_settings_id": "EmptyNodeSettings"
             }
         },
         {
             "node": "exception_node_6",
             "settings": {
-                "id": "ExceptionNodeSettings"
+                "task_settings_id": "ExceptionNodeSettings"
             }
         },
         {
             "node": "empty_node_7",
             "settings": {
-                "id": "EmptyNodeSettings"
+                "task_settings_id": "EmptyNodeSettings"
             }
         }
     ],

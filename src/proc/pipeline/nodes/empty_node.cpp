@@ -11,7 +11,7 @@ std::shared_ptr<task::BaseSettings> create_empty_node_settings(const ObjectPtrJS
 
 void EmptyNodeSettings::deserialize(const ObjectPtrJSON& cfg)
 {
-    STEP_UNDEFINED("EmptyNodeSettings::deserialize is undefined");
+    //STEP_UNDEFINED("EmptyNodeSettings::deserialize is undefined");
 }
 
 }  // namespace step::proc

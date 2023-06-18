@@ -36,7 +36,8 @@ public:
 
     void process(const PipelineDataPtr<TData>& data)
     {
-        std::ranges::for_each(m_list, [&data](const PipelineNodePtr<TData>& node) { node->process(data); });
+        for (const auto& node : m_list)
+            node->process(data);
     }
 
 private:

@@ -77,9 +77,7 @@ public:
 
 TEST_F(PipelineTest, multi_branch_pipeline_constructible_destructible)
 {
-    const auto init_pipeline = [this](const ObjectPtrJSON& cfg) {
-        m_pipeline = std::make_unique<FrameAsyncPipeline>(cfg);
-    };
+    const auto init_pipeline = [this](const ObjectPtrJSON& cfg) { m_pipeline = FrameAsyncPipeline::create(cfg); };
 
     const auto filename = "multi_branch_pipeline.json";
     auto entry_path = TestDataProvider::test_data_dir().append(filename);
@@ -93,9 +91,7 @@ TEST_F(PipelineTest, multi_branch_pipeline_constructible_destructible)
 
 TEST_F(PipelineTest, multi_branch_pipeline_fast_destruction)
 {
-    const auto init_pipeline = [this](const ObjectPtrJSON& cfg) {
-        m_pipeline = std::make_unique<FrameAsyncPipeline>(cfg);
-    };
+    const auto init_pipeline = [this](const ObjectPtrJSON& cfg) { m_pipeline = FrameAsyncPipeline::create(cfg); };
 
     const auto filename = "multi_branch_pipeline.json";
     auto entry_path = TestDataProvider::test_data_dir().append(filename);
@@ -113,9 +109,7 @@ TEST_F(PipelineTest, multi_branch_pipeline_fast_destruction)
 
 TEST_F(PipelineTest, multi_branch_pipeline_multiple_run)
 {
-    const auto init_pipeline = [this](const ObjectPtrJSON& cfg) {
-        m_pipeline = std::make_unique<FrameAsyncPipeline>(cfg);
-    };
+    const auto init_pipeline = [this](const ObjectPtrJSON& cfg) { m_pipeline = FrameAsyncPipeline::create(cfg); };
 
     const auto filename = "multi_branch_pipeline.json";
     auto entry_path = TestDataProvider::test_data_dir().append(filename);

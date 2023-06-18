@@ -7,6 +7,7 @@ namespace step::proc {
 VideoProcessingManager::VideoProcessingManager(const ObjectPtrJSON& cfg)
     : m_processor(VideoProcessor::create(json::get_object(cfg, CFG_FLD::VIDEO_PROCESSOR)))
 {
+    m_processor->register_observer(this);
 }
 
 IVideoProcessor* VideoProcessingManager::get_video_processor() const

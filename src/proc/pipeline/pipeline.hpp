@@ -13,16 +13,18 @@ template <typename TData>
 class BasePipeline : public graph::BaseGraph, public ISerializable
 {
 public:
-    BasePipeline(const ObjectPtrJSON& config)
+    BasePipeline() {}
+
+    virtual ~BasePipeline() { STEP_LOG(L_TRACE, "BasePipeline {} destruction", m_settings.name); }
+
+    void initialize(const ObjectPtrJSON& pipeline_json)
     {
         graph::GraphSettings graph_settings;
         graph_settings.one_parent = true;
         set_settings(graph_settings);
 
-        deserialize(config);
+        deserialize(pipeline_json);
     }
-
-    virtual ~BasePipeline() { STEP_LOG(L_TRACE, "BasePipeline {} destruction", m_settings.name); }
 
     PipelineIdType get_root_id() const
     {
@@ -39,7 +41,7 @@ protected:
     virtual void add_node_to_branch(const PipelineIdType& branch_id, const PipelineNodePtr<TData>& node) = 0;
 
     // Data parsing
-private:
+protected:
     void deserialize(const ObjectPtrJSON& pipeline_json)
     {
         STEP_LOG(L_INFO, "Start pipeline deserializing");
@@ -87,7 +89,7 @@ private:
             auto node = get_node(processed_id);
 
             auto pipeline_node = std::dynamic_pointer_cast<PipelineNode<TData>>(node);
-            this->create_branch(pipeline_node);
+            create_branch(pipeline_node);
 
             if (node->get_children_ids().empty())
                 continue;
@@ -97,7 +99,7 @@ private:
             while (!branch_ids.contains(processed_id))
             {
                 auto node = get_node(processed_id);
-                this->add_node_to_branch(list_front_id, std::dynamic_pointer_cast<PipelineNode<TData>>(node));
+                add_node_to_branch(list_front_id, std::dynamic_pointer_cast<PipelineNode<TData>>(node));
 
                 if (node->get_children_ids().empty())
                     break;

@@ -19,7 +19,7 @@ public:
     void draw(video::Frame& frame, const T& obj);
 
 private:
-    cv::Scalar get_cv_color(const ColorRGB& color) { return cv::Scalar(color.red, color.green, color.blue); }
+    cv::Scalar get_cv_color(const ColorRGB& color, video::PixFmt fmt);
 
 public:
     SettingsDrawer m_settings;
