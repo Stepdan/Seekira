@@ -20,6 +20,7 @@ public:
         FE_DETECTION   = (1u << 1),
         FE_LANDMARKS   = (1u << 2),
         FE_RECOGNITION = (1u << 3),
+        FE_DETECTION_RECOGNITION = FE_DETECTION | FE_RECOGNITION,
         FE_ALL = FE_DETECTION | FE_LANDMARKS | FE_RECOGNITION,
         /* clang-format on */
     };

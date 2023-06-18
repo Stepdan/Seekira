@@ -20,7 +20,8 @@
                         "task_settings_id": "FaceDetectionNodeSettings",
                         "face_detector_settings": {
                             "task_settings_id": "SettingsFaceDetector",
-                            "mode": "detection",
+                            "mode": "detection_and_recognition",
+                            "mode_temp": "detection",
                             "type": "TDV",
                             "model_path": "C:/Work/StepTech/SDK/models/"
                         }

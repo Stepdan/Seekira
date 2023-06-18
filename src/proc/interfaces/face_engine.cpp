@@ -10,9 +10,10 @@ namespace {
 /* clang-format off */
 
 constexpr std::pair<step::proc::IFaceEngine::Mode, std::string_view> g_face_engine_modes[] = {
-    { step::proc::IFaceEngine::Mode::FE_DETECTION   , "detection"   },
-    { step::proc::IFaceEngine::Mode::FE_RECOGNITION , "recognition" },
-    { step::proc::IFaceEngine::Mode::FE_ALL         , "all"         },
+    { step::proc::IFaceEngine::Mode::FE_DETECTION               , "detection"                   },
+    { step::proc::IFaceEngine::Mode::FE_RECOGNITION             , "recognition"                 },
+    { step::proc::IFaceEngine::Mode::FE_DETECTION_RECOGNITION   , "detection_and_recognition"   },
+    { step::proc::IFaceEngine::Mode::FE_ALL                     , "all"                         },
 };
 /* clang-format on */
 
