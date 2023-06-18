@@ -14,6 +14,7 @@ const std::string CFG_FLD::MODE = "mode";
 const std::string CFG_FLD::TYPE = "type";
 const std::string CFG_FLD::SERIAL_ID = "serial_id";
 const std::string CFG_FLD::CREATE_ID = "create_id";
+const std::string CFG_FLD::CACHE_SIZE = "cache_size";
 
 const std::string CFG_FLD::X = "x";
 const std::string CFG_FLD::Y = "y";

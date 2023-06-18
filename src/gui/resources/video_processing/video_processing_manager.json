@@ -1,50 +1,47 @@
 {
     "video_processor": {
-        "id": "video_processor_face_detect",
-        "config": {
-            "task_settings_id": "SettingsVideoProcessorTask",
-            "pipeline": {
-                "settings": {
-                    "name": "face_detection_pipeline",
-                    "sync_mode": "sync"
+        "task_settings_id": "SettingsVideoProcessorTask",
+        "pipeline": {
+            "settings": {
+                "name": "face_detection_pipeline",
+                "sync_mode": "sync"
+            },
+            "nodes": [
+                {
+                    "node": "input_node",
+                    "settings": {
+                        "task_settings_id": "InputNodeSettings"
+                    }
                 },
-                "nodes": [
-                    {
-                        "node": "input_node",
-                        "settings": {
-                            "task_settings_id": "InputNodeSettings"
-                        }
-                    },
-                    {
-                        "node": "face_detection_node",
-                        "settings": {
-                            "task_settings_id": "FaceDetectionNodeSettings",
-                            "face_detector_settings": {
-                                "task_settings_id": "SettingsFaceDetector",
-                                "mode": "detection",
-                                "type": "TDV",
-                                "model_path": "C:/Work/StepTech/SDK/models/"
-                            }
-                        }
-                    },
-                    {
-                        "node": "face_draw_node",
-                        "settings": {
-                            "task_settings_id": "DrawerNodeSettings"
+                {
+                    "node": "face_detection_node",
+                    "settings": {
+                        "task_settings_id": "FaceDetectionNodeSettings",
+                        "face_detector_settings": {
+                            "task_settings_id": "SettingsFaceDetector",
+                            "mode": "detection",
+                            "type": "TDV",
+                            "model_path": "C:/Work/StepTech/SDK/models/"
                         }
                     }
+                },
+                {
+                    "node": "face_draw_node",
+                    "settings": {
+                        "task_settings_id": "DrawerNodeSettings"
+                    }
+                }
+            ],
+            "links": [
+                [
+                    "input_node",
+                    "face_detection_node"
                 ],
-                "links": [
-                    [
-                        "input_node",
-                        "face_detection_node"
-                    ],
-                    [
-                        "face_detection_node",
-                        "face_draw_node"
-                    ]
+                [
+                    "face_detection_node",
+                    "face_draw_node"
                 ]
-            }
+            ]
         }
     }
 }

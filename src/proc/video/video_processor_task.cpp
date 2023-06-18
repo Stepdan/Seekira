@@ -21,12 +21,21 @@ public:
 
         VideoProcessorInfo result;
 
+        try
         {
-            auto data = VideoProcessorInfo::create(std::move(*frame));
+            auto data = VideoProcessorInfo::create(*frame);
 
             m_frame_pipeline->process(data);
 
             std::swap(result, *data);
+        }
+        catch (const std::exception& e)
+        {
+            STEP_LOG(L_ERROR, "Handled exception due frame analyzing: {}", e.what());
+        }
+        catch (...)
+        {
+            STEP_LOG(L_ERROR, "Handled unknown exception due frame analyzing");
         }
 
         return result;

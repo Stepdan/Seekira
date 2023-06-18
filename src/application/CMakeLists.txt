@@ -31,7 +31,7 @@ target_link_libraries(${PROJECT_NAME}
     step::frame_interface
     step::proc_detect
     step::proc_pipeline
-    step::proc_video_processor
+    step::proc_video
 )
 
 target_compile_definitions(${PROJECT_NAME}

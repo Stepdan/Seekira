@@ -27,7 +27,7 @@ class InputPipelineNode : public PipelineNodeTask<TData, InputNodeSettings>
 public:
     InputPipelineNode() = default;
 
-    void process(DataType) override { STEP_LOG(L_INFO, "Processing InputPipelineNode"); }
+    void process(DataType) override { STEP_LOG(L_TRACE, "Processing InputPipelineNode"); }
 };
 
 template <typename TData>

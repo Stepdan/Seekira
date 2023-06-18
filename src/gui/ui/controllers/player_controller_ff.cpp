@@ -21,10 +21,7 @@ const std::string VIDEO_PROCESSING_CONFIG_PATH =
 namespace step::gui {
 
 PlayerControllerFF::PlayerControllerFF(QObject* parent /*= nullptr*/)
-    : m_video_frame_provider(std::make_unique<VideoFrameProviderFF>(this))
-    , m_video_proc_manager(
-          std::make_unique<proc::VideoProcessingManager>(json::utils::from_file(VIDEO_PROCESSING_CONFIG_PATH)))
-    , m_state(QMediaPlayer::State::StoppedState)
+    : m_video_frame_provider(std::make_unique<VideoFrameProviderFF>(this)), m_state(QMediaPlayer::State::StoppedState)
 {
 }
 
@@ -38,7 +35,7 @@ IVideoFrameProvider* PlayerControllerFF::get_video_frame_provider() const
 
 void PlayerControllerFF::reset()
 {
-    m_video_reader.reset();
+    m_video_proc_manager.reset();
     m_state = QMediaPlayer::State::StoppedState;
     m_is_loaded = false;
 }
@@ -51,9 +48,10 @@ bool PlayerControllerFF::open_file(const QString& filename)
 
         reset();
 
-        m_video_reader = std::make_unique<video::ff::ReaderFF>();
+        m_video_proc_manager =
+            std::make_unique<proc::VideoProcessingManager>(json::utils::from_file(VIDEO_PROCESSING_CONFIG_PATH));
 
-        if (!m_video_reader->open_file(filename.toStdString()))
+        if (!m_video_proc_manager->open_file(filename.toStdString()))
         {
             STEP_LOG(L_ERROR, "Can't open file {}", filename);
             return false;
@@ -63,9 +61,7 @@ bool PlayerControllerFF::open_file(const QString& filename)
         STEP_ASSERT(frame_observer, "Invalid cast to VideoFrameProviderFF*");
 
         m_video_proc_manager->register_observer(frame_observer);
-
-        m_video_reader->register_observer(m_video_proc_manager->get_video_processor());
-        m_video_reader->register_observer(this);
+        m_video_proc_manager->register_observer(this);
 
         // Открыли файл - ставим на паузу
         m_state = QMediaPlayer::State::PausedState;
@@ -74,7 +70,7 @@ bool PlayerControllerFF::open_file(const QString& filename)
     }
 
     // Прочитаем первый кадр, чтобы показать на экране и встать в 0
-    m_video_reader->start(video::ff::ReaderMode::All);
+    m_video_proc_manager->start(video::ff::ReaderMode::All);
     step_frame(Enums::PLAYER_DIRECTION_FORWARD);
 
     return true;
@@ -100,17 +96,17 @@ void PlayerControllerFF::play_state_switch()
     {
         case QMediaPlayer::State::PlayingState: {
             STEP_LOG(L_DEBUG, "PLAY");
-            m_video_reader->play();
+            m_video_proc_manager->play();
             break;
         }
         case QMediaPlayer::State::PausedState: {
             STEP_LOG(L_DEBUG, "PAUSE");
-            m_video_reader->pause();
+            m_video_proc_manager->pause();
             break;
         }
         case QMediaPlayer::State::StoppedState: {
             STEP_LOG(L_DEBUG, "STOP");
-            m_video_reader->stop();
+            m_video_proc_manager->stop();
             break;
         }
     }
@@ -127,8 +123,8 @@ void PlayerControllerFF::step_rewind(Enums::PlayerDirection direction)
 
     // Не меняем m_state, так как если мы на паузе, то просто сделаем seek
     // Иначе делаем seek и проигрываем дальше
-    direction == Enums::PlayerDirection::PLAYER_DIRECTION_FORWARD ? m_video_reader->rewind_forward()
-                                                                  : m_video_reader->rewind_backward();
+    direction == Enums::PlayerDirection::PLAYER_DIRECTION_FORWARD ? m_video_proc_manager->rewind_forward()
+                                                                  : m_video_proc_manager->rewind_backward();
 }
 
 void PlayerControllerFF::step_frame(Enums::PlayerDirection direction)
@@ -139,11 +135,11 @@ void PlayerControllerFF::step_frame(Enums::PlayerDirection direction)
         return;
 
     // принудительно останавливаем чтение
-    m_video_reader->pause();
+    m_video_proc_manager->pause();
     m_state = QMediaPlayer::State::PausedState;
 
-    direction == Enums::PlayerDirection::PLAYER_DIRECTION_FORWARD ? m_video_reader->step_forward()
-                                                                  : m_video_reader->step_backward();
+    direction == Enums::PlayerDirection::PLAYER_DIRECTION_FORWARD ? m_video_proc_manager->step_forward()
+                                                                  : m_video_proc_manager->step_backward();
 }
 
 void PlayerControllerFF::on_reader_state_changed(video::ff::ReaderState state)

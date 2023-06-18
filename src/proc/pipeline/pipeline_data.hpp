@@ -13,6 +13,11 @@ struct PipelineData
     TData data;
     MetaStorage storage;
 
+    static std::shared_ptr<PipelineData<TData>> create(const TData& d)
+    {
+        return std::make_shared<PipelineData<TData>>(d, MetaStorage());
+    }
+
     static std::shared_ptr<PipelineData<TData>> create(TData&& d)
     {
         return std::make_shared<PipelineData<TData>>(std::move(d), MetaStorage());

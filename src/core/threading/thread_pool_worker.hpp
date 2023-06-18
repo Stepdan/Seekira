@@ -69,7 +69,13 @@ public:
     bool has_data() const
     {
         std::scoped_lock lock(m_data_guard);
-        !m_data.empty();
+        return !m_data.empty();
+    }
+
+    size_t get_data_size()
+    {
+        std::scoped_lock lock(m_data_guard);
+        return m_data.size();
     }
 
     void run_worker()
@@ -79,6 +85,7 @@ public:
 
         m_worker = std::thread(&ThreadPoolWorker::worker_thread, this);
         m_is_running.store(true);
+        m_continue_reading.store(true);
         STEP_LOG(L_TRACE, "ThreadPoolWorker {} has been started", m_id);
     }
 
@@ -89,6 +96,7 @@ public:
 
         STEP_LOG(L_TRACE, "Stopping ThreadPoolWorker {}", m_id);
         m_need_stop.store(true);
+        m_read_cnd.notify_one();
         m_data_cnd.notify_one();
 
         if (m_worker.joinable())
@@ -101,6 +109,20 @@ public:
         m_need_stop.store(false);
 
         STEP_LOG(L_TRACE, "ThreadPoolWorker {} has been stopped", m_id);
+    }
+
+    bool is_paused() const { return !m_continue_reading; }
+
+    void pause()
+    {
+        m_continue_reading.store(false);
+        m_read_cnd.notify_one();
+    }
+
+    void continue_reading()
+    {
+        m_continue_reading.store(true);
+        m_read_cnd.notify_one();
     }
 
 public:
@@ -157,10 +179,16 @@ private:
         {
             try
             {
+                std::unique_lock read_lock(m_read_guard);
+                m_read_cnd.wait(read_lock, [this]() { return m_need_stop || m_continue_reading; });
+
+                if (m_need_stop)
+                    continue;
+
                 DataType data;
                 {
                     std::unique_lock lock(m_data_guard);
-                    m_data_cnd.wait(lock, [this]() { return !m_data.empty() || m_need_stop; });
+                    m_data_cnd.wait(lock, [this]() { return m_need_stop || !m_data.empty(); });
 
                     if (m_need_stop)
                         continue;
@@ -207,6 +235,11 @@ private:
     mutable std::mutex m_data_guard;
     std::condition_variable m_data_cnd;
     std::queue<DataType> m_data;
+
+    // Механизм паузы
+    mutable std::mutex m_read_guard;
+    std::condition_variable m_read_cnd;
+    std::atomic_bool m_continue_reading{true};
 
     std::thread m_worker;
 

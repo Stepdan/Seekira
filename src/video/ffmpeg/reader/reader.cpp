@@ -179,6 +179,7 @@ void ReaderFF::read_frame()
 
         if (need_handle)
         {
+            reader_process_frame(frame_ptr);
             m_frame_observers.perform_for_each_event_handler(
                 std::bind(&IFrameSourceObserver::process_frame, std::placeholders::_1, frame_ptr));
         }

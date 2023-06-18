@@ -1,8 +1,8 @@
 #pragma once
 
 #include "reader_event.hpp"
-#include "reader_event_handler.hpp"
 
+#include <core/base/interfaces/event_handler_list.hpp>
 #include <core/threading/thread_worker.hpp>
 #include <core/threading/thread_utils.hpp>
 #include <core/threading/thread_pool_execute_policy.hpp>
@@ -17,7 +17,7 @@
 
 namespace step::video::ff {
 
-class ReaderFF : public IReader, public IFrameSource, public IReaderEventSource, public threading::ThreadWorker
+class ReaderFF : public IReader, public threading::ThreadWorker
 {
 public:
     ReaderFF();
@@ -45,6 +45,9 @@ public:
 
     void register_observer(IReaderEventObserver* observer) override;
     void unregister_observer(IReaderEventObserver* observer) override;
+
+protected:
+    virtual void reader_process_frame(video::FramePtr frame) {}
 
 private:
     void play_impl();

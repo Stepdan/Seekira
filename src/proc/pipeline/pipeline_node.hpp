@@ -30,7 +30,7 @@ public:
 
     void process(const PipelineDataPtr<TData>& data)
     {
-        STEP_LOG(L_INFO, "Processing pipeline node {}", m_id);
+        STEP_LOG(L_TRACE, "Processing pipeline node {}", m_id);
         m_task->process(data);
     }
 

@@ -19,9 +19,17 @@ namespace step::video::ff {
         std::scoped_lock event_lock(m_event_guard);
 */
 
-void ReaderFF::play_impl() { m_continue_reading.store(true); }
+void ReaderFF::play_impl()
+{
+    if (!m_continue_reading)
+        m_continue_reading.store(true);
+}
 
-void ReaderFF::pause_impl() { m_continue_reading.store(false); }
+void ReaderFF::pause_impl()
+{
+    if (m_continue_reading)
+        m_continue_reading.store(false);
+}
 
 void ReaderFF::stop_impl()
 {

@@ -2,6 +2,8 @@
 
 #include "types.hpp"
 
+#include <video/frame/interfaces/frame_interfaces.hpp>
+
 #include <string>
 
 namespace step::video::ff {
@@ -23,7 +25,24 @@ enum class ReaderState
     Error,
 };
 
-class IReader
+class IReaderEventObserver
+{
+public:
+    virtual ~IReaderEventObserver() = default;
+
+    virtual void on_reader_state_changed(ReaderState) { STEP_UNDEFINED("on_reader_state_changed is undefined!"); }
+};
+
+class IReaderEventSource
+{
+public:
+    virtual ~IReaderEventSource() = default;
+
+    virtual void register_observer(IReaderEventObserver* observer) = 0;
+    virtual void unregister_observer(IReaderEventObserver* observer) = 0;
+};
+
+class IReader : public IReaderEventSource, public IFrameSource
 {
 public:
     ~IReader() = default;

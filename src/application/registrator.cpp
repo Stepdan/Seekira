@@ -16,7 +16,7 @@
 #include <proc/settings/settings_face_detector.hpp>
 #include <proc/settings/settings_video_processor_task.hpp>
 
-#include <proc/processor/video_processor_task.hpp>
+#include <proc/video/video_processor_task.hpp>
 
 namespace step::app {
 

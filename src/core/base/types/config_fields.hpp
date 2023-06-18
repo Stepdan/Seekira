@@ -26,6 +26,8 @@ public:
     static const std::string SERIAL_ID;
     static const std::string CREATE_ID;
 
+    static const std::string CACHE_SIZE;
+
     /* Coordinates */
     static const std::string X;
     static const std::string Y;
