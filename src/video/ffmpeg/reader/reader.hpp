@@ -20,12 +20,12 @@ namespace step::video::ff {
 class ReaderFF : public IReader, public threading::ThreadWorker
 {
 public:
-    ReaderFF();
+    ReaderFF(ReaderMode mode = ReaderMode::All);
     ~ReaderFF();
 
 public:
     bool open_file(const std::string& filename) override;
-    void start(ReaderMode mode = ReaderMode::All) override;
+    void start() override;
     TimeFF get_duration() const override;
     TimestampFF get_position() const override;
     ReaderState get_state() const override;

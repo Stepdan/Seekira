@@ -18,8 +18,7 @@ constexpr size_t MAX_INVALID_THRESHOLD = 10;
 
 namespace step::video::ff {
 
-ReaderFF::ReaderFF() {}
-//ReaderFF::ReaderFF() {}
+ReaderFF::ReaderFF(ReaderMode mode) : m_mode(mode) {}
 
 ReaderFF::~ReaderFF()
 {
@@ -49,7 +48,7 @@ bool ReaderFF::open_file(const std::string& filename)
     return true;
 }
 
-void ReaderFF::start(ReaderMode mode)
+void ReaderFF::start()
 {
     if (is_running())
     {
@@ -61,8 +60,6 @@ void ReaderFF::start(ReaderMode mode)
     set_reader_state(ReaderState::Reading);
 
     run_worker();
-
-    m_mode = mode;
 
     STEP_LOG(L_INFO, "Start ReaderFF");
 }

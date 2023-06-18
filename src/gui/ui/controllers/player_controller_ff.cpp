@@ -70,7 +70,7 @@ bool PlayerControllerFF::open_file(const QString& filename)
     }
 
     // Прочитаем первый кадр, чтобы показать на экране и встать в 0
-    m_video_proc_manager->start(video::ff::ReaderMode::All);
+    m_video_proc_manager->start();
     step_frame(Enums::PLAYER_DIRECTION_FORWARD);
 
     return true;

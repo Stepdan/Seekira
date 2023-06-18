@@ -1,4 +1,5 @@
 {
+    "mode": "keyframe",
     "video_processor": {
         "task_settings_id": "SettingsVideoProcessorTask",
         "pipeline": {

@@ -1,13 +1,21 @@
 #include "video_processing_manager.hpp"
 
 #include <core/base/types/config_fields.hpp>
+#include <core/base/json/json_utils.hpp>
+#include <core/base/utils/string_utils.hpp>
+
 #include <core/task/settings_factory.hpp>
 #include <core/task/task_factory.hpp>
 
 namespace step::proc {
 
 VideoProcessingManager::VideoProcessingManager(const ObjectPtrJSON& cfg)
-    : m_video_processing_task(IVideoProcessorTask::from_abstract(
+    : ReaderFF([&cfg]() {
+        video::ff::ReaderMode mode;
+        step::utils::from_string<video::ff::ReaderMode>(mode, json::get<std::string>(cfg, CFG_FLD::MODE));
+        return mode;
+    }())
+    , m_video_processing_task(IVideoProcessorTask::from_abstract(
           CREATE_TASK_UNIQUE(CREATE_SETTINGS(json::get_object(cfg, CFG_FLD::VIDEO_PROCESSOR)))))
 {
 }
