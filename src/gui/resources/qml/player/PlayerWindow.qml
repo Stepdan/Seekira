@@ -11,8 +11,8 @@ Window {
     height: 720
     visible: true
 
-    PlayerFrameView {
-        id: playerFrameView
+    PlayerTopPanel {
+        id: playerTopPanel
         anchors { top: parent.top; left: parent.left; }
     }
 
@@ -24,5 +24,10 @@ Window {
     PlayerSidePanel {
         id: playerSidePanel
         anchors { top: parent.top; right: parent.right; }
+    }
+
+    PlayerFrameView {
+        id: playerFrameView
+        anchors { top: playerTopPanel.bottom; left: parent.left; }
     }
 }

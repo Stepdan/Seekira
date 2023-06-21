@@ -7,8 +7,8 @@ import QtQuick.Window 2.15
 import "../common/constants.js" as Constants
 
 Rectangle {
-    id: playerSidePanel
-    width: Constants.kPlayerSidePanelWidth
-    height: parent.height
+    id: playerTopPanel
+    width: parent.width
+    height: Constants.kPlayerTopPanelHeight
     color: "#222532"
 }

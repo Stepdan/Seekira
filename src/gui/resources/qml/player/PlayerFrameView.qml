@@ -12,11 +12,11 @@ import "../common/constants.js" as Constants
 Item {
     id: playerFrameView
     width: parent.width - Constants.kPlayerSidePanelWidth
-    height: parent.height - Constants.kPlayerControlPanelHeight
+    height: parent.height - Constants.kPlayerControlPanelHeight - Constants.kPlayerTopPanelHeight
 
     Rectangle {
         anchors.fill: parent;
-        color: "#181818"
+        color: "#191B23"
 
         VideoOutput {
             id: playerFrameViewVideoOutput

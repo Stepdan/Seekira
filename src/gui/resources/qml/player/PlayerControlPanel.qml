@@ -13,7 +13,8 @@ Rectangle {
     id: playerControlPanel
     width: parent.width - Constants.kPlayerSidePanelWidth
     height: Constants.kPlayerControlPanelHeight
-    color: "#313131"
+    //color: "#313131"
+    color: "#222532"
 
     Button {
         id: playButton
