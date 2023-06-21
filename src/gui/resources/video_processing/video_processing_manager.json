@@ -1,5 +1,17 @@
 {
-    "mode": "keyframe",
+    "reader_ff": {
+        "mode": "All"
+    },
+    "face_engine_controller": {
+        "face_engine_connection_id": "video_processor_face_engine_conn_id",
+        "face_engine_init": {
+            "mode": "detection",
+            "mode_temp": "detection_and_recognition",
+            "type": "TDV",
+            "model_path": "C:/Work/StepTech/SDK/models/",
+            "save_frames": false
+        }
+    },
     "video_processor": {
         "task_settings_id": "SettingsVideoProcessorTask",
         "pipeline": {
@@ -20,10 +32,7 @@
                         "task_settings_id": "FaceDetectionNodeSettings",
                         "face_detector_settings": {
                             "task_settings_id": "SettingsFaceDetector",
-                            "mode": "detection_and_recognition",
-                            "mode_temp": "detection",
-                            "type": "TDV",
-                            "model_path": "C:/Work/StepTech/SDK/models/"
+                            "face_engine_connection_id": "video_processor_face_engine_conn_id"
                         }
                     }
                 },

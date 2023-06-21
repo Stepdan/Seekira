@@ -68,7 +68,9 @@ public:
 
     void init_reader()
     {
-        m_reader = std::make_unique<ReaderFF>();
+        IReader::Initializer init;
+        init.mode = ReaderMode::All;
+        m_reader = std::make_unique<ReaderFF>(std::move(init));
         m_frame_observer = std::make_unique<FrameSourceObserver>();
         m_reader->register_observer(m_frame_observer.get());
     }

@@ -2,11 +2,12 @@
 
 #include <video/ffmpeg/reader/reader.hpp>
 
+#include <proc/interfaces/face_engine_controller.hpp>
 #include <proc/interfaces/video_processor_interface.hpp>
 
 namespace step::proc {
 
-class VideoProcessingManager : public video::ff::ReaderFF
+class VideoProcessingManager : public video::ff::ReaderFF, public IFaceEngineController
 {
 public:
     VideoProcessingManager(const ObjectPtrJSON& cfg);

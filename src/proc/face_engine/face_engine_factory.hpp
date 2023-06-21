@@ -6,6 +6,6 @@
 
 namespace step::proc {
 
-std::unique_ptr<IFaceEngine> create_face_engine(IFaceEngine::Initializer&&);
+std::shared_ptr<IFaceEngine> create_face_engine(IFaceEngine::Initializer&&);
 
 }

@@ -6,6 +6,7 @@ enum class FaceEngineType
 {
     Undefined,
     TDV,
+    OpenVINO,
 };
 
 }

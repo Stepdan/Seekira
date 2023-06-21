@@ -2,6 +2,8 @@
 
 #include "types.hpp"
 
+#include <core/base/interfaces/serializable.hpp>
+
 #include <video/frame/interfaces/frame_interfaces.hpp>
 
 #include <string>
@@ -42,8 +44,21 @@ public:
     virtual void unregister_observer(IReaderEventObserver* observer) = 0;
 };
 
-class IReader : public IReaderEventSource, public IFrameSource
+class IReader : public IReaderEventSource, public IFrameSource, public ISerializable
 {
+public:
+    struct Initializer : public ISerializable
+    {
+        ReaderMode mode{ReaderMode::Undefined};
+
+        void deserialize(const ObjectPtrJSON& container);
+
+        bool is_valid() const noexcept;
+
+        bool operator==(const Initializer& rhs) const noexcept;
+        bool operator!=(const Initializer& rhs) const noexcept { return !(*this == rhs); }
+    };
+
 public:
     ~IReader() = default;
 

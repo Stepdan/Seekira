@@ -14,18 +14,21 @@ bool SettingsFaceDetector::operator==(const SettingsFaceDetector& rhs) const noe
 {
     /* clang-format off */
     return true
-        && m_face_engine_type == rhs.m_face_engine_type
-        && m_model_path == rhs.m_model_path
-        && m_mode == rhs.m_mode
+        && m_face_engine_init == rhs.m_face_engine_init
+        && m_face_engine_conn_id == rhs.m_face_engine_conn_id
     ;
     /* clang-format on */
 }
 
 void SettingsFaceDetector::deserialize(const ObjectPtrJSON& container)
 {
-    m_model_path = json::get<std::string>(container, CFG_FLD::MODEL_PATH);
-    step::utils::from_string<FaceEngineType>(m_face_engine_type, json::get<std::string>(container, CFG_FLD::TYPE));
-    step::utils::from_string<IFaceEngine::Mode>(m_mode, json::get<std::string>(container, CFG_FLD::MODE));
+    auto face_engine_conn_id_opt = json::get_opt<std::string>(container, CFG_FLD::FACE_ENGINE_CONNECTION_ID);
+    if (face_engine_conn_id_opt.has_value())
+    {
+        m_face_engine_conn_id = face_engine_conn_id_opt.value();
+        STEP_ASSERT(!m_face_engine_conn_id.empty(), "FACE_ENGINE_CONNECTION_ID can't be empty!");
+        return;
+    }
 }
 
 std::shared_ptr<task::BaseSettings> create_face_detector_settings(const ObjectPtrJSON& cfg)

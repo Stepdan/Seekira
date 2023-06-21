@@ -3,6 +3,7 @@
 #include <core/log/log.hpp>
 #include <core/exception/assert.hpp>
 
+#include <core/base/types/config_fields.hpp>
 #include <core/base/utils/string_utils.hpp>
 
 #include <proc/drawer/drawer.hpp>
@@ -18,7 +19,9 @@ constexpr size_t MAX_INVALID_THRESHOLD = 10;
 
 namespace step::video::ff {
 
-ReaderFF::ReaderFF(ReaderMode mode) : m_mode(mode) {}
+ReaderFF::ReaderFF(IReader::Initializer&& init) : m_mode(std::move(init.mode)) {}
+
+ReaderFF::ReaderFF(const ObjectPtrJSON& cfg) { deserialize(cfg); }
 
 ReaderFF::~ReaderFF()
 {
@@ -313,5 +316,14 @@ void ReaderFF::worker_thread()
 }
 
 void ReaderFF::thread_worker_stop_impl() {}
+
+}  // namespace step::video::ff
+
+namespace step::video::ff {
+
+void ReaderFF::deserialize(const ObjectPtrJSON& container)
+{
+    step::utils::from_string<video::ff::ReaderMode>(m_mode, json::get<std::string>(container, CFG_FLD::MODE));
+}
 
 }  // namespace step::video::ff

@@ -20,7 +20,8 @@ namespace step::video::ff {
 class ReaderFF : public IReader, public threading::ThreadWorker
 {
 public:
-    ReaderFF(ReaderMode mode = ReaderMode::All);
+    ReaderFF(IReader::Initializer&& init);
+    ReaderFF(const ObjectPtrJSON& cfg);
     ~ReaderFF();
 
 public:
@@ -75,6 +76,9 @@ private:
     void add_reader_event(ReaderEvent);
     void handle_event(ReaderEvent);
     bool has_event() const;
+
+private:
+    void deserialize(const ObjectPtrJSON& container);
 
 private:
     std::shared_ptr<ParserFF> m_parser{nullptr};

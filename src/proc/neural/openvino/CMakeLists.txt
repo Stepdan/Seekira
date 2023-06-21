@@ -1,6 +1,4 @@
-add_subdirectory(impl)
-
-project(step_face_engine)
+project(step_proc_openvino)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)
@@ -17,7 +15,7 @@ source_group("Headers" FILES ${HEADERS})
 source_group("Sources" FILES ${SOURCES})
 
 add_library(${PROJECT_NAME} STATIC)
-add_library(step::face_engine ALIAS ${PROJECT_NAME})
+add_library(step::proc_openvino ALIAS ${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME}
     PRIVATE
@@ -28,12 +26,15 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    step::face_engine_tdv
+    openvino::runtime
+    step::core_task
+    step::core_threading
+    step::frame_interface
 )
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    STEPKIT_MODULE_NAME="PROC_FACE_ENGINE"
+    STEPKIT_MODULE_NAME="PROC_OPENVINO"
     PUBLIC
     BUILD_WITH_EASY_PROFILER
 )
@@ -41,9 +42,5 @@ target_compile_definitions(${PROJECT_NAME}
 # install(TARGETS ${PROJECT_NAME} EXPORT ${INSTALL_TARGET_NAME}
 #     COMPONENT ${PROJECT_NAME}
 #     FILE_SET headers_base DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_ALIAS}
-#     FILE_SET headers_types DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_ALIAS}/types
-#     FILE_SET headers_utils DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_ALIAS}/utils
-#     FILE_SET headers_json DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_ALIAS}/json
-#     FILE_SET headers_interfaces DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_ALIAS}/interfaces
 #     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 # )

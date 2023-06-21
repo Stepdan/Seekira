@@ -295,9 +295,9 @@ private:
 
 namespace step::proc {
 
-std::unique_ptr<IFaceEngine> create_face_engine_tdv(IFaceEngine::Initializer&& init)
+std::shared_ptr<IFaceEngine> create_face_engine_tdv(IFaceEngine::Initializer&& init)
 {
-    return std::make_unique<FaceEngineTDV>(std::move(init));
+    return std::make_shared<FaceEngineTDV>(std::move(init));
 }
 
 }  // namespace step::proc

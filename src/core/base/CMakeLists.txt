@@ -12,6 +12,7 @@ endif()
 if(NOT DEFINED SOURCES)
     file(GLOB SOURCES
         types/*.cpp
+        interfaces/*.cpp
         utils/*.cpp
         json/*.cpp
     )

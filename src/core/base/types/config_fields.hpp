@@ -25,6 +25,7 @@ public:
 
     static const std::string SERIAL_ID;
     static const std::string CREATE_ID;
+    static const std::string CONNECTION_ID;
 
     static const std::string CACHE_SIZE;
 
@@ -98,6 +99,13 @@ public:
     static const std::string FACES;
     static const std::string FACE_DETECTOR_SETTINGS;
     static const std::string FACE_DETECTION_RESULT;
+    static const std::string FACE_ENGINE_CONNECTION_ID;
+    static const std::string FACE_ENGINE_INIT;
+    static const std::string FACE_ENGINE_INIT_SAVE_FRAMES;
+    static const std::string FACE_ENGINE_CONTROLLER;
+
+    /* ReaderFF */
+    static const std::string READER_FF_SETTINGS;
 
     static const std::string DRAWER_SETTINGS;
 };

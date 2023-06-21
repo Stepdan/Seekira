@@ -197,6 +197,7 @@ find_package(OpenCV REQUIRED)
 include_directories ("/usr/include/opencv4/")
 
 include(onnxruntime)
+include(openvino)
 
 set(INSTALL_TARGET_NAME "stepkit-targets")
 

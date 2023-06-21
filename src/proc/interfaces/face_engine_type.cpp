@@ -11,7 +11,8 @@ namespace {
 
 /* clang-format off */
 constexpr std::pair<step::proc::FaceEngineType, std::string_view> g_face_engine_types[] = {
-    { step::proc::FaceEngineType::TDV, "TDV" },
+    { step::proc::FaceEngineType::TDV       , "TDV"         },
+    { step::proc::FaceEngineType::OpenVINO  , "OpenVINO"    },
 };
 /* clang-format on */
 

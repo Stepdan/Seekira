@@ -25,13 +25,20 @@ public:
         /* clang-format on */
     };
 
-    struct Initializer
+    struct Initializer : public ISerializable
     {
         FaceEngineType type{FaceEngineType::Undefined};
         Mode mode{FE_UNDEFINED};
         std::filesystem::path models_path;
 
         bool save_frames = false;  // Обрезка кадра и сохранение в IFace
+
+        void deserialize(const ObjectPtrJSON& container);
+
+        bool is_valid() const noexcept;
+
+        bool operator==(const Initializer& rhs) const noexcept;
+        bool operator!=(const Initializer& rhs) const noexcept { return !(*this == rhs); }
     };
 
 public:

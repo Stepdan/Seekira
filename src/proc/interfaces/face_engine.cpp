@@ -1,5 +1,6 @@
 #include "face_engine.hpp"
 
+#include <core/base/types/config_fields.hpp>
 #include <core/base/utils/find_pair.hpp>
 #include <core/base/utils/string_utils.hpp>
 
@@ -43,3 +44,38 @@ void from_string(step::proc::IFaceEngine::Mode& type, const std::string& str)
 }
 
 }  // namespace step::utils
+
+namespace step::proc {
+
+void IFaceEngine::Initializer::deserialize(const ObjectPtrJSON& container)
+{
+    models_path = json::get<std::string>(container, CFG_FLD::MODEL_PATH);
+    step::utils::from_string<FaceEngineType>(type, json::get<std::string>(container, CFG_FLD::TYPE));
+    step::utils::from_string<IFaceEngine::Mode>(mode, json::get<std::string>(container, CFG_FLD::MODE));
+    save_frames = json::get<bool>(container, CFG_FLD::FACE_ENGINE_INIT_SAVE_FRAMES);
+}
+
+bool IFaceEngine::Initializer::is_valid() const noexcept
+{
+    /* clang-format off */
+    return true
+        && type != FaceEngineType::Undefined
+        && mode != Mode::FE_UNDEFINED
+        && !models_path.empty()
+    ;
+    /* clang-format on */
+}
+
+bool IFaceEngine::Initializer::operator==(const IFaceEngine::Initializer& rhs) const noexcept
+{
+    /* clang-format off */
+    return true
+        && type == rhs.type
+        && models_path == rhs.models_path
+        && mode == rhs.mode
+        && save_frames == rhs.save_frames
+    ;
+    /* clang-format on */
+}
+
+}  // namespace step::proc

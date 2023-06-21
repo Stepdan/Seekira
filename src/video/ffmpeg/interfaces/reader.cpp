@@ -1,34 +1,31 @@
 #include "reader.hpp"
 
-#include <core/base/utils/find_pair.hpp>
-#include <core/base/utils/string_utils.hpp>
+#include <core/base/types/config_fields.hpp>
 
-#include <utility>
+namespace step::video::ff {
 
-namespace {
-
-/* clang-format off */
-constexpr std::pair<step::video::ff::ReaderMode, std::string_view> g_reader_modes[] = {
-    { step::video::ff::ReaderMode::All      , "all"         },
-    { step::video::ff::ReaderMode::KeyFrame , "keyframe"    },
-};
-/* clang-format on */
-
-}  // namespace
-
-// to_string
-namespace step::utils {
-
-template <>
-std::string to_string(step::video::ff::ReaderMode mode)
+void IReader::Initializer::deserialize(const ObjectPtrJSON& container)
 {
-    return find_by_type(mode, g_reader_modes);
+    IReader::Initializer init;
+    step::utils::from_string<video::ff::ReaderMode>(init.mode, json::get<std::string>(container, CFG_FLD::MODE));
 }
 
-template <>
-void from_string(step::video::ff::ReaderMode& mode, const std::string& str)
+bool IReader::Initializer::is_valid() const noexcept
 {
-    find_by_str(str, mode, g_reader_modes);
+    /* clang-format off */
+    return true
+        && mode != ReaderMode::Undefined
+    ;
+    /* clang-format on */
 }
 
-}  // namespace step::utils
+bool IReader::Initializer::operator==(const IReader::Initializer& rhs) const noexcept
+{
+    /* clang-format off */
+    return true
+        && mode == rhs.mode
+    ;
+    /* clang-format on */
+}
+
+}  // namespace step::video::ff

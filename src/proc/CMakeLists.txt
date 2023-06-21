@@ -1,5 +1,6 @@
-add_subdirectory(face_engine)
+add_subdirectory(neural)
 add_subdirectory(interfaces)
+add_subdirectory(face_engine)
 add_subdirectory(settings)
 add_subdirectory(effects)
 add_subdirectory(detect)

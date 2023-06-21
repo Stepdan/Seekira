@@ -3,31 +3,34 @@
 #include <core/log/log.hpp>
 #include <core/base/types/config_fields.hpp>
 
+#include <proc/interfaces/face_engine_user.hpp>
 #include <proc/face_engine/face_engine_factory.hpp>
 #include <proc/settings/settings_face_detector.hpp>
 
 namespace step::proc {
 
-class FaceDetector : public BaseDetector<SettingsFaceDetector>
+class FaceDetector : public BaseDetector<SettingsFaceDetector>, public IFaceEngineUser
 {
 public:
     FaceDetector(const std::shared_ptr<task::BaseSettings>& settings)
     {
         set_settings(*settings);
 
-        IFaceEngine::Initializer init;
-        init.type = m_typed_settings.get_face_engine_type();
-        init.models_path = m_typed_settings.get_model_path();
-        init.mode = m_typed_settings.get_mode();
-
-        m_face_engine = create_face_engine(std::move(init));
+        const auto conn_id = m_typed_settings.get_face_engine_conn_id();
+        if (conn_id.empty())
+        {
+            init_face_engine_internal();
+        }
+        else
+        {
+            set_conn_id(conn_id);
+            Connector::connect(this);
+        }
     }
 
     DetectionResult process(video::Frame& frame)
     {
-        STEP_ASSERT(m_face_engine, "Invalid face engine!");
-
-        auto faces = m_face_engine->detect(frame);
+        auto faces = get_face_engine_impl()->detect(frame);
 
         std::vector<Rect> bboxes;
         bboxes.reserve(faces.size());
@@ -44,7 +47,21 @@ public:
     }
 
 private:
-    std::unique_ptr<IFaceEngine> m_face_engine;
+    void init_face_engine_internal()
+    {
+        m_face_engine_internal = create_face_engine(m_typed_settings.get_face_engine_init());
+    }
+
+    std::shared_ptr<IFaceEngine> get_face_engine_impl()
+    {
+        if (m_face_engine_internal)
+            return m_face_engine_internal;
+
+        return get_face_engine(true);
+    }
+
+private:
+    std::shared_ptr<IFaceEngine> m_face_engine_internal{nullptr};
 };
 
 }  // namespace step::proc

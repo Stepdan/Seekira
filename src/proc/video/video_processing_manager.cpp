@@ -10,14 +10,15 @@
 namespace step::proc {
 
 VideoProcessingManager::VideoProcessingManager(const ObjectPtrJSON& cfg)
-    : ReaderFF([&cfg]() {
-        video::ff::ReaderMode mode;
-        step::utils::from_string<video::ff::ReaderMode>(mode, json::get<std::string>(cfg, CFG_FLD::MODE));
-        return mode;
-    }())
-    , m_video_processing_task(IVideoProcessorTask::from_abstract(
-          CREATE_TASK_UNIQUE(CREATE_SETTINGS(json::get_object(cfg, CFG_FLD::VIDEO_PROCESSOR)))))
+    : ReaderFF(json::get_object(cfg, CFG_FLD::READER_FF_SETTINGS))
+    , IFaceEngineController(json::get_object(cfg, CFG_FLD::FACE_ENGINE_CONTROLLER))
 {
+    Connector::register_conn_source(this);
+    // TODO создаем таску после регистрации в коннекторе, иначе face engine внутри таски
+    // попытается зарегестрироваться ДО регистрации ConnectionSource
+    // TODO - сделать независимой регистрацию Source и Object
+    m_video_processing_task = IVideoProcessorTask::from_abstract(
+        CREATE_TASK_UNIQUE(CREATE_SETTINGS(json::get_object(cfg, CFG_FLD::VIDEO_PROCESSOR))));
 }
 
 void VideoProcessingManager::reader_process_frame(video::FramePtr frame)

@@ -6,7 +6,7 @@
 
 namespace step::proc {
 
-std::unique_ptr<IFaceEngine> create_face_engine(IFaceEngine::Initializer&& init)
+std::shared_ptr<IFaceEngine> create_face_engine(IFaceEngine::Initializer&& init)
 {
     switch (init.type)
     {

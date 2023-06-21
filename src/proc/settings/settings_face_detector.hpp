@@ -16,18 +16,16 @@ public:
     bool operator==(const SettingsFaceDetector& rhs) const noexcept;
     bool operator!=(const SettingsFaceDetector& rhs) const noexcept { return !(*this == rhs); }
 
-    FaceEngineType get_face_engine_type() const noexcept { return m_face_engine_type; }
-    const std::string& get_model_path() const noexcept { return m_model_path; }
-    IFaceEngine::Mode get_mode() const noexcept { return m_mode; }
+    // Если есть conn_id, то face_engine будет получен через механизм IFaceEngineUser
+    void set_face_engine_conn_id(const std::string& value) { m_face_engine_conn_id = value; }
+    const std::string& get_face_engine_conn_id() const noexcept { return m_face_engine_conn_id; }
 
-    void set_face_engine_type(FaceEngineType value) { m_face_engine_type = value; }
-    void set_model_path(const std::string& model_path) { m_model_path = model_path; }
-    void set_mode(IFaceEngine::Mode mode) { m_mode = mode; }
+    void set_face_engine_init(const IFaceEngine::Initializer& init) { m_face_engine_init = init; }
+    IFaceEngine::Initializer get_face_engine_init() const noexcept { return m_face_engine_init; }
 
 public:
-    FaceEngineType m_face_engine_type;
-    IFaceEngine::Mode m_mode;
-    std::string m_model_path;
+    IFaceEngine::Initializer m_face_engine_init;
+    std::string m_face_engine_conn_id;
 };
 
 std::shared_ptr<task::BaseSettings> create_face_detector_settings(const ObjectPtrJSON&);

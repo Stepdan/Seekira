@@ -1,6 +1,4 @@
-add_subdirectory(impl)
-
-project(step_face_engine)
+project(step_face_engine_tdv)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)
@@ -17,7 +15,7 @@ source_group("Headers" FILES ${HEADERS})
 source_group("Sources" FILES ${SOURCES})
 
 add_library(${PROJECT_NAME} STATIC)
-add_library(step::face_engine ALIAS ${PROJECT_NAME})
+add_library(step::face_engine_tdv ALIAS ${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME}
     PRIVATE
@@ -28,12 +26,14 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    step::face_engine_tdv
+    step::thirdparty_tdv
+    step::frame_utils
+    step::proc_interfaces
 )
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    STEPKIT_MODULE_NAME="PROC_FACE_ENGINE"
+    STEPKIT_MODULE_NAME="PROC_FACE_ENGINE_TDV"
     PUBLIC
     BUILD_WITH_EASY_PROFILER
 )

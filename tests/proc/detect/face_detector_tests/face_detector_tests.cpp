@@ -37,10 +37,13 @@ protected:
     void SetUp()
     {
         frame = video::utils::open_file(TestDataProvider::frame_path());
+        proc::IFaceEngine::Initializer init;
+        init.mode = proc::IFaceEngine::Mode::FE_DETECTION;
+        init.type = proc::FaceEngineType::TDV;
+        init.models_path = "C:/Work/StepTech/SDK/models/";
+
         auto settings_ptr = std::make_shared<proc::SettingsFaceDetector>();
-        settings_ptr->set_face_engine_type(proc::FaceEngineType::TDV);
-        settings_ptr->set_mode(proc::IFaceEngine::Mode::FE_DETECTION);
-        settings_ptr->set_model_path("C:/Work/StepTech/SDK/models/");
+        settings_ptr->set_face_engine_init(init);
         m_detector = proc::create_face_detector(settings_ptr);
     }
 
