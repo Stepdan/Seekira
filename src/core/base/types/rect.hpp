@@ -17,6 +17,9 @@ struct Rect : public ISerializable
 
     bool is_valid() const noexcept;
 
+    int length() const noexcept { return p1.x - p0.x; }
+    int height() const noexcept { return p1.y - p0.y; }
+
     void serialize(ObjectPtrJSON&) override;
     void deserialize(const ObjectPtrJSON&) override;
 };

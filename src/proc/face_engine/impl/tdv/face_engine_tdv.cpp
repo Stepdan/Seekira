@@ -89,6 +89,8 @@ public:
                                  static_cast<int>(rect_ctx[2].getDouble() * frame.size.width),
                                  static_cast<int>(rect_ctx[3].getDouble() * frame.size.height)}));
 
+            face->set_confidence(obj.at("confidence").getDouble());
+
             face->set_impl_data(std::make_shared<api::Context>(obj));
 
             /*

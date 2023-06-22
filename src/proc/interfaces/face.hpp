@@ -26,11 +26,13 @@ public:
     virtual video::FramePtr get_frame() const noexcept = 0;
     virtual FaceLandmarks get_landmarks() const noexcept = 0;
     virtual FaceRecognizerData get_recognizer_data() const noexcept = 0;
+    virtual double get_confidence() const noexcept = 0;
 
     virtual void set_rect(const Rect& value) = 0;
     virtual void set_frame(const video::FramePtr& value) = 0;
     virtual void set_landmarks(const FaceLandmarks& value) = 0;
     virtual void set_recognizer_data(const FaceRecognizerData& value) = 0;
+    virtual void set_confidence(double value) = 0;
 };
 
 template <typename TImplType>
@@ -44,6 +46,7 @@ public:
     video::FramePtr get_frame() const noexcept override { return m_frame; }
     FaceLandmarks get_landmarks() const noexcept override { return m_landmarks; }
     FaceRecognizerData get_recognizer_data() const noexcept override { return m_recognizer_data; }
+    double get_confidence() const noexcept override { return m_confidence; }
 
     bool is_empty() const noexcept
     {
@@ -67,12 +70,14 @@ protected:
     void set_frame(const video::FramePtr& value) override { m_frame = value; }
     void set_landmarks(const FaceLandmarks& value) override { m_landmarks = value; }
     void set_recognizer_data(const FaceRecognizerData& value) override { m_recognizer_data = value; }
+    void set_confidence(double value) override { m_confidence = value; }
 
 protected:
     Rect m_rect;
     video::FramePtr m_frame;
     FaceLandmarks m_landmarks;
     FaceRecognizerData m_recognizer_data;
+    double m_confidence;
 
     std::shared_ptr<ImplType> m_impl{nullptr};
 };
