@@ -35,9 +35,11 @@ ONNXRuntimeEnvironment::ONNXRuntimeEnvironment(const Context& config)
     const bool enable_trace = config.get<bool>("enable_trace", false);
     // const int intra_op_num_threads = config.get<long>("intra_op_num_threads", 1);
     const int intra_op_num_threads = config.get<long>("intra_op_num_threads", std::thread::hardware_concurrency());
+    //const int intra_op_num_threads = config.get<long>("intra_op_num_threads", 0);
     const int execution_mode = config.get<long>("execution_mode", 0);
     //const int inter_op_num_threads = config.get<long>("inter_op_num_threads", 1);
     const int inter_op_num_threads = config.get<long>("inter_op_num_threads", std::thread::hardware_concurrency());
+    //const int inter_op_num_threads = config.get<long>("inter_op_num_threads", 0);
     const void* model_buffer = config["model_buffer"].get<char*>();
     const unsigned long model_buffer_size = config["model_buffer_size"].get<unsigned long>();
 
@@ -91,7 +93,7 @@ ONNXRuntimeEnvironment::ONNXRuntimeEnvironment(const Context& config)
         OrtCUDAProviderOptions options;
         options.device_id = device_id;
         options.arena_extend_strategy = 0;
-        options.gpu_mem_limit = 2 * 1024 * 1024 * 1024l;
+        options.gpu_mem_limit = SIZE_MAX;
         options.cudnn_conv_algo_search = OrtCudnnConvAlgoSearch::OrtCudnnConvAlgoSearchExhaustive;
         options.do_copy_in_default_stream = 1;
         OrtCheckStatus(ort_api->SessionOptionsAppendExecutionProvider_CUDA(session_options, &options));

@@ -53,6 +53,9 @@ void IFaceEngine::Initializer::deserialize(const ObjectPtrJSON& container)
     step::utils::from_string<FaceEngineType>(type, json::get<std::string>(container, CFG_FLD::TYPE));
     step::utils::from_string<IFaceEngine::Mode>(mode, json::get<std::string>(container, CFG_FLD::MODE));
     save_frames = json::get<bool>(container, CFG_FLD::FACE_ENGINE_INIT_SAVE_FRAMES);
+    step::utils::from_string<DeviceType>(device, json::get<std::string>(container, CFG_FLD::DEVICE));
+
+    STEP_ASSERT(is_valid(), "FaceEngine is invalid after deserialization!");
 }
 
 bool IFaceEngine::Initializer::is_valid() const noexcept
@@ -61,6 +64,7 @@ bool IFaceEngine::Initializer::is_valid() const noexcept
     return true
         && type != FaceEngineType::Undefined
         && mode != Mode::FE_UNDEFINED
+        && device != DeviceType::Undefined
         && !models_path.empty()
     ;
     /* clang-format on */
@@ -74,6 +78,7 @@ bool IFaceEngine::Initializer::operator==(const IFaceEngine::Initializer& rhs) c
         && models_path == rhs.models_path
         && mode == rhs.mode
         && save_frames == rhs.save_frames
+        && device == rhs.device
     ;
     /* clang-format on */
 }

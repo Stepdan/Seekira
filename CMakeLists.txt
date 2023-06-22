@@ -198,6 +198,7 @@ include_directories ("/usr/include/opencv4/")
 
 include(onnxruntime)
 include(openvino)
+include(cuda)
 
 set(INSTALL_TARGET_NAME "stepkit-targets")
 

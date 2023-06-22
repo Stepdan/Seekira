@@ -1,5 +1,6 @@
 #pragma once
 
+#include "device_type.hpp"
 #include "face.hpp"
 
 #include <proc/interfaces/face_engine_type.hpp>
@@ -30,7 +31,7 @@ public:
         FaceEngineType type{FaceEngineType::Undefined};
         Mode mode{FE_UNDEFINED};
         std::filesystem::path models_path;
-
+        DeviceType device{DeviceType::Undefined};
         bool save_frames = false;  // Обрезка кадра и сохранение в IFace
 
         void deserialize(const ObjectPtrJSON& container);
@@ -59,13 +60,15 @@ class BaseFaceEngine : public IFaceEngine
 {
 protected:
     BaseFaceEngine(IFaceEngine::Initializer&& init)
-        : m_mode(std::move(init.mode))
+        : m_device_type(std::move(init.device))
+        , m_mode(std::move(init.mode))
         , m_models_path(std::move(init.models_path))
         , m_save_frames(std::move(init.save_frames))
     {
     }
 
 protected:
+    DeviceType m_device_type;
     IFaceEngine::Mode m_mode;
     std::filesystem::path m_models_path;
     bool m_save_frames = false;  // Обрезка кадра и сохранение в IFace

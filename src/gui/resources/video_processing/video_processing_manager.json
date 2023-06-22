@@ -5,6 +5,7 @@
     "face_engine_controller": {
         "face_engine_connection_id": "video_processor_face_engine_conn_id",
         "face_engine_init": {
+            "device": "cpu",
             "mode": "detection",
             "mode_temp": "detection_and_recognition",
             "type": "TDV",

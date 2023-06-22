@@ -608,6 +608,8 @@ TDV_PUBLIC HPBlock* TDVProcessingBlock_createProcessingBlock(const HContext* con
         internal::ProcessingBlock* handle_;
         std::string unit_type = ctx.get<std::string>("unit_type", "");
 
+        new_ctx["use_cuda"] = ctx.get<bool>("use_cuda", false);
+
         if (unit_type == "")
         {
             throw std::invalid_argument("not unit_type");

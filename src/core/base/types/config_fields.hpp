@@ -29,6 +29,8 @@ public:
 
     static const std::string CACHE_SIZE;
 
+    static const std::string DEVICE;
+
     /* Coordinates */
     static const std::string X;
     static const std::string Y;

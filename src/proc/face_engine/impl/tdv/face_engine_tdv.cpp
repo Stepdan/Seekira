@@ -16,6 +16,7 @@ namespace {
 
 /* clang-format off */
 const std::string UNIT_TYPE = "unit_type";
+const std::string USE_CUDA = "use_cuda";
 
 const std::string FACE_DETECTOR_UNIT_NAME      = "FACE_DETECTOR";
 const std::string FACE_RECOGNIZER_UNIT_NAME    = "FACE_RECOGNIZER";
@@ -218,10 +219,13 @@ private:
         {
             m_service = std::make_unique<api::Service>(api::Service::createService(m_models_path.string()));
 
+            const auto use_cuda = m_device_type == DeviceType::GPU;
+
             if (m_mode & FE_DETECTION)
             {
                 m_detector_ctx = std::make_unique<api::Context>(m_service->createContext());
                 (*m_detector_ctx)[UNIT_TYPE] = FACE_DETECTOR_UNIT_NAME;
+                (*m_detector_ctx)[USE_CUDA] = use_cuda;
                 m_face_detector =
                     std::make_unique<api::ProcessingBlock>(m_service->createProcessingBlock(*m_detector_ctx));
             }
@@ -230,6 +234,7 @@ private:
             {
                 m_fitter_ctx = std::make_unique<api::Context>(m_service->createContext());
                 (*m_fitter_ctx)[UNIT_TYPE] = FACE_LANDMARKS_UNIT_NAME;
+                (*m_fitter_ctx)[USE_CUDA] = use_cuda;
                 m_mesh_fitter = std::make_unique<api::ProcessingBlock>(m_service->createProcessingBlock(*m_fitter_ctx));
             }
 
@@ -237,6 +242,7 @@ private:
             {
                 m_recognizer_ctx = std::make_unique<api::Context>(m_service->createContext());
                 (*m_recognizer_ctx)[UNIT_TYPE] = FACE_RECOGNIZER_UNIT_NAME;
+                (*m_recognizer_ctx)[USE_CUDA] = use_cuda;
                 m_recognizer_module =
                     std::make_unique<api::ProcessingBlock>(m_service->createProcessingBlock(*m_recognizer_ctx));
 

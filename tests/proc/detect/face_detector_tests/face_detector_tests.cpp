@@ -41,6 +41,7 @@ protected:
         init.mode = proc::IFaceEngine::Mode::FE_DETECTION;
         init.type = proc::FaceEngineType::TDV;
         init.models_path = "C:/Work/StepTech/SDK/models/";
+        init.device = proc::DeviceType::CPU;
 
         auto settings_ptr = std::make_shared<proc::SettingsFaceDetector>();
         settings_ptr->set_face_engine_init(init);

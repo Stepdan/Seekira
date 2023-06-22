@@ -49,7 +49,7 @@ std::string GetLastErrorAsString()
 #define GET_ERROR_MSG GetLastErrorAsString
 #define HANDLE HMODULE
 #define ONNX_NAME "onnxruntime.dll"
-#define ONNX_CUDA_NAME "onnxruntime_cuda.dll"
+#define ONNX_CUDA_NAME "onnxruntime.dll"
 #define SLASH "\\"
 
 #else
