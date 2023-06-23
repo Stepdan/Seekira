@@ -17,6 +17,7 @@ const std::string CFG_FLD::CREATE_ID = "create_id";
 const std::string CFG_FLD::CONNECTION_ID = "connection_id";
 const std::string CFG_FLD::CACHE_SIZE = "cache_size";
 const std::string CFG_FLD::DEVICE = "device";
+const std::string CFG_FLD::INTERPOLATION = "interpolation";
 
 const std::string CFG_FLD::X = "x";
 const std::string CFG_FLD::Y = "y";
@@ -63,6 +64,7 @@ const std::string CFG_FLD::CYCLIC = "cyclic";
 const std::string CFG_FLD::TASK_SETTINGS_ID = "task_settings_id";
 
 const std::string CFG_FLD::PIXEL_FORMAT = "pixel_format";
+const std::string CFG_FLD::FRAME_SIZE = "frame_size";
 
 const std::string CFG_FLD::PIPELINE = "pipeline";
 const std::string CFG_FLD::NODE = "node";
@@ -75,12 +77,13 @@ const std::string CFG_FLD::VIDEO_PROCESSOR = "video_processor";
 
 const std::string CFG_FLD::FACE = "face";
 const std::string CFG_FLD::FACES = "faces";
-const std::string CFG_FLD::FACE_DETECTOR_SETTINGS = "face_detector_settings";
 const std::string CFG_FLD::FACE_DETECTION_RESULT = "face_detection_result";
 const std::string CFG_FLD::FACE_ENGINE_CONNECTION_ID = "face_engine_connection_id";
 const std::string CFG_FLD::FACE_ENGINE_INIT = "face_engine_init";
 const std::string CFG_FLD::FACE_ENGINE_INIT_SAVE_FRAMES = "save_frames";
 const std::string CFG_FLD::FACE_ENGINE_CONTROLLER = "face_engine_controller";
+
+const std::string CFG_FLD::RESIZER_SIZE_MODE = "size_mode";
 
 const std::string CFG_FLD::READER_FF_SETTINGS = "reader_ff";
 

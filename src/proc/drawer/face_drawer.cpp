@@ -21,8 +21,8 @@ void Drawer::draw(video::Frame& frame, const FacePtr& face)
     cv::rectangle(mat, cv::Rect(rect.p0.x, rect.p0.y, rect.length(), rect.height()),
                   get_cv_color(m_settings.get_face_color(), frame.pix_fmt), 2);
 
-    cv::putText(mat, std::to_string(face->get_confidence()), cv::Point(rect.p0.x + 5, rect.p0.y + rect.length() * 0.15),
-                cv::FONT_HERSHEY_DUPLEX, 0.5, get_cv_color(m_settings.get_face_color(), frame.pix_fmt), 1);
+    //cv::putText(mat, std::to_string(face->get_confidence()), cv::Point(rect.p0.x + 5, rect.p0.y + rect.length() * 0.15),
+    //            cv::FONT_HERSHEY_DUPLEX, 0.5, get_cv_color(m_settings.get_face_color(), frame.pix_fmt), 1);
 }
 
 }  // namespace step::proc

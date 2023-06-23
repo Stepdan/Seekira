@@ -61,6 +61,16 @@ cv::Mat to_mat(Frame& frame)
 
 cv::Mat to_mat_deep(Frame& frame) { return to_mat(frame).clone(); }
 
+Frame from_mat(cv::Mat& mat, PixFmt fmt)
+{
+    return Frame::create(FrameSize(mat.cols, mat.rows), mat.step, fmt, mat.data);
+}
+
+Frame from_mat_deep(cv::Mat& mat, PixFmt fmt)
+{
+    return Frame::create_deep(FrameSize(mat.cols, mat.rows), mat.step, fmt, mat.data);
+}
+
 int get_colorspace_convert_id(PixFmt from, PixFmt to)
 {
     if (auto it = step::utils::find_pair_iterator_by_first(colorspace_convert_ids, {from, to});
@@ -76,6 +86,25 @@ int get_cv_data_type(PixFmt fmt)
         return it->second;
     else
         STEP_THROW_RUNTIME("get_cv_data_type(): No OpenCV data type for pix fmt: {}", fmt);
+}
+
+cv::Size get_cv_size(const FrameSize& frame_size) { return cv::Size(frame_size.width, frame_size.height); }
+
+int get_cv_interpolation(InterpolationType type)
+{
+    switch (type)
+    {
+        case InterpolationType::Area:
+            return cv::INTER_AREA;
+        case InterpolationType::Cubic:
+            return cv::INTER_CUBIC;
+        case InterpolationType::Linear:
+            return cv::INTER_LINEAR;
+        default:
+            STEP_UNDEFINED("Invalid InterpolationType");
+    }
+
+    return -1;
 }
 
 }  // namespace step::video::utils

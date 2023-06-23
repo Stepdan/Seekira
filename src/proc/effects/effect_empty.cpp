@@ -2,6 +2,8 @@
 
 #include <core/log/log.hpp>
 
+#include <proc/settings/settings_empty.hpp>
+
 namespace step::proc {
 
 class EffectEmpty : public BaseEffect<SettingsEmpty>

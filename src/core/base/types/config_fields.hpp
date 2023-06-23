@@ -31,6 +31,8 @@ public:
 
     static const std::string DEVICE;
 
+    static const std::string INTERPOLATION;
+
     /* Coordinates */
     static const std::string X;
     static const std::string Y;
@@ -84,6 +86,7 @@ public:
 
     /* Frame */
     static const std::string PIXEL_FORMAT;
+    static const std::string FRAME_SIZE;
 
     /* Frame pipeline */
     static const std::string PIPELINE;
@@ -99,12 +102,14 @@ public:
     /* Face engine */
     static const std::string FACE;
     static const std::string FACES;
-    static const std::string FACE_DETECTOR_SETTINGS;
     static const std::string FACE_DETECTION_RESULT;
     static const std::string FACE_ENGINE_CONNECTION_ID;
     static const std::string FACE_ENGINE_INIT;
     static const std::string FACE_ENGINE_INIT_SAVE_FRAMES;
     static const std::string FACE_ENGINE_CONTROLLER;
+
+    /* Resizer */
+    static const std::string RESIZER_SIZE_MODE;
 
     /* ReaderFF */
     static const std::string READER_FF_SETTINGS;

@@ -17,7 +17,7 @@ std::shared_ptr<task::BaseSettings> create_face_detection_node_settings(const Ob
 
 void FaceDetectionNodeSettings::deserialize(const ObjectPtrJSON& container)
 {
-    auto face_detector_settings_json = json::get_object(container, CFG_FLD::FACE_DETECTOR_SETTINGS);
+    auto face_detector_settings_json = json::get_object(container, CFG_FLD::SETTINGS);
     m_face_detector_settings = CREATE_SETTINGS(face_detector_settings_json);
 }
 

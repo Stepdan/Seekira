@@ -1,12 +1,14 @@
 #pragma once
 
+#include <core/base/interfaces/serializable.hpp>
+
 #include <fmt/format.h>
 
 #include <cstddef>
 
 namespace step::video {
 
-class FrameSize
+class FrameSize : public ISerializable
 {
 public:
     FrameSize() : width(0), height(0) {}
@@ -25,6 +27,8 @@ public:
         *this = *this * scale_factor;
         return *this;
     }
+
+    void deserialize(const ObjectPtrJSON& cfg) override;
 
     size_t width, height;
 };

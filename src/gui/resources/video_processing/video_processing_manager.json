@@ -1,6 +1,6 @@
 {
     "reader_ff": {
-        "mode": "KeyFrame"
+        "mode": "All"
     },
     "face_engine_controller": {
         "face_engine_connection_id": "video_processor_face_engine_conn_id",
@@ -28,10 +28,25 @@
                     }
                 },
                 {
+                    "node": "resizer_node",
+                    "settings": {
+                        "task_settings_id": "ResizerNodeSettings",
+                        "settings": {
+                            "task_settings_id": "SettingsResizer",
+                            "interpolation": "area",
+                            "size_mode": "scale_by_max",
+                            "frame_size": {
+                                "width": 640,
+                                "height": 480
+                            }
+                        }
+                    }
+                },
+                {
                     "node": "face_detection_node",
                     "settings": {
                         "task_settings_id": "FaceDetectionNodeSettings",
-                        "face_detector_settings": {
+                        "settings": {
                             "task_settings_id": "SettingsFaceDetector",
                             "face_engine_connection_id": "video_processor_face_engine_conn_id"
                         }
@@ -47,6 +62,10 @@
             "links": [
                 [
                     "input_node",
+                    "resizer_node"
+                ],
+                [
+                    "resizer_node",
                     "face_detection_node"
                 ],
                 [

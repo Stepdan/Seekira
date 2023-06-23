@@ -29,6 +29,7 @@ target_sources(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
     step::frame_interface
+    step::proc_effects
     step::proc_detect
     step::proc_pipeline
     step::proc_video
