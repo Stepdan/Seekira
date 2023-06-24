@@ -9,6 +9,11 @@
 
 namespace step::video::utils {
 
+Frame open_file(const std::filesystem::path& path, PixFmt fmt /*= PixFmt::BGR*/)
+{
+    return open_file(path.string(), fmt);
+}
+
 Frame open_file(const std::string& path, PixFmt fmt /*= PixFmt::BGR*/)
 {
     int cv_open_flags;

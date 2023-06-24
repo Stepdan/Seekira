@@ -107,10 +107,13 @@ public:
     static const std::string FACE;
     static const std::string FACES;
     static const std::string FACE_DETECTION_RESULT;
+    static const std::string FACE_MATCHING_RESULT;
     static const std::string FACE_ENGINE_CONNECTION_ID;
     static const std::string FACE_ENGINE_INIT;
     static const std::string FACE_ENGINE_INIT_SAVE_FRAMES;
     static const std::string FACE_ENGINE_CONTROLLER;
+
+    static const std::string PERSON_HOLDER_PATHES;
 
     /* Resizer */
     static const std::string RESIZER_SIZE_MODE;

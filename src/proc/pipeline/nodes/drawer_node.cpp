@@ -66,6 +66,18 @@ private:
         process(pipeline_data->storage);
     }
 
+    void draw_matched_faces(PipelineDataPtr<video::Frame> pipeline_data)
+    {
+        auto face_matching_result = pipeline_data->storage.get_attachment<Faces>(CFG_FLD::FACE_MATCHING_RESULT);
+
+        // Смотрим, есть ли результаты валидации лиц
+        if (face_matching_result.has_value())
+        {
+            for (const auto& face : face_matching_result.value())
+                m_drawer->draw(pipeline_data->data, face);
+        }
+    }
+
 private:
     std::unique_ptr<proc::Drawer> m_drawer;
 };

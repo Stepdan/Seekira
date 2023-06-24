@@ -14,6 +14,7 @@ namespace step::video::utils {
         BGRA
 */
 Frame open_file(const std::string& path, PixFmt fmt = PixFmt::BGR);
+Frame open_file(const std::filesystem::path& path, PixFmt fmt = PixFmt::BGR);
 
 void save_to_file(Frame& frame, const std::filesystem::path& path);
 

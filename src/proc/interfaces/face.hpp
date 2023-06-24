@@ -27,12 +27,16 @@ public:
     virtual FaceLandmarks get_landmarks() const noexcept = 0;
     virtual FaceRecognizerData get_recognizer_data() const noexcept = 0;
     virtual double get_confidence() const noexcept = 0;
+    virtual bool is_matched() const noexcept = 0;
 
     virtual void set_rect(const Rect& value) = 0;
     virtual void set_frame(const video::FramePtr& value) = 0;
     virtual void set_landmarks(const FaceLandmarks& value) = 0;
     virtual void set_recognizer_data(const FaceRecognizerData& value) = 0;
     virtual void set_confidence(double value) = 0;
+    virtual void set_matched(bool matched) = 0;
+
+    virtual FacePtr clone() const noexcept = 0;
 };
 
 template <typename TImplType>
@@ -47,6 +51,7 @@ public:
     FaceLandmarks get_landmarks() const noexcept override { return m_landmarks; }
     FaceRecognizerData get_recognizer_data() const noexcept override { return m_recognizer_data; }
     double get_confidence() const noexcept override { return m_confidence; }
+    bool is_matched() const noexcept override { return m_matched; }
 
     bool is_empty() const noexcept
     {
@@ -71,6 +76,7 @@ protected:
     void set_landmarks(const FaceLandmarks& value) override { m_landmarks = value; }
     void set_recognizer_data(const FaceRecognizerData& value) override { m_recognizer_data = value; }
     void set_confidence(double value) override { m_confidence = value; }
+    void set_matched(bool matched) override { m_matched = matched; }
 
 protected:
     Rect m_rect;
@@ -78,6 +84,7 @@ protected:
     FaceLandmarks m_landmarks;
     FaceRecognizerData m_recognizer_data;
     double m_confidence;
+    bool m_matched{false};
 
     std::shared_ptr<ImplType> m_impl{nullptr};
 };

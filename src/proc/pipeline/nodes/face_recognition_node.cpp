@@ -27,7 +27,6 @@ void FaceRecognitionNodeSettings::deserialize(const ObjectPtrJSON& container)
     {
         m_face_engine_conn_id = face_engine_conn_id_opt.value();
         STEP_ASSERT(!m_face_engine_conn_id.empty(), "FACE_ENGINE_CONNECTION_ID can't be empty!");
-        return;
     }
 }
 

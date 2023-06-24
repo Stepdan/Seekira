@@ -4,11 +4,13 @@ project(step_face_engine)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)
-    set(HEADERS ${HEADERS_BASE})
+    file(GLOB HEADERS_HOLDER holder/*.hpp)
+    set(HEADERS ${HEADERS_BASE} ${HEADERS_HOLDER})
 endif()
 
 if(NOT DEFINED SOURCES)
     file(GLOB SOURCES
+        holder/*.cpp
         *.cpp
     )
 endif()
@@ -24,6 +26,7 @@ target_sources(${PROJECT_NAME}
     ${SOURCES}
     PUBLIC
     FILE_SET headers_base TYPE HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} FILES "${HEADERS_BASE}"
+    FILE_SET headers_holder TYPE HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} FILES "${HEADERS_HOLDER}"
 )
 
 target_link_libraries(${PROJECT_NAME}

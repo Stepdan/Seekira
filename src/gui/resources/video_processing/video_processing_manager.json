@@ -9,7 +9,8 @@
     "f7": "C:/Work/test_video/MVI_9781.MOV",
     "f8": "C:/Work/test_video/MVI_9782.MOV",
     "f9": "C:/Work/test_video/MVI_9783.MOV",
-    "filename": "C:/Work/test_video/IMG_5903.MOV",
+    "f10": "C:/Work/test_video/video5.avi",
+    "filename": "C:/Work/test_video/MVI_9782.MOV",
     "reader_ff": {
         "mode": "All"
     },
@@ -68,7 +69,18 @@
                     "settings": {
                         "task_settings_id": "FaceRecognitionNodeSettings",
                         "face_engine_connection_id": "video_processor_face_engine_conn_id",
-                        "skip_flag": true
+                        "skip_flag": false
+                    }
+                },
+                {
+                    "node": "face_matcher_node",
+                    "settings": {
+                        "task_settings_id": "FaceMatcherNodeSettings",
+                        "face_engine_connection_id": "video_processor_face_engine_conn_id",
+                        "skip_flag": false,
+                        "person_holder_pathes": [
+                            "C:/Work/test_faces/mother"
+                        ]
                     }
                 },
                 {
@@ -93,6 +105,10 @@
                 ],
                 [
                     "face_recognition_node",
+                    "face_matcher_node"
+                ],
+                [
+                    "face_matcher_node",
                     "face_draw_node"
                 ]
             ]

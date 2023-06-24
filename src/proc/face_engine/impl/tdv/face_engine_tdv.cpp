@@ -52,6 +52,20 @@ void mat_to_bsm(api::Context& bsm_ctx, const cv::Mat& img, bool copy = false)
 
 namespace step::proc {
 
+FacePtr FaceTDV::clone() const noexcept
+{
+    auto face = FaceTDV::create_face();
+    std::dynamic_pointer_cast<FaceTDV>(face)->m_impl = std::make_shared<api::Context>(*m_impl);
+
+    face->set_confidence(get_confidence());
+    face->set_frame(video::Frame::clone_deep(get_frame()));
+    face->set_landmarks(get_landmarks());
+    face->set_recognizer_data(get_recognizer_data());
+    face->set_rect(get_rect());
+
+    return face;
+}
+
 class FaceEngineTDV : public BaseFaceEngine
 {
 public:
@@ -162,7 +176,7 @@ public:
         STEP_ASSERT(face0_tdv && face1_tdv, "Invalid FaceTDV cast!");
 
         auto impl0_data = face0_tdv->get_impl_data();
-        auto impl1_data = face0_tdv->get_impl_data();
+        auto impl1_data = face1_tdv->get_impl_data();
         STEP_ASSERT(impl0_data && impl1_data, "Invalid FaceTDV impl data!");
 
         api::Context matcher_data = m_service->createContext();
