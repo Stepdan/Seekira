@@ -35,6 +35,8 @@ public:
 
     static const std::string SKIP_FLAG;
 
+    static const std::string FILENAME;
+
     /* Coordinates */
     static const std::string X;
     static const std::string Y;

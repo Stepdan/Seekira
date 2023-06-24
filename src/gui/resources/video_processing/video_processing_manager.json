@@ -1,4 +1,15 @@
 {
+    "f0": "C:/Work/test_video/IMG_5903.MOV",
+    "f1": "C:/Work/test_video/family.avi",
+    "f2": "C:/Work/test_video/video1.avi",
+    "f3": "C:/Work/test_video/video2.avi",
+    "f4": "C:/Work/test_video/video3.mp4",
+    "f5": "C:/Work/test_video/video4.avi",
+    "f6": "C:/Work/test_video/MVI_9776.MOV",
+    "f7": "C:/Work/test_video/MVI_9781.MOV",
+    "f8": "C:/Work/test_video/MVI_9782.MOV",
+    "f9": "C:/Work/test_video/MVI_9783.MOV",
+    "filename": "C:/Work/test_video/IMG_5903.MOV",
     "reader_ff": {
         "mode": "All"
     },
@@ -57,7 +68,7 @@
                     "settings": {
                         "task_settings_id": "FaceRecognitionNodeSettings",
                         "face_engine_connection_id": "video_processor_face_engine_conn_id",
-                        "skip_flag": false
+                        "skip_flag": true
                     }
                 },
                 {

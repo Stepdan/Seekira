@@ -2,7 +2,7 @@
 
 #include <core/log/log.hpp>
 #include <core/exception/assert.hpp>
-
+#include <core/base/types/config_fields.hpp>
 #include <core/base/json/json_utils.hpp>
 
 #include <gui/utils/log_handler.hpp>
@@ -44,14 +44,16 @@ bool PlayerControllerFF::open_file(const QString& filename)
 {
     {
         std::scoped_lock(m_guard);
-        STEP_LOG(L_DEBUG, "PlayerControllerFF: open file {}", filename);
 
         reset();
 
-        m_video_proc_manager =
-            std::make_unique<proc::VideoProcessingManager>(json::utils::from_file(VIDEO_PROCESSING_CONFIG_PATH));
+        auto cfg = json::utils::from_file(VIDEO_PROCESSING_CONFIG_PATH);
+        m_video_proc_manager = std::make_unique<proc::VideoProcessingManager>(cfg);
 
-        if (!m_video_proc_manager->open_file(filename.toStdString()))
+        auto filename_opt = json::get_opt<std::string>(cfg, CFG_FLD::FILENAME);
+        STEP_ASSERT(filename_opt.has_value(), "No field {} in config", CFG_FLD::FILENAME);
+        STEP_LOG(L_DEBUG, "PlayerControllerFF: open file {}", filename_opt.value());
+        if (!m_video_proc_manager->open_file(filename_opt.value()))
         {
             STEP_LOG(L_ERROR, "Can't open file {}", filename);
             return false;
