@@ -135,8 +135,8 @@ void PlayerControllerFF::step_frame(Enums::PlayerDirection direction)
         return;
 
     // принудительно останавливаем чтение
-    m_video_proc_manager->pause();
-    m_state = QMediaPlayer::State::PausedState;
+    //m_video_proc_manager->pause();
+    //m_state = QMediaPlayer::State::PausedState;
 
     direction == Enums::PlayerDirection::PLAYER_DIRECTION_FORWARD ? m_video_proc_manager->step_forward()
                                                                   : m_video_proc_manager->step_backward();

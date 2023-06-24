@@ -175,7 +175,7 @@ void ReaderFF::read_frame()
     {
         m_invalid_counter = 0;
         m_prev_duration = m_last_valid_frame ? m_last_valid_frame->duration : 0;
-        m_last_valid_frame = frame_ptr;
+        m_last_valid_frame = Frame::clone_deep(frame_ptr);
 
         if (need_handle)
         {
