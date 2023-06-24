@@ -114,8 +114,8 @@ public:
     void recognize(const FacePtr& face) override
     {
         STEP_ASSERT(m_mode & FE_RECOGNITION, "Can't recognize faces: wrong mode!");
-        STEP_ASSERT(m_recognizer_ctx, "Can't detect faces: invalid context!");
-        STEP_ASSERT(m_recognizer_module, "Can't detect faces: invalid proc block!");
+        STEP_ASSERT(m_recognizer_ctx, "Can't recognize faces: invalid context!");
+        STEP_ASSERT(m_recognizer_module, "Can't recognize faces: invalid proc block!");
 
         auto face_tdv = std::dynamic_pointer_cast<FaceTDV>(face);
         STEP_ASSERT(face_tdv, "Invalid FaceTDV cast!");

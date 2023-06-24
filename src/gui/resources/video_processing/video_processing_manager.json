@@ -6,7 +6,7 @@
         "face_engine_connection_id": "video_processor_face_engine_conn_id",
         "face_engine_init": {
             "device": "gpu",
-            "mode": "detection",
+            "mode": "detection_and_recognition",
             "mode_temp": "detection_and_recognition",
             "type": "TDV",
             "model_path": "C:/Work/StepTech/SDK/models/",
@@ -53,6 +53,14 @@
                     }
                 },
                 {
+                    "node": "face_recognition_node",
+                    "settings": {
+                        "task_settings_id": "FaceRecognitionNodeSettings",
+                        "face_engine_connection_id": "video_processor_face_engine_conn_id",
+                        "skip_flag": false
+                    }
+                },
+                {
                     "node": "face_draw_node",
                     "settings": {
                         "task_settings_id": "DrawerNodeSettings"
@@ -70,6 +78,10 @@
                 ],
                 [
                     "face_detection_node",
+                    "face_recognition_node"
+                ],
+                [
+                    "face_recognition_node",
                     "face_draw_node"
                 ]
             ]

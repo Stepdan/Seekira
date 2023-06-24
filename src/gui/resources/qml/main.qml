@@ -69,7 +69,7 @@ ApplicationWindow {
     function playerButtonClicked() {
         playerWindowLoader.source = "player/PlayerWindow.qml"
         playerWindowLoader.item.show()
-        //cpPlayerController.open_file("C:/Work/test_video/IMG_5903.MOV")
+        cpPlayerController.open_file("C:/Work/test_video/IMG_5903.MOV")
         //cpPlayerController.open_file("C:/Work/test_video/family.avi")
         //cpPlayerController.open_file("C:/Work/test_video/video1.avi")
         //cpPlayerController.open_file("C:/Work/test_video/video2.avi")
@@ -77,7 +77,7 @@ ApplicationWindow {
         //cpPlayerController.open_file("C:/Work/test_video/video4.avi")
         //cpPlayerController.open_file("C:/Work/test_video/MVI_9776.MOV")
         //cpPlayerController.open_file("C:/Work/test_video/MVI_9781.MOV")
-        cpPlayerController.open_file("C:/Work/test_video/MVI_9782.MOV")
+        //cpPlayerController.open_file("C:/Work/test_video/MVI_9782.MOV")
         //cpPlayerController.open_file("C:/Work/test_video/MVI_9783.MOV")
     }
 }

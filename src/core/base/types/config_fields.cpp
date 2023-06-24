@@ -18,6 +18,7 @@ const std::string CFG_FLD::CONNECTION_ID = "connection_id";
 const std::string CFG_FLD::CACHE_SIZE = "cache_size";
 const std::string CFG_FLD::DEVICE = "device";
 const std::string CFG_FLD::INTERPOLATION = "interpolation";
+const std::string CFG_FLD::SKIP_FLAG = "skip_flag";
 
 const std::string CFG_FLD::X = "x";
 const std::string CFG_FLD::Y = "y";

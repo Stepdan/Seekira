@@ -33,6 +33,8 @@ public:
 
     static const std::string INTERPOLATION;
 
+    static const std::string SKIP_FLAG;
+
     /* Coordinates */
     static const std::string X;
     static const std::string Y;

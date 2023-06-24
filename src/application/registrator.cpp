@@ -12,6 +12,7 @@
 #include <proc/pipeline/nodes/exception_node.hpp>
 #include <proc/pipeline/nodes/input_node.hpp>
 #include <proc/pipeline/nodes/face_detection_node.hpp>
+#include <proc/pipeline/nodes/face_recognition_node.hpp>
 #include <proc/pipeline/nodes/resizer_node.hpp>
 #include <proc/pipeline/nodes/drawer_node.hpp>
 
@@ -38,16 +39,18 @@ Registrator::Registrator()
     REGISTER_TASK_SETTINGS_CREATOR(proc::EmptyNodeSettings          ::SETTINGS_ID, &proc::create_empty_node_settings            );
     REGISTER_TASK_SETTINGS_CREATOR(proc::ExceptionNodeSettings      ::SETTINGS_ID, &proc::create_exception_node_settings        );
     REGISTER_TASK_SETTINGS_CREATOR(proc::FaceDetectionNodeSettings  ::SETTINGS_ID, &proc::create_face_detection_node_settings   );
+    REGISTER_TASK_SETTINGS_CREATOR(proc::FaceRecognitionNodeSettings::SETTINGS_ID, &proc::create_face_recognition_node_settings );
     REGISTER_TASK_SETTINGS_CREATOR(proc::ResizerNodeSettings        ::SETTINGS_ID, &proc::create_resizer_node_settings          );
     REGISTER_TASK_SETTINGS_CREATOR(proc::DrawerNodeSettings         ::SETTINGS_ID, &proc::create_drawer_node_settings           );
 
     // Pipeline nodes tasks
-    REGISTER_TASK_CREATOR_UNIQUE(proc::FaceDetectionNodeSettings::SETTINGS_ID, &proc::create_face_detection_node);
-    REGISTER_TASK_CREATOR_UNIQUE(proc::ResizerNodeSettings      ::SETTINGS_ID, &proc::create_resizer_node       );
-    REGISTER_TASK_CREATOR_UNIQUE(proc::DrawerNodeSettings       ::SETTINGS_ID, &proc::create_drawer_node        );
-    REGISTER_TASK_CREATOR_UNIQUE(proc::InputNodeSettings        ::SETTINGS_ID, &proc::create_input_node             <video::Frame>);
-    REGISTER_TASK_CREATOR_UNIQUE(proc::EmptyNodeSettings        ::SETTINGS_ID, &proc::create_empty_node             <video::Frame>);
-    REGISTER_TASK_CREATOR_UNIQUE(proc::ExceptionNodeSettings    ::SETTINGS_ID, &proc::create_exception_node         <video::Frame>);
+    REGISTER_TASK_CREATOR_UNIQUE(proc::FaceDetectionNodeSettings    ::SETTINGS_ID, &proc::create_face_detection_node    );
+    REGISTER_TASK_CREATOR_UNIQUE(proc::FaceRecognitionNodeSettings  ::SETTINGS_ID, &proc::create_face_recognition_node  );
+    REGISTER_TASK_CREATOR_UNIQUE(proc::ResizerNodeSettings          ::SETTINGS_ID, &proc::create_resizer_node           );
+    REGISTER_TASK_CREATOR_UNIQUE(proc::DrawerNodeSettings           ::SETTINGS_ID, &proc::create_drawer_node            );
+    REGISTER_TASK_CREATOR_UNIQUE(proc::InputNodeSettings            ::SETTINGS_ID, &proc::create_input_node             <video::Frame>);
+    REGISTER_TASK_CREATOR_UNIQUE(proc::EmptyNodeSettings            ::SETTINGS_ID, &proc::create_empty_node             <video::Frame>);
+    REGISTER_TASK_CREATOR_UNIQUE(proc::ExceptionNodeSettings        ::SETTINGS_ID, &proc::create_exception_node         <video::Frame>);
     /* clang-format on */
 
     /* clang-format off */
