@@ -107,6 +107,7 @@ public:
     static const std::string FACE;
     static const std::string FACES;
     static const std::string FACE_DETECTION_RESULT;
+    static const std::string FACE_MATCHING_THRESHOLD;
     static const std::string FACE_MATCHING_RESULT;
     static const std::string FACE_ENGINE_CONNECTION_ID;
     static const std::string FACE_ENGINE_INIT;

@@ -8,7 +8,7 @@
 
 namespace {
 
-constexpr double VALID_THRESHOLD = 0.75;
+constexpr double VALID_THRESHOLD = 0.5;
 
 }
 

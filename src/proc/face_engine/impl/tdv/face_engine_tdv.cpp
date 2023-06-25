@@ -17,6 +17,7 @@ namespace {
 /* clang-format off */
 const std::string UNIT_TYPE = "unit_type";
 const std::string USE_CUDA = "use_cuda";
+const std::string THRESHOLD = "threshold";
 
 const std::string FACE_DETECTOR_UNIT_NAME      = "FACE_DETECTOR";
 const std::string FACE_RECOGNIZER_UNIT_NAME    = "FACE_RECOGNIZER";
@@ -184,6 +185,7 @@ public:
         matcher_data["verification"]["objects"].push_back(*impl1_data);
         (*m_matcher_module)(matcher_data);
 
+        STEP_LOG(L_INFO, "Face distance: {}", matcher_data["verification"]["result"]["distance"].getDouble());
         return matcher_data["verification"]["result"]["verdict"].getBool();
     }
 
@@ -262,6 +264,7 @@ private:
 
                 m_matcher_ctx = std::make_unique<api::Context>(m_service->createContext());
                 (*m_matcher_ctx)[UNIT_TYPE] = FACE_MATCHER_UNIT_NAME;
+                (*m_matcher_ctx)[THRESHOLD] = m_match_threshold;
                 m_matcher_module =
                     std::make_unique<api::ProcessingBlock>(m_service->createProcessingBlock(*m_matcher_ctx));
             }

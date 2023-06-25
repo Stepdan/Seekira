@@ -3,6 +3,7 @@
 #include <core/base/types/config_fields.hpp>
 #include <core/base/utils/find_pair.hpp>
 #include <core/base/utils/string_utils.hpp>
+#include <core/base/utils/type_utils.hpp>
 
 #include <utility>
 
@@ -54,6 +55,7 @@ void IFaceEngine::Initializer::deserialize(const ObjectPtrJSON& container)
     step::utils::from_string<IFaceEngine::Mode>(mode, json::get<std::string>(container, CFG_FLD::MODE));
     save_frames = json::get<bool>(container, CFG_FLD::FACE_ENGINE_INIT_SAVE_FRAMES);
     step::utils::from_string<DeviceType>(device, json::get<std::string>(container, CFG_FLD::DEVICE));
+    match_threshold = json::get<double>(container, CFG_FLD::FACE_MATCHING_THRESHOLD);
 
     STEP_ASSERT(is_valid(), "FaceEngine is invalid after deserialization!");
 }
@@ -66,6 +68,7 @@ bool IFaceEngine::Initializer::is_valid() const noexcept
         && mode != Mode::FE_UNDEFINED
         && device != DeviceType::Undefined
         && !models_path.empty()
+        && !step::utils::compare(match_threshold, 0.0);
     ;
     /* clang-format on */
 }
@@ -79,6 +82,7 @@ bool IFaceEngine::Initializer::operator==(const IFaceEngine::Initializer& rhs) c
         && mode == rhs.mode
         && save_frames == rhs.save_frames
         && device == rhs.device
+        && step::utils::compare(match_threshold, rhs.match_threshold)
     ;
     /* clang-format on */
 }

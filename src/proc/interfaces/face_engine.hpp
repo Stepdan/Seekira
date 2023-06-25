@@ -33,6 +33,7 @@ public:
         std::filesystem::path models_path;
         DeviceType device{DeviceType::Undefined};
         bool save_frames = false;  // Обрезка кадра и сохранение в IFace
+        double match_threshold{0.0};
 
         void deserialize(const ObjectPtrJSON& container);
 
@@ -64,6 +65,7 @@ protected:
         , m_mode(std::move(init.mode))
         , m_models_path(std::move(init.models_path))
         , m_save_frames(std::move(init.save_frames))
+        , m_match_threshold(std::move(init.match_threshold))
     {
     }
 
@@ -72,6 +74,7 @@ protected:
     IFaceEngine::Mode m_mode;
     std::filesystem::path m_models_path;
     bool m_save_frames = false;  // Обрезка кадра и сохранение в IFace
+    double m_match_threshold{0.0};
 };
 
 }  // namespace step::proc

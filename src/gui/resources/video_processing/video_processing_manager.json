@@ -10,7 +10,7 @@
     "f8": "C:/Work/test_video/MVI_9782.MOV",
     "f9": "C:/Work/test_video/MVI_9783.MOV",
     "f10": "C:/Work/test_video/video5.avi",
-    "filename": "C:/Work/test_video/MVI_9782.MOV",
+    "filename": "C:/Work/test_video/video3.mp4",
     "reader_ff": {
         "mode": "All"
     },
@@ -22,7 +22,8 @@
             "mode_temp": "detection_and_recognition",
             "type": "TDV",
             "model_path": "C:/Work/StepTech/SDK/models/",
-            "save_frames": false
+            "save_frames": false,
+            "face_matching_threshold": 1.25
         }
     },
     "video_processor": {
@@ -79,7 +80,7 @@
                         "face_engine_connection_id": "video_processor_face_engine_conn_id",
                         "skip_flag": false,
                         "person_holder_pathes": [
-                            "C:/Work/test_faces/mother"
+                            "C:/Work/test_faces/father"
                         ]
                     }
                 },
