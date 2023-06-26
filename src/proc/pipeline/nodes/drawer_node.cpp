@@ -58,24 +58,12 @@ private:
         auto face_detection_result =
             pipeline_data->storage.get_attachment<DetectionResult>(CFG_FLD::FACE_DETECTION_RESULT);
 
+        // Вдруг есть данные в главном хранилище
+        process(pipeline_data->storage);
+
         // Смотрим, есть ли результаты детекции лиц
         if (face_detection_result.has_value())
             process(face_detection_result.value().data());
-
-        // Вдруг есть данные в главном хранилище
-        process(pipeline_data->storage);
-    }
-
-    void draw_matched_faces(PipelineDataPtr<video::Frame> pipeline_data)
-    {
-        auto face_matching_result = pipeline_data->storage.get_attachment<Faces>(CFG_FLD::FACE_MATCHING_RESULT);
-
-        // Смотрим, есть ли результаты валидации лиц
-        if (face_matching_result.has_value())
-        {
-            for (const auto& face : face_matching_result.value())
-                m_drawer->draw(pipeline_data->data, face);
-        }
     }
 
 private:

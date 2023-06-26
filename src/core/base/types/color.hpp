@@ -30,6 +30,7 @@ public:
     static const ColorRGB Blue;
     static const ColorRGB Black;
     static const ColorRGB White;
+    static const ColorRGB Orange;
 };
 
 }  // namespace step

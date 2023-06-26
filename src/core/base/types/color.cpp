@@ -44,10 +44,11 @@ void ColorRGB::deserialize(const ObjectPtrJSON& container)
 
 namespace step {
 /* clang-format off */
-const ColorRGB COLOR_RGB::Red   = ColorRGB(255  , 0     , 0     );
-const ColorRGB COLOR_RGB::Green = ColorRGB(0    , 255   , 0     );
-const ColorRGB COLOR_RGB::Blue  = ColorRGB(0    , 0     , 255   );
-const ColorRGB COLOR_RGB::Black = ColorRGB(0    , 0     , 0     );
-const ColorRGB COLOR_RGB::White = ColorRGB(255  , 255   , 255   );
+const ColorRGB COLOR_RGB::Red       = ColorRGB(255  , 0     , 0     );
+const ColorRGB COLOR_RGB::Green     = ColorRGB(0    , 255   , 0     );
+const ColorRGB COLOR_RGB::Blue      = ColorRGB(0    , 0     , 255   );
+const ColorRGB COLOR_RGB::Black     = ColorRGB(0    , 0     , 0     );
+const ColorRGB COLOR_RGB::White     = ColorRGB(255  , 255   , 255   );
+const ColorRGB COLOR_RGB::Orange    = ColorRGB(255  , 165   , 0     );
 /* clang-format on */
 }  // namespace step

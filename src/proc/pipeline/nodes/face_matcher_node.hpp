@@ -2,6 +2,8 @@
 
 #include <core/log/log.hpp>
 
+#include <proc/face_engine/holder/person_holder.hpp>
+
 #include <proc/pipeline/pipeline_task.hpp>
 
 #include <filesystem>
@@ -24,16 +26,19 @@ public:
     void set_skip_flag(bool value) { m_skip_flag = true; }
     bool get_skip_flag() const noexcept { return m_skip_flag; }
 
-    void set_person_holder_pathes(const std::vector<std::filesystem::path>& pathes) { m_person_holder_pathes = pathes; }
-    const std::vector<std::filesystem::path>& get_person_holder_pathes() const noexcept
+    void set_person_holder_initializers(const std::vector<PersonHolder::Initializer>& inits)
     {
-        return m_person_holder_pathes;
+        m_person_holder_initializers = inits;
+    }
+    const std::vector<PersonHolder::Initializer>& get_person_holder_initializers() const noexcept
+    {
+        return m_person_holder_initializers;
     }
 
 private:
     std::string m_face_engine_conn_id;
     bool m_skip_flag{false};
-    std::vector<std::filesystem::path> m_person_holder_pathes;
+    std::vector<PersonHolder::Initializer> m_person_holder_initializers;
 };
 
 std::shared_ptr<task::BaseSettings> create_face_matcher_node_settings(const ObjectPtrJSON&);

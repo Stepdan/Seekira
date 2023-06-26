@@ -41,6 +41,7 @@ const std::string CFG_FLD::BLUE = "blue";
 
 const std::string CFG_FLD::FACE_COLOR = "face_color";
 const std::string CFG_FLD::VALID_FACE_COLOR = "valid_face_color";
+const std::string CFG_FLD::PROB_FACE_COLOR = "prob_face_color";
 const std::string CFG_FLD::INVALID_FACE_COLOR = "invalid_face_color";
 
 const std::string CFG_FLD::P = "p";
@@ -80,14 +81,16 @@ const std::string CFG_FLD::VIDEO_PROCESSOR = "video_processor";
 const std::string CFG_FLD::FACE = "face";
 const std::string CFG_FLD::FACES = "faces";
 const std::string CFG_FLD::FACE_DETECTION_RESULT = "face_detection_result";
-const std::string CFG_FLD::FACE_MATCHING_THRESHOLD = "face_matching_threshold";
+const std::string CFG_FLD::FACE_MATCHING_GROUNDTRUTH_THRESHOLD = "face_matching_groundtruth_threshold";
+const std::string CFG_FLD::FACE_MATCHING_GROUNDFALSE_THRESHOLD = "face_matching_groundfalse_threshold";
+const std::string CFG_FLD::FACE_MATCHING_PROBABILITY_THRESHOLD = "face_matching_probability_threshold";
 const std::string CFG_FLD::FACE_MATCHING_RESULT = "face_matching_result";
 const std::string CFG_FLD::FACE_ENGINE_CONNECTION_ID = "face_engine_connection_id";
 const std::string CFG_FLD::FACE_ENGINE_INIT = "face_engine_init";
 const std::string CFG_FLD::FACE_ENGINE_INIT_SAVE_FRAMES = "save_frames";
 const std::string CFG_FLD::FACE_ENGINE_CONTROLLER = "face_engine_controller";
 
-const std::string CFG_FLD::PERSON_HOLDER_PATHES = "person_holder_pathes";
+const std::string CFG_FLD::PERSON_HOLDERS = "person_holders";
 
 const std::string CFG_FLD::RESIZER_SIZE_MODE = "size_mode";
 

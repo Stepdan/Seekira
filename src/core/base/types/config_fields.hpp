@@ -60,6 +60,7 @@ public:
     static const std::string FACE_COLOR;
     static const std::string VALID_FACE_COLOR;
     static const std::string INVALID_FACE_COLOR;
+    static const std::string PROB_FACE_COLOR;
 
     /* Pose */
     static const std::string P;
@@ -107,14 +108,16 @@ public:
     static const std::string FACE;
     static const std::string FACES;
     static const std::string FACE_DETECTION_RESULT;
-    static const std::string FACE_MATCHING_THRESHOLD;
+    static const std::string FACE_MATCHING_GROUNDTRUTH_THRESHOLD;
+    static const std::string FACE_MATCHING_GROUNDFALSE_THRESHOLD;
+    static const std::string FACE_MATCHING_PROBABILITY_THRESHOLD;
     static const std::string FACE_MATCHING_RESULT;
     static const std::string FACE_ENGINE_CONNECTION_ID;
     static const std::string FACE_ENGINE_INIT;
     static const std::string FACE_ENGINE_INIT_SAVE_FRAMES;
     static const std::string FACE_ENGINE_CONTROLLER;
 
-    static const std::string PERSON_HOLDER_PATHES;
+    static const std::string PERSON_HOLDERS;
 
     /* Resizer */
     static const std::string RESIZER_SIZE_MODE;

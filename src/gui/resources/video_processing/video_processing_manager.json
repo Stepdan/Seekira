@@ -23,7 +23,9 @@
             "type": "TDV",
             "model_path": "C:/Work/StepTech/SDK/models/",
             "save_frames": false,
-            "face_matching_threshold": 1.25
+            "face_matching_groundtruth_threshold": 1.25,
+            "face_matching_groundfalse_threshold": 2,
+            "face_matching_probability_threshold": 0.85
         }
     },
     "video_processor": {
@@ -79,8 +81,25 @@
                         "task_settings_id": "FaceMatcherNodeSettings",
                         "face_engine_connection_id": "video_processor_face_engine_conn_id",
                         "skip_flag": false,
-                        "person_holder_pathes": [
-                            "C:/Work/test_faces/father"
+                        "person_holders": [
+                            {
+                                "id": "mother",
+                                "path": "C:/Work/test_faces/mother"
+                            },
+                            {
+                                "id": "father",
+                                "path": "C:/Work/test_faces/father"
+                            }
+                        ],
+                        "person_holders_temp": [
+                            {
+                                "id": "mother",
+                                "path": "C:/Work/test_faces/mother"
+                            },
+                            {
+                                "id": "father",
+                                "path": "C:/Work/test_faces/father"
+                            }
                         ]
                     }
                 },

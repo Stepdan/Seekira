@@ -7,10 +7,11 @@
 
 namespace step {
 
-using ConnId = std::string;
-
 class IConnectable
 {
+public:
+    using ConnId = std::string;
+
 public:
     IConnectable() = default;
     IConnectable(const ConnId& id) : m_conn_id(id) { STEP_ASSERT(!id.empty(), "Connectable id can't be empty!"); }
@@ -69,7 +70,7 @@ private:
     Connector& operator=(Connector&&) = delete;
 
 private:
-    std::unordered_map<ConnId, IConnectionSource*> m_connections;
+    std::unordered_map<IConnectable::ConnId, IConnectionSource*> m_connections;
 };
 
 }  // namespace step

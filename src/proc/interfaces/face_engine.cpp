@@ -1,52 +1,16 @@
 #include "face_engine.hpp"
 
 #include <core/base/types/config_fields.hpp>
-#include <core/base/utils/find_pair.hpp>
-#include <core/base/utils/string_utils.hpp>
 #include <core/base/utils/type_utils.hpp>
 
-#include <utility>
-
-namespace {
-
-/* clang-format off */
-
-constexpr std::pair<step::proc::IFaceEngine::Mode, std::string_view> g_face_engine_modes[] = {
-    { step::proc::IFaceEngine::Mode::FE_DETECTION               , "detection"                   },
-    { step::proc::IFaceEngine::Mode::FE_RECOGNITION             , "recognition"                 },
-    { step::proc::IFaceEngine::Mode::FE_DETECTION_RECOGNITION   , "detection_and_recognition"   },
-    { step::proc::IFaceEngine::Mode::FE_ALL                     , "all"                         },
-};
-/* clang-format on */
-
-}  // namespace
-
-// to_string
-namespace step::utils {
-
-template <>
-std::string to_string(step::proc::IFaceEngine::Mode mode)
-{
-    if (auto it = step::utils::find_pair_iterator_by_first(g_face_engine_modes, mode);
-        it != std::cend(g_face_engine_modes))
-        return std::string(it->second);
-    else
-        return std::string();
-}
-
-template <>
-void from_string(step::proc::IFaceEngine::Mode& type, const std::string& str)
-{
-    if (auto it = step::utils::find_pair_iterator_by_second(g_face_engine_modes, str);
-        it != std::cend(g_face_engine_modes))
-        type = it->first;
-    else
-        type = step::proc::IFaceEngine::Mode::FE_UNDEFINED;
-}
-
-}  // namespace step::utils
-
 namespace step::proc {
+
+FaceMatchResult::FaceMatchResult(double prob_value, double prob_threshold /*= 1.0*/) : probability(prob_value)
+{
+    status = step::utils::compare(probability, 1.0) ? FaceMatchStatus::Matched
+             : probability > prob_threshold         ? FaceMatchStatus::Possible
+                                                    : FaceMatchStatus::NotMatched;
+}
 
 void IFaceEngine::Initializer::deserialize(const ObjectPtrJSON& container)
 {
@@ -55,7 +19,9 @@ void IFaceEngine::Initializer::deserialize(const ObjectPtrJSON& container)
     step::utils::from_string<IFaceEngine::Mode>(mode, json::get<std::string>(container, CFG_FLD::MODE));
     save_frames = json::get<bool>(container, CFG_FLD::FACE_ENGINE_INIT_SAVE_FRAMES);
     step::utils::from_string<DeviceType>(device, json::get<std::string>(container, CFG_FLD::DEVICE));
-    match_threshold = json::get<double>(container, CFG_FLD::FACE_MATCHING_THRESHOLD);
+    match_gt_threshold = json::get<double>(container, CFG_FLD::FACE_MATCHING_GROUNDTRUTH_THRESHOLD);
+    match_gf_threshold = json::get<double>(container, CFG_FLD::FACE_MATCHING_GROUNDFALSE_THRESHOLD);
+    match_prob_threshold = json::get<double>(container, CFG_FLD::FACE_MATCHING_PROBABILITY_THRESHOLD);
 
     STEP_ASSERT(is_valid(), "FaceEngine is invalid after deserialization!");
 }
@@ -68,7 +34,9 @@ bool IFaceEngine::Initializer::is_valid() const noexcept
         && mode != Mode::FE_UNDEFINED
         && device != DeviceType::Undefined
         && !models_path.empty()
-        && !step::utils::compare(match_threshold, 0.0);
+        && !step::utils::compare(match_gt_threshold, 0.0)
+        && !step::utils::compare(match_gf_threshold, 0.0)
+        && !step::utils::compare(match_prob_threshold, 0.0)
     ;
     /* clang-format on */
 }
@@ -82,9 +50,24 @@ bool IFaceEngine::Initializer::operator==(const IFaceEngine::Initializer& rhs) c
         && mode == rhs.mode
         && save_frames == rhs.save_frames
         && device == rhs.device
-        && step::utils::compare(match_threshold, rhs.match_threshold)
+        && step::utils::compare(match_gt_threshold, rhs.match_gt_threshold)
+        && step::utils::compare(match_gf_threshold, rhs.match_gf_threshold)
+        && step::utils::compare(match_prob_threshold, rhs.match_prob_threshold)
     ;
     /* clang-format on */
+}
+
+double BaseFaceEngine::calc_match_probability(double distance) const noexcept
+{
+    // Базовый подсчет вероятности совпадения лица с искомым.
+    // Наследники могут переопределить механизм подсчета.
+    if (distance < m_match_gt_threshold)
+        return 1.0;
+
+    if (distance > m_match_gf_threshold)
+        return 0.0;
+
+    return (m_match_gf_threshold - distance) / (m_match_gf_threshold - m_match_gt_threshold);
 }
 
 }  // namespace step::proc

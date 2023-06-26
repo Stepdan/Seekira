@@ -19,6 +19,20 @@ bool compare(T x, T y)
         || std::fabs(x - y) <= std::numeric_limits<T>::epsilon() * std::fabs(x + y) * UNITS_IN_LAST_PLACE
         || std::fabs(x - y) < std::numeric_limits<T>::min();
 }
+
+// greater or equal
+template <std::floating_point T>
+bool compare_ge(T x, T y)
+{
+    return x > y || compare(x, y);
+}
+
+// less or equal
+template <std::floating_point T>
+bool compare_le(T x, T y)
+{
+    return x < y || compare(x, y);
+}
 /* clang-format on */
 
 template <std::floating_point T>

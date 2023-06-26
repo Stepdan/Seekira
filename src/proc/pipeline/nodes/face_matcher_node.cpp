@@ -31,11 +31,14 @@ void FaceMatcherNodeSettings::deserialize(const ObjectPtrJSON& container)
         STEP_ASSERT(!m_face_engine_conn_id.empty(), "FACE_ENGINE_CONNECTION_ID can't be empty!");
     }
 
-    auto persons_pathes_json = json::opt_array(container, CFG_FLD::PERSON_HOLDER_PATHES);
-    if (persons_pathes_json)
+    auto persons_json = json::opt_array(container, CFG_FLD::PERSON_HOLDERS);
+    if (persons_json)
     {
-        json::for_each_in_array<std::string>(
-            persons_pathes_json, [this](const std::string& path) { m_person_holder_pathes.push_back(path); });
+        json::for_each_in_array<ObjectPtrJSON>(persons_json, [this](const ObjectPtrJSON& cfg) {
+            PersonHolder::Initializer init;
+            init.deserialize(cfg);
+            m_person_holder_initializers.push_back(init);
+        });
     }
 }
 
@@ -54,10 +57,9 @@ public:
         set_conn_id(conn_id);
         Connector::connect(this);
 
-        for (const auto& path : m_typed_settings.get_person_holder_pathes())
+        for (const auto& init : m_typed_settings.get_person_holder_initializers())
         {
-            m_persons.push_back(PersonHolder(conn_id));
-            m_persons.back().load_from_dir(path);
+            m_persons.push_back(PersonHolder(init, conn_id));
         }
     }
 
@@ -81,19 +83,13 @@ public:
         {
             for (const auto& person : m_persons)
             {
-                if (person.compare(face))
+                const auto status = person.compare(face);
+                if (status != FaceMatchStatus::NotMatched)
                 {
-                    face->set_matched(true);
-                    matched_faces.push_back(face);
+                    face->set_match_status(status);
                     break;
                 }
             }
-        }
-
-        if (!matched_faces.empty())
-        {
-            pipeline_data->storage.set_attachment(CFG_FLD::FACE_MATCHING_RESULT,
-                                                  std::make_any<decltype(matched_faces)>(matched_faces));
         }
     }
 

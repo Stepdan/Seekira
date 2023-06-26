@@ -166,7 +166,7 @@ public:
         }
     }
 
-    bool compare(const FacePtr& face0, const FacePtr& face1) override
+    FaceMatchResult compare(const FacePtr& face0, const FacePtr& face1) override
     {
         STEP_ASSERT(m_mode & FE_RECOGNITION, "Can't compare faces: wrong mode!");
         STEP_ASSERT(m_matcher_ctx, "Can't compare faces: invalid context!");
@@ -185,8 +185,8 @@ public:
         matcher_data["verification"]["objects"].push_back(*impl1_data);
         (*m_matcher_module)(matcher_data);
 
-        STEP_LOG(L_INFO, "Face distance: {}", matcher_data["verification"]["result"]["distance"].getDouble());
-        return matcher_data["verification"]["result"]["verdict"].getBool();
+        return FaceMatchResult(calc_match_probability(matcher_data["verification"]["result"]["distance"].getDouble()),
+                               m_match_prob_threshold);
     }
 
 protected:
@@ -264,7 +264,7 @@ private:
 
                 m_matcher_ctx = std::make_unique<api::Context>(m_service->createContext());
                 (*m_matcher_ctx)[UNIT_TYPE] = FACE_MATCHER_UNIT_NAME;
-                (*m_matcher_ctx)[THRESHOLD] = m_match_threshold;
+                (*m_matcher_ctx)[THRESHOLD] = m_match_gt_threshold;
                 m_matcher_module =
                     std::make_unique<api::ProcessingBlock>(m_service->createProcessingBlock(*m_matcher_ctx));
             }
