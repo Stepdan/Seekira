@@ -27,6 +27,10 @@ public:
     Q_INVOKABLE virtual void step_frame(step::gui::Enums::PlayerDirection) = 0;
 
     Q_INVOKABLE virtual void reset() = 0;
+
+    Q_INVOKABLE virtual void playback_set_position_slot(double value) = 0;
+    Q_INVOKABLE virtual qint64 get_position() const = 0;
+    Q_INVOKABLE virtual qint64 get_duration() const = 0;
 };
 
 }  // namespace step::gui

@@ -4,6 +4,7 @@
         <file>icons/logo.png</file>
         <file>qml/common/constants.js</file>
         <file>qml/common/functions.js</file>
+        <file>qml/player/PlaybackSeekControl.qml</file>
         <file>qml/player/PlayerControlPanel.qml</file>
         <file>qml/player/PlayerFrameView.qml</file>
         <file>qml/player/PlayerSidePanel.qml</file>

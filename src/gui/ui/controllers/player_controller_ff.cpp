@@ -5,8 +5,8 @@
 #include <core/base/types/config_fields.hpp>
 #include <core/base/json/json_utils.hpp>
 
+#include <gui/interfaces/objects_connector_id.hpp>
 #include <gui/utils/log_handler.hpp>
-
 #include <gui/ui/video/video_frame_provider_ff.hpp>
 
 #include <QUrl>
@@ -23,6 +23,11 @@ namespace step::gui {
 PlayerControllerFF::PlayerControllerFF(QObject* parent /*= nullptr*/)
     : m_video_frame_provider(std::make_unique<VideoFrameProviderFF>(this)), m_state(QMediaPlayer::State::StoppedState)
 {
+    utils::ObjectsConnector::register_emitter(ObjectsConnectorID::PLAYBACK_POS_UPDATED(), this,
+                                              SIGNAL(update_playback_pos_signal()));
+
+    connect(m_video_frame_provider.get(), &IVideoFrameProvider::frame_process_finished_signal, this,
+            &PlayerControllerFF::update_playback_pos_signal);
 }
 
 PlayerControllerFF::~PlayerControllerFF() { reset(); }
@@ -163,5 +168,18 @@ void PlayerControllerFF::on_reader_state_changed(video::ff::ReaderState state)
     if (state == video::ff::ReaderState::Stopped)
         QMediaPlayer::State::StoppedState;
 }
+
+void PlayerControllerFF::playback_set_position_slot(double value)
+{
+    m_video_proc_manager->pause();
+    m_video_proc_manager->set_position(
+        static_cast<video::ff::TimestampFF>(m_video_proc_manager->get_duration() * value));
+
+    QMediaPlayer::State::PausedState;
+}
+
+qint64 PlayerControllerFF::get_position() const { return static_cast<qint64>(m_video_proc_manager->get_position()); }
+
+qint64 PlayerControllerFF::get_duration() const { return static_cast<qint64>(m_video_proc_manager->get_duration()); }
 
 }  // namespace step::gui

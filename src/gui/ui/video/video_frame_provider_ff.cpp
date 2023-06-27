@@ -74,6 +74,8 @@ void VideoFrameProviderFF::on_process_frame_slot(const step::video::FramePtr& fr
             STEP_LOG(L_ERROR, "Failed to present frame");
             return;
         }
+
+        emit frame_process_finished_signal();
     }
     catch (std::exception& e)
     {

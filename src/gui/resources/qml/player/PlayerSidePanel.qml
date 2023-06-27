@@ -10,5 +10,5 @@ Rectangle {
     id: playerSidePanel
     width: Constants.kPlayerSidePanelWidth
     height: parent.height
-    color: "#222532"
+    color: Constants.kClrMain
 }

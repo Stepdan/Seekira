@@ -30,6 +30,8 @@ class ObjectsConnectorID : public QObject
 
     ADD_PROPERTY(VIDEO_FRAME_UPDATED)
 
+    ADD_PROPERTY(PLAYBACK_POS_UPDATED)
+
 public:
     explicit ObjectsConnectorID(QObject* parent = nullptr) : QObject(parent) {}
 };

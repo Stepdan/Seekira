@@ -44,6 +44,7 @@ namespace step::gui {
 
 GuiController::GuiController(QObject* parent) : QObject(parent), m_impl(std::make_unique<Impl>(*this))
 {
+    register_meta_types();
     register_qml_types();
 
     STEP_LOG(L_INFO, "GuiController has been created!");
@@ -77,6 +78,8 @@ void GuiController::register_qml_types()
     qmlRegisterInterface<QAbstractItemModel>("QAbstractItemModel");
     qmlRegisterInterface<IPlayerController>("IPlayerController");
 }
+
+void GuiController::register_meta_types() {}
 
 void GuiController::set_main_qml_engine()
 {

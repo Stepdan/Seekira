@@ -11,7 +11,7 @@ Rectangle {
     id: playerTopPanel
     width: parent.width
     height: Constants.kPlayerTopPanelHeight
-    color: "#222532"
+    color: Constants.kClrMain
 
     Image {
         id: logo

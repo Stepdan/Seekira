@@ -28,6 +28,9 @@ public:
 protected:
     void close_surface();
 
+signals:
+    void frame_process_finished_signal();
+
 protected:
     QAbstractVideoSurface* m_surface;
     QVideoSurfaceFormat m_format;

@@ -24,6 +24,7 @@ public slots:
 
 private:
     void register_qml_types();
+    void register_meta_types();
     void set_main_qml_engine();
     void show_windows_on_start();
 

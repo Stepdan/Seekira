@@ -44,18 +44,23 @@ public:
 
     void reset() override;
 
+    void playback_set_position_slot(double value) override;
+    qint64 get_position() const override;
+    qint64 get_duration() const override;
+
     // video::ff::IReaderEventObserver
 public:
     void on_reader_state_changed(video::ff::ReaderState state);
 
-public slots:
+signals:
+    void update_playback_pos_signal();
 
 private:
     std::unique_ptr<IVideoFrameProvider> m_video_frame_provider;
 
     std::unique_ptr<proc::VideoProcessingManager> m_video_proc_manager;
 
-    QMediaPlayer::State m_state;
+    QMediaPlayer::State m_state{QMediaPlayer::State::StoppedState};
 
     bool m_is_loaded{false};
 

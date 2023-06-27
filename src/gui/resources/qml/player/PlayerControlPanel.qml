@@ -14,79 +14,95 @@ Rectangle {
     width: parent.width - Constants.kPlayerSidePanelWidth
     height: Constants.kPlayerControlPanelHeight
     //color: "#313131"
-    color: "#222532"
+    color: Constants.kClrMain
 
-    Button {
-        id: playButton
-        width: Constants.kPlayerPlayBtnSize
-        height: Constants.kPlayerPlayBtnSize
-        anchors { top: parent.top; left: parent.left; topMargin: (parent.height-height)/2; leftMargin: (parent.width-width)/2 }
-
-        onClicked: playBtnClicked()
+    PlaybackSeekControl {
+        id: playbackSeekControl
+        width: parent.width
+        height: Constants.kPlaybackSeekControlHeight
+        anchors { top: parent.top; left: parent.left; }
     }
+
+    Rectangle {
+        id: btnRect
+        width: parent.width
+        height: parent.height - Constants.kPlaybackSeekControlHeight
+        anchors { bottom: parent.bottom; left: parent.left; }
+        color: Constants.kClrMain
+
+        Button {
+            id: playButton
+            width: Constants.kPlayerPlayBtnSize
+            height: Constants.kPlayerPlayBtnSize
+            anchors { top: parent.top; left: parent.left; topMargin: (parent.height-height)/2; leftMargin: (parent.width-width)/2 }
+
+            onClicked: playBtnClicked()
+        }
+
+        Button {
+            id: stepLeftButton
+            width: Constants.kPlayerBtnSize
+            height: Constants.kPlayerBtnSize
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.topMargin: (parent.height-Constants.kPlayerPlayBtnSize)/2 + Constants.kPlayerBtnSpace
+            anchors.leftMargin: (parent.width-Constants.kPlayerPlayBtnSize)/2 - Constants.kPlayerBtnSize - Constants.kPlayerBtnSpace
+
+            onClicked: stepLeftBtnClicked()
+        }
+
+        Button {
+            id: backwardButton
+            width: Constants.kPlayerBtnSize
+            height: Constants.kPlayerBtnSize
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.topMargin: (parent.height-Constants.kPlayerPlayBtnSize)/2 + Constants.kPlayerBtnSpace
+            anchors.leftMargin: (parent.width-Constants.kPlayerPlayBtnSize)/2 - 2*Constants.kPlayerBtnSize - 2*Constants.kPlayerBtnSpace
+
+            onClicked: backwardBtnClicked()
+        }
+
+        Button {
+            id: stepRightButton
+            width: Constants.kPlayerBtnSize
+            height: Constants.kPlayerBtnSize
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.topMargin: (parent.height-Constants.kPlayerPlayBtnSize)/2 + Constants.kPlayerBtnSpace
+            anchors.leftMargin: (parent.width-Constants.kPlayerPlayBtnSize)/2 + Constants.kPlayerPlayBtnSize + Constants.kPlayerBtnSpace
+
+            onClicked: stepRightBtnClicked()
+        }
+
+        Button {
+            id: forwardButton
+            width: Constants.kPlayerBtnSize
+            height: Constants.kPlayerBtnSize
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.topMargin: (parent.height-Constants.kPlayerPlayBtnSize)/2 + Constants.kPlayerBtnSpace
+            anchors.leftMargin: (parent.width-Constants.kPlayerPlayBtnSize)/2 + Constants.kPlayerPlayBtnSize + Constants.kPlayerBtnSize + 2*Constants.kPlayerBtnSpace
+
+            onClicked: forwardBtnClicked()
+        }
+    }
+    
 
     function playBtnClicked() {
         cpPlayerController.play_state_switch()
-    }
-
-    Button {
-        id: stepLeftButton
-        width: Constants.kPlayerBtnSize
-        height: Constants.kPlayerBtnSize
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.topMargin: (parent.height-Constants.kPlayerPlayBtnSize)/2 + Constants.kPlayerBtnSpace
-        anchors.leftMargin: (parent.width-Constants.kPlayerPlayBtnSize)/2 - Constants.kPlayerBtnSize - Constants.kPlayerBtnSpace
-
-        onClicked: stepLeftBtnClicked()
     }
 
     function stepLeftBtnClicked() {
         cpPlayerController.step_rewind(Enums.PLAYER_DIRECTION_BACKWARD);
     }
 
-    Button {
-        id: backwardButton
-        width: Constants.kPlayerBtnSize
-        height: Constants.kPlayerBtnSize
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.topMargin: (parent.height-Constants.kPlayerPlayBtnSize)/2 + Constants.kPlayerBtnSpace
-        anchors.leftMargin: (parent.width-Constants.kPlayerPlayBtnSize)/2 - 2*Constants.kPlayerBtnSize - 2*Constants.kPlayerBtnSpace
-
-        onClicked: backwardBtnClicked()
-    }
-
     function backwardBtnClicked() {
         cpPlayerController.step_frame(Enums.PLAYER_DIRECTION_BACKWARD);
     }
 
-    Button {
-        id: stepRightButton
-        width: Constants.kPlayerBtnSize
-        height: Constants.kPlayerBtnSize
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.topMargin: (parent.height-Constants.kPlayerPlayBtnSize)/2 + Constants.kPlayerBtnSpace
-        anchors.leftMargin: (parent.width-Constants.kPlayerPlayBtnSize)/2 + Constants.kPlayerPlayBtnSize + Constants.kPlayerBtnSpace
-
-        onClicked: stepRightBtnClicked()
-    }
-
     function stepRightBtnClicked() {
         cpPlayerController.step_rewind(Enums.PLAYER_DIRECTION_FORWARD);
-    }
-
-    Button {
-        id: forwardButton
-        width: Constants.kPlayerBtnSize
-        height: Constants.kPlayerBtnSize
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.topMargin: (parent.height-Constants.kPlayerPlayBtnSize)/2 + Constants.kPlayerBtnSpace
-        anchors.leftMargin: (parent.width-Constants.kPlayerPlayBtnSize)/2 + Constants.kPlayerPlayBtnSize + Constants.kPlayerBtnSize + 2*Constants.kPlayerBtnSpace
-
-        onClicked: forwardBtnClicked()
     }
 
     function forwardBtnClicked() {

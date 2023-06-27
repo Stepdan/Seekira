@@ -16,7 +16,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent;
-        color: "#191B23"
+        color: Constants.kClrMainSecondary
 
         VideoOutput {
             id: playerFrameViewVideoOutput
