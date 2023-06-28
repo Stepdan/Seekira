@@ -138,8 +138,8 @@ FaceMatchStatus PersonHolder::compare(const FacePtr& face) const
 
     face->set_match_status(status);
 
-    STEP_LOG(L_INFO, "Face {} compared with person {}: v {}, i {}, p {}. Verdict: {}", face->get_rect(), m_id,
-             valid_counter, invalid_counter, prob_counter, step::utils::to_string(status));
+    //STEP_LOG(L_INFO, "Face {} compared with person {}: v {}, i {}, p {}. Verdict: {}", face->get_rect(), m_id,
+    //         valid_counter, invalid_counter, prob_counter, step::utils::to_string(status));
 
     return status;
 }
