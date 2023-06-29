@@ -76,6 +76,7 @@ conan_cmake_run(
         boost/1.81.0
         ffmpeg/5.1
         protobuf/3.21.9
+        libpng/1.6.38
         #onnx/1.14.0 #TODO Ждем onnxruntime, для винды нет: https://conan.io/center/onnxruntime
         opencv/4.5.5
         ${CONAN_Qt}

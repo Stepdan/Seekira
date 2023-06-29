@@ -29,6 +29,10 @@ constexpr std::pair<step::proc::FaceMatchStatus, std::string_view> g_face_match_
     { step::proc::FaceMatchStatus::Possible  , "possible"    },
     { step::proc::FaceMatchStatus::Matched   , "matched"     },
 };
+
+// constexpr std::pair<step::proc::TrackingEngineType, std::string_view> g_tracking_engine_types[] = {
+//     { step::proc::TrackingEngineType::OpenCV, "OpenCV" },
+// };
 /* clang-format on */
 
 }  // namespace
@@ -58,6 +62,12 @@ std::string to_string(step::proc::FaceMatchStatus status)
     return find_by_type(status, g_face_match_statuses);
 }
 
+// template <>
+// std::string to_string(proc::TrackingEngineType type)
+// {
+//     return find_by_type(type, g_tracking_engine_types);
+// }
+
 template <>
 void from_string(proc::FaceEngineType& type, const std::string& str)
 {
@@ -79,5 +89,11 @@ void from_string(step::proc::FaceMatchStatus& status, const std::string& str)
 {
     find_by_str(str, status, g_face_match_statuses);
 }
+
+// template <>
+// void from_string(proc::TrackingEngineType& type, const std::string& str)
+// {
+//     find_by_str(str, type, g_tracking_engine_types);
+// }
 
 }  // namespace step::utils

@@ -1,5 +1,4 @@
-project(step_proc_interfaces)
-set(PROJECT_ALIAS proc_interfaces)
+project(step_proc_track_opencv)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)
@@ -16,7 +15,7 @@ source_group("Headers" FILES ${HEADERS})
 source_group("Sources" FILES ${SOURCES})
 
 add_library(${PROJECT_NAME} STATIC)
-add_library(step::${PROJECT_ALIAS} ALIAS ${PROJECT_NAME})
+add_library(step::proc_track_opencv ALIAS ${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME}
     PRIVATE
@@ -27,15 +26,12 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    robin_hood::robin_hood
-    step::core_task
-    step::core_threading
-    step::frame_interface
+    step::proc_settings
 )
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    STEPKIT_MODULE_NAME="PROC_INTERFACES"
+    STEPKIT_MODULE_NAME="PROC_TRACK_OPENCV"
     PUBLIC
     BUILD_WITH_EASY_PROFILER
 )
@@ -43,5 +39,9 @@ target_compile_definitions(${PROJECT_NAME}
 # install(TARGETS ${PROJECT_NAME} EXPORT ${INSTALL_TARGET_NAME}
 #     COMPONENT ${PROJECT_NAME}
 #     FILE_SET headers_base DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_ALIAS}
+#     FILE_SET headers_types DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_ALIAS}/types
+#     FILE_SET headers_utils DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_ALIAS}/utils
+#     FILE_SET headers_json DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_ALIAS}/json
+#     FILE_SET headers_interfaces DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_ALIAS}/interfaces
 #     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 # )

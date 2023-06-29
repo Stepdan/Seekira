@@ -16,8 +16,14 @@ public:
     virtual void reset() = 0;
 };
 
-template <typename TData, typename TReturnData = void>
-class ITask : public IAbstractTask
+class ITaskExtensionDummy
+{
+public:
+    virtual ~ITaskExtensionDummy() = default;
+};
+
+template <typename TData, typename TReturnData = void, typename TExt = ITaskExtensionDummy>
+class ITask : public IAbstractTask, public TExt
 {
 public:
     static std::unique_ptr<ITask<TData, TReturnData>> from_abstract(std::unique_ptr<IAbstractTask>&& abstract_task)
@@ -41,8 +47,8 @@ public:
     virtual TReturnData process(TData) = 0;
 };
 
-template <typename TSettings, typename TData, typename TReturnData = void>
-class BaseTask : public ITask<TData, TReturnData>
+template <typename TSettings, typename TData, typename TReturnData = void, typename TExt = ITaskExtensionDummy>
+class BaseTask : public ITask<TData, TReturnData, TExt>
 {
 protected:
     using SettingsType = TSettings;
