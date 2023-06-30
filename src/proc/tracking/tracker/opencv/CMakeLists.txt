@@ -1,4 +1,4 @@
-project(step_proc_track_opencv)
+project(step_proc_tracker_opencv)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)
@@ -15,7 +15,7 @@ source_group("Headers" FILES ${HEADERS})
 source_group("Sources" FILES ${SOURCES})
 
 add_library(${PROJECT_NAME} STATIC)
-add_library(step::proc_track_opencv ALIAS ${PROJECT_NAME})
+add_library(step::proc_tracker_opencv ALIAS ${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME}
     PRIVATE
@@ -31,7 +31,7 @@ target_link_libraries(${PROJECT_NAME}
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    STEPKIT_MODULE_NAME="PROC_TRACK_OPENCV"
+    STEPKIT_MODULE_NAME="PROC_TRACKER_OPENCV"
     PUBLIC
     BUILD_WITH_EASY_PROFILER
 )

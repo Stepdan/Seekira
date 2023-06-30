@@ -9,7 +9,7 @@ class TrackerKCF : public BaseTracker<SettingsTrackerKCF>
 public:
     TrackerKCF(const std::shared_ptr<task::BaseSettings>& settings) { set_settings(*settings); }
 
-    void process(video::Frame& frame) {}
+    void process(TrackingData track_data) {}
 };
 
 TrackerPtr create_tracker_kcf_opencv(const std::shared_ptr<task::BaseSettings>& settings)
