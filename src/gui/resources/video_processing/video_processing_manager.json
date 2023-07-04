@@ -58,6 +58,49 @@
                     }
                 },
                 {
+                    "node": "person_detection_node",
+                    "settings": {
+                        "task_settings_id": "PersonDetectionNodeSettings",
+                        "settings": {
+                            "task_settings_id": "SettingsPersonDetector",
+                            "model_path": "C:/Work/StepTech/SDK/models/bytetrack_s.onnx"
+                        }
+                    }
+                }
+            ],
+            "links": [
+                [
+                    "input_node",
+                    "resizer_node"
+                ],
+                [
+                    "resizer_node",
+                    "person_detection_node"
+                ]
+            ],
+            "nodes_old": [
+                {
+                    "node": "input_node",
+                    "settings": {
+                        "task_settings_id": "InputNodeSettings"
+                    }
+                },
+                {
+                    "node": "resizer_node",
+                    "settings": {
+                        "task_settings_id": "ResizerNodeSettings",
+                        "settings": {
+                            "task_settings_id": "SettingsResizer",
+                            "interpolation": "area",
+                            "size_mode": "scale_by_max",
+                            "frame_size": {
+                                "width": 640,
+                                "height": 480
+                            }
+                        }
+                    }
+                },
+                {
                     "node": "face_detection_node",
                     "settings": {
                         "task_settings_id": "FaceDetectionNodeSettings",
@@ -110,7 +153,7 @@
                     }
                 }
             ],
-            "links": [
+            "links_old": [
                 [
                     "input_node",
                     "resizer_node"

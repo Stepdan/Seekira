@@ -1,6 +1,6 @@
 #include "registrator.hpp"
 
-#include <proc/tracking/opencv/registrator.hpp>
+#include <proc/tracking/tracker/opencv/registrator.hpp>
 
 namespace step::proc {
 
