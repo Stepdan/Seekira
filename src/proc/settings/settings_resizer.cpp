@@ -16,6 +16,7 @@ constexpr std::pair<step::proc::SettingsResizer::SizeMode, std::string_view> g_s
     { step::proc::SettingsResizer::SizeMode::QuaterDownscale    , "quater_downscale"    },
     { step::proc::SettingsResizer::SizeMode::ScaleByMax         , "scale_by_max"        },
     { step::proc::SettingsResizer::SizeMode::ScaleByMin         , "scale_by_min"        },
+    { step::proc::SettingsResizer::SizeMode::Padding            , "padding"             },
 };
 
 /* clang-format on */

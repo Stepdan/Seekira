@@ -18,6 +18,7 @@ public:
         QuaterDownscale,  // Уменьшаем в 4 раза
         ScaleByMin,  // Масштабируем по минимальному значению из пары width/height в переданном FrameSize
         ScaleByMax,  // Масштабируем по максимальному значению из пары width/height в переданном FrameSize
+        Padding,  // Масштабируем до максимальному и добиваем вторую меру до указанного размера
     };
 
 public:

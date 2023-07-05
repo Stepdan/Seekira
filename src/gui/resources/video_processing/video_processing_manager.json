@@ -49,10 +49,10 @@
                         "settings": {
                             "task_settings_id": "SettingsResizer",
                             "interpolation": "area",
-                            "size_mode": "scale_by_max",
+                            "size_mode": "padding",
                             "frame_size": {
-                                "width": 640,
-                                "height": 480
+                                "width": 1088,
+                                "height": 608
                             }
                         }
                     }
