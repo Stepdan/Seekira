@@ -6,7 +6,7 @@ enum class DeviceType
 {
     Undefined,
     CPU,
-    GPU,
+    CUDA,
 };
 
 }

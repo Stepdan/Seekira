@@ -17,7 +17,7 @@
     "face_engine_controller": {
         "face_engine_connection_id": "video_processor_face_engine_conn_id",
         "face_engine_init": {
-            "device": "gpu",
+            "device": "cuda",
             "mode": "detection_and_recognition",
             "mode_temp": "detection_and_recognition",
             "type": "TDV",
@@ -43,27 +43,35 @@
                     }
                 },
                 {
-                    "node": "resizer_node",
-                    "settings": {
-                        "task_settings_id": "ResizerNodeSettings",
-                        "settings": {
-                            "task_settings_id": "SettingsResizer",
-                            "interpolation": "area",
-                            "size_mode": "padding",
-                            "frame_size": {
-                                "width": 1088,
-                                "height": 608
-                            }
-                        }
-                    }
-                },
-                {
                     "node": "person_detection_node",
                     "settings": {
                         "task_settings_id": "PersonDetectionNodeSettings",
                         "settings": {
                             "task_settings_id": "SettingsPersonDetector",
-                            "model_path": "C:/Work/StepTech/SDK/models/bytetrack_s.onnx"
+                            "neural_net_settings": {
+                                "task_settings_id": "SettingsNeuralOnnxRuntime",
+                                "device": "cuda",
+                                "model_path": "C:/Work/StepTech/SDK/models/bytetrack_s.onnx",
+                                "mean_values": [
+                                    0.485,
+                                    0.456,
+                                    0.406
+                                ],
+                                "norm_values": [
+                                    0.229,
+                                    0.224,
+                                    0.225
+                                ]
+                            },
+                            "resizer_settings": {
+                                "task_settings_id": "SettingsResizer",
+                                "interpolation": "area",
+                                "size_mode": "padding",
+                                "frame_size": {
+                                    "width": 1088,
+                                    "height": 608
+                                }
+                            }
                         }
                     }
                 }
@@ -71,10 +79,6 @@
             "links": [
                 [
                     "input_node",
-                    "resizer_node"
-                ],
-                [
-                    "resizer_node",
                     "person_detection_node"
                 ]
             ],

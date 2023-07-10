@@ -39,10 +39,7 @@ public:
 
     void process(PipelineDataPtr<video::Frame> pipeline_data) override
     {
-        EffectMultiInput input;
-        input.emplace_back(std::move(pipeline_data->data));
-
-        pipeline_data->data = std::move(m_resizer->process(input));
+        pipeline_data->data = std::move(m_resizer->process(pipeline_data->data));
     }
 
 private:

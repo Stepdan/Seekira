@@ -1,1 +1,2 @@
-add_subdirectory(openvino)
+add_subdirectory(onnxruntime)
+#add_subdirectory(openvino)

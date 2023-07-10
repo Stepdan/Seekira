@@ -92,10 +92,15 @@ const std::string CFG_FLD::FACE_ENGINE_CONTROLLER = "face_engine_controller";
 
 const std::string CFG_FLD::PERSON_HOLDERS = "person_holders";
 
+const std::string CFG_FLD::RESIZER_SETTINGS = "resizer_settings";
 const std::string CFG_FLD::RESIZER_SIZE_MODE = "size_mode";
 
 const std::string CFG_FLD::READER_FF_SETTINGS = "reader_ff";
 
 const std::string CFG_FLD::DRAWER_SETTINGS = "drawer_settings";
+
+const std::string CFG_FLD::NEURAL_NET_SETTINGS = "neural_net_settings";
+const std::string CFG_FLD::MEAN_VALUES = "mean_values";
+const std::string CFG_FLD::NORM_VALUES = "norm_values";
 
 }  // namespace step

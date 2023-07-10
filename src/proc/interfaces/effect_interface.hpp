@@ -6,11 +6,9 @@
 
 namespace step::proc {
 
-using EffectMultiInput = std::vector<video::Frame>;
-
-using IEffect = task::ITask<EffectMultiInput&, video::Frame>;
+using IEffect = task::ITask<video::Frame&, video::Frame>;
 
 template <typename TSettings>
-using BaseEffect = task::BaseTask<TSettings, EffectMultiInput&, video::Frame>;
+using BaseEffect = task::BaseTask<TSettings, video::Frame&, video::Frame>;
 
 }  // namespace step::proc

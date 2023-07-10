@@ -235,7 +235,7 @@ private:
         {
             m_service = std::make_unique<api::Service>(api::Service::createService(m_models_path.string()));
 
-            const auto use_cuda = m_device_type == DeviceType::GPU;
+            const auto use_cuda = m_device_type == DeviceType::CUDA;
 
             if (m_mode & FE_DETECTION)
             {

@@ -120,12 +120,19 @@ public:
     static const std::string PERSON_HOLDERS;
 
     /* Resizer */
+    static const std::string RESIZER_SETTINGS;
     static const std::string RESIZER_SIZE_MODE;
 
     /* ReaderFF */
     static const std::string READER_FF_SETTINGS;
 
+    /* Drawer */
     static const std::string DRAWER_SETTINGS;
+
+    /* Neural */
+    static const std::string NEURAL_NET_SETTINGS;
+    static const std::string MEAN_VALUES;
+    static const std::string NORM_VALUES;
 };
 
 }  // namespace step

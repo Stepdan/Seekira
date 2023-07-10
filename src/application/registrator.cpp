@@ -7,6 +7,7 @@
 
 #include <proc/detect/registrator.hpp>
 #include <proc/effects/registrator.hpp>
+#include <proc/neural/onnxruntime/registrator.hpp>
 
 #include <proc/pipeline/nodes/empty_node.hpp>
 #include <proc/pipeline/nodes/exception_node.hpp>
@@ -21,6 +22,7 @@
 #include <proc/settings/settings_face_detector.hpp>
 #include <proc/settings/settings_person_detector.hpp>
 #include <proc/settings/settings_resizer.hpp>
+#include <proc/settings/settings_neural_onnxruntime.hpp>
 #include <proc/settings/settings_video_processor_task.hpp>
 
 #include <proc/video/video_processor_task.hpp>
@@ -70,6 +72,12 @@ Registrator::Registrator()
     REGISTER_TASK_CREATOR_UNIQUE(proc::SettingsPersonDetector       ::SETTINGS_ID, &proc::create_person_detector        );
     REGISTER_TASK_CREATOR_UNIQUE(proc::SettingsResizer              ::SETTINGS_ID, &proc::create_effect_resizer         );
     REGISTER_TASK_CREATOR_UNIQUE(proc::SettingsVideoProcessorTask   ::SETTINGS_ID, &proc::create_video_processor_task   );
+    /* clang-format on */
+
+    /* clang-format off */
+    REGISTER_TASK_SETTINGS_CREATOR(proc::SettingsNeuralOnnxRuntime::SETTINGS_ID, &proc::create_neural_onnxruntime_settings);
+    
+    REGISTER_TASK_CREATOR_UNIQUE(proc::SettingsNeuralOnnxRuntime::SETTINGS_ID, &proc::create_onnxruntime_neural_net);
     /* clang-format on */
 }
 

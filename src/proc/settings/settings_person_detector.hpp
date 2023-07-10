@@ -14,11 +14,15 @@ public:
     bool operator==(const SettingsPersonDetector& rhs) const noexcept;
     bool operator!=(const SettingsPersonDetector& rhs) const noexcept { return !(*this == rhs); }
 
-    void set_model_path(const std::string& value) { m_model_path = value; }
-    const std::string& get_model_path() const noexcept { return m_model_path; }
+    void set_neural_net_cfg(const ObjectPtrJSON& value) { m_neural_net_cfg = value; }
+    const ObjectPtrJSON& get_neural_net_cfg() const noexcept { return m_neural_net_cfg; }
+
+    void set_resizer_cfg(const ObjectPtrJSON& value) { m_resizer_cfg = value; }
+    const ObjectPtrJSON& get_resizer_cfg() const noexcept { return m_resizer_cfg; }
 
 public:
-    std::string m_model_path;
+    ObjectPtrJSON m_neural_net_cfg;
+    ObjectPtrJSON m_resizer_cfg;
 };
 
 std::shared_ptr<task::BaseSettings> create_person_detector_settings(const ObjectPtrJSON&);

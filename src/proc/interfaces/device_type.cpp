@@ -11,7 +11,7 @@ namespace {
 
 constexpr std::pair<step::proc::DeviceType, std::string_view> g_device_types[] = {
     { step::proc::DeviceType::CPU, "cpu"    },
-    { step::proc::DeviceType::GPU, "gpu"    },
+    { step::proc::DeviceType::CUDA, "cuda"  },
 };
 
 /* clang-format on */
