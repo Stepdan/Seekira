@@ -2,6 +2,7 @@
 
 #include <core/log/log.hpp>
 #include <core/base/utils/type_utils.hpp>
+#include <core/base/utils/time_utils.hpp>
 
 #include <video/frame/utils/frame_utils_opencv.hpp>
 
@@ -26,6 +27,25 @@ public:
 
             m_ort_session_options = std::make_unique<Ort::SessionOptions>();
             m_ort_session_options->SetGraphOptimizationLevel(ORT_ENABLE_ALL);
+            switch (m_typed_settings.get_device_type())
+            {
+                case DeviceType::CPU:
+                    break;
+
+                case DeviceType::CUDA: {
+                    OrtCUDAProviderOptions options;
+                    options.device_id = 0;  // TODO передавать конкретный device_id
+                    options.arena_extend_strategy = 0;
+                    options.gpu_mem_limit = SIZE_MAX;
+                    options.cudnn_conv_algo_search = OrtCudnnConvAlgoSearch::OrtCudnnConvAlgoSearchExhaustive;
+                    options.do_copy_in_default_stream = 1;
+                    m_ort_session_options->AppendExecutionProvider_CUDA(options);
+                }
+                break;
+
+                default:
+                    STEP_UNDEFINED("Undefined device type for onnxruntime");
+            }
 
             m_ort_session =
                 std::make_unique<Ort::Session>(*m_ort_env.get(), model_path.c_str(), *m_ort_session_options.get());
@@ -33,11 +53,18 @@ public:
             m_input_count = m_ort_session->GetInputCount();
             m_ouput_count = m_ort_session->GetOutputCount();
 
+            Ort::AllocatorWithDefaultOptions allocator;
             {
                 auto input_type_info = m_ort_session->GetInputTypeInfo(0);
                 auto input_tensor_info = input_type_info.GetTensorTypeAndShapeInfo();
-                auto input_dims = input_tensor_info.GetShape();
-                m_input_size = step::video::FrameSize(input_dims[3], input_dims[2]);
+                m_input_shape = input_tensor_info.GetShape();
+                m_input_size = step::video::FrameSize(m_input_shape[3], m_input_shape[2]);
+
+                for (int i = 0; i < m_input_count; ++i)
+                    m_input_names.push_back(m_ort_session->GetInputName(i, allocator));
+
+                for (int i = 0; i < m_ouput_count; ++i)
+                    m_output_names.push_back(m_ort_session->GetOutputName(i, allocator));
             }
 
             STEP_LOG(L_INFO, "Loaded base onnxruntime net: inputs: {}, outputs: {}, input size: {}, path: {}",
@@ -62,34 +89,71 @@ public:
         const auto& mean_values = m_typed_settings.get_means();
         const auto& norm_values = m_typed_settings.get_norms();
 
-        std::vector<cv::Mat> channels;
-        cv::split(mat, channels);
-        for (int i = 0; i < norm_values.size(); ++i)
-            channels[i] *= 1 / norm_values[i];
-        cv::merge(channels, mat);
+        if (norm_values.size() == mat.channels() && norm_values.size() > 1)
+        {
+            std::vector<cv::Mat> channels;
+            cv::split(mat, channels);
+            for (int i = 0; i < norm_values.size(); ++i)
+                channels[i] *= 1 / norm_values[i];
+            cv::merge(channels, mat);
+        }
 
-        cv::Scalar mean = mean_values.size() != 3
-                              ? cv::Scalar(0, 0, 0)
-                              : cv::Scalar(mean_values[0] / norm_values[0], mean_values[1] / norm_values[1],
-                                           mean_values[2] / norm_values[2]);
+        cv::Scalar mean(0, 0, 0);
+        if (mean_values.size() == mat.channels() && mean_values.size() > 1)
+        {
+            mean = cv::Scalar(mean_values[0] / norm_values[0], mean_values[1] / norm_values[1],
+                              mean_values[2] / norm_values[2]);
+        }
 
         cv::Mat blob =
             cv::dnn::blobFromImage(mat, 1 / 255.0, cv::Size(frame.size.width, frame.size.height), mean, swap_rb, false);
 
-        // array<int64_t, 4> input_shape_{1, 3, row, col};
-        // auto allocator_info = MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
-        // Value input_tensor_ = Value::CreateTensor<float>(allocator_info, input_image_.data(), input_image_.size(),
-        //                                                  input_shape_.data(), input_shape_.size());
-        // vector<Value> ort_outputs = session_->Run(RunOptions{nullptr}, &input_names[0], &input_tensor_, 1,
-        //                                           output_names.data(), output_names.size());
+        switch (m_typed_settings.get_device_type())
+        {
+            case DeviceType::CPU:
+                return process_cpu(blob);
+            case DeviceType::CUDA:
+                return process_cpu(blob);
+
+            default:
+                STEP_UNDEFINED("Undefined device type for onnxruntime");
+        }
 
         return {};
     }
 
 private:
+    NeuralOutput process_cpu(cv::Mat& blob)
+    {
+        auto allocator_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
+
+        // create input tensor object from data values
+        auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+        Ort::Value input_tensor = Ort::Value::CreateTensor<float>(
+            memory_info, reinterpret_cast<float*>(blob.data), blob.total(), m_input_shape.data(), m_input_shape.size());
+        STEP_ASSERT(input_tensor.IsTensor(), "Invalid OnnxRuntime tensor");
+
+        {
+            utils::ExecutionTimer<Milliseconds> timer("ORT");
+
+            auto ort_outputs = m_ort_session->Run(Ort::RunOptions(nullptr), &m_input_names[0], &input_tensor, 1,
+                                                  m_output_names.data(), m_output_names.size());
+            const float* out = ort_outputs[0].GetTensorMutableData<float>();
+        }
+
+        return {};
+    }
+
+    NeuralOutput process_cuda(cv::Mat& blob) { return {}; }
+
+private:
     size_t m_input_count{0};
     size_t m_ouput_count{0};
     video::FrameSize m_input_size;
+
+    std::vector<char*> m_input_names;
+    std::vector<char*> m_output_names;
+    std::vector<int64_t> m_input_shape;
 
     std::unique_ptr<Ort::Session> m_ort_session;
     std::unique_ptr<Ort::Env> m_ort_env;

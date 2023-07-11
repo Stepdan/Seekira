@@ -1,6 +1,8 @@
 #include "time_utils.hpp"
 #include "string_utils.hpp"
 
+#include <core/log/log.hpp>
+
 namespace step::utils {
 
 #define TIME_TO_STRING(TIME_TYPE)                                                                                      \

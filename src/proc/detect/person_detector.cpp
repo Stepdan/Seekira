@@ -26,8 +26,11 @@ public:
 
     DetectionResult process(video::Frame& frame)
     {
-        auto resized = m_resizer->process(frame);
-        m_net->process(resized);
+        {
+            utils::ExecutionTimer<Milliseconds> timer("PersonDetector");
+            auto resized = m_resizer->process(frame);
+            m_net->process(resized);
+        }
         return {};
     }
 
