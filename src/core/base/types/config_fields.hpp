@@ -118,6 +118,7 @@ public:
     static const std::string FACE_ENGINE_CONTROLLER;
 
     static const std::string PERSON_HOLDERS;
+    static const std::string PERSON_DETECTION_RESULT;
 
     /* Resizer */
     static const std::string RESIZER_SETTINGS;

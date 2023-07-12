@@ -41,7 +41,11 @@ public:
         m_drawer = std::make_unique<Drawer>(m_typed_settings.get_drawer_settings());
     }
 
-    void process(PipelineDataPtr<video::Frame> pipeline_data) override { draw_faces(pipeline_data); }
+    void process(PipelineDataPtr<video::Frame> pipeline_data) override
+    {
+        draw_bboxes(pipeline_data);
+        draw_faces(pipeline_data);
+    }
 
 private:
     void draw_faces(PipelineDataPtr<video::Frame> pipeline_data)
@@ -64,6 +68,15 @@ private:
         // Смотрим, есть ли результаты детекции лиц
         if (face_detection_result.has_value())
             process(face_detection_result.value().data());
+    }
+
+    void draw_bboxes(PipelineDataPtr<video::Frame> pipeline_data)
+    {
+        auto person_detection_result =
+            pipeline_data->storage.get_attachment<DetectionResult>(CFG_FLD::PERSON_DETECTION_RESULT);
+
+        if (person_detection_result.has_value())
+            m_drawer->draw(pipeline_data->data, person_detection_result.value().bboxes());
     }
 
 private:

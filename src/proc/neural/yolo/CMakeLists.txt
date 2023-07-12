@@ -1,4 +1,4 @@
-project(step_proc_detect)
+project(step_neural_yolo)
 
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS_BASE *.hpp)
@@ -15,7 +15,7 @@ source_group("Headers" FILES ${HEADERS})
 source_group("Sources" FILES ${SOURCES})
 
 add_library(${PROJECT_NAME} STATIC)
-add_library(step::proc_detect ALIAS ${PROJECT_NAME})
+add_library(step::neural_yolo ALIAS ${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME}
     PRIVATE
@@ -26,15 +26,13 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    opencv::dnn
-    step::face_engine
-    step::proc_settings
-    step::neural_yolo
+    step::proc_interfaces
+    step::frame_utils
 )
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-    STEPKIT_MODULE_NAME="PROC_DETECT"
+    STEPKIT_MODULE_NAME="NEURAL_YOLO"
     PUBLIC
     BUILD_WITH_EASY_PROFILER
 

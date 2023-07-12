@@ -17,6 +17,10 @@ namespace step::proc {
 class OnnxRuntimeNeuralNet : public BaseNeuralNet<SettingsNeuralOnnxRuntime>
 {
 public:
+    std::vector<int64_t> get_input_shape() const { return m_input_shape; }
+    std::vector<int64_t> get_output_shape() const { return m_output_shape; }
+
+public:
     OnnxRuntimeNeuralNet(const std::shared_ptr<task::BaseSettings>& settings)
     {
         set_settings(*settings);
@@ -62,6 +66,12 @@ public:
 
                 for (int i = 0; i < m_input_count; ++i)
                     m_input_names.push_back(m_ort_session->GetInputName(i, allocator));
+            }
+
+            {
+                auto output_type_info = m_ort_session->GetOutputTypeInfo(0);
+                auto output_tensor_info = output_type_info.GetTensorTypeAndShapeInfo();
+                m_output_shape = output_tensor_info.GetShape();
 
                 for (int i = 0; i < m_ouput_count; ++i)
                     m_output_names.push_back(m_ort_session->GetOutputName(i, allocator));
@@ -108,22 +118,11 @@ public:
         cv::Mat blob =
             cv::dnn::blobFromImage(mat, 1 / 255.0, cv::Size(frame.size.width, frame.size.height), mean, swap_rb, false);
 
-        switch (m_typed_settings.get_device_type())
-        {
-            case DeviceType::CPU:
-                return process_cpu(blob);
-            case DeviceType::CUDA:
-                return process_cpu(blob);
-
-            default:
-                STEP_UNDEFINED("Undefined device type for onnxruntime");
-        }
-
-        return {};
+        return process_impl(blob);
     }
 
 private:
-    NeuralOutput process_cpu(cv::Mat& blob)
+    NeuralOutput process_impl(cv::Mat& blob)
     {
         auto allocator_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
 
@@ -133,18 +132,15 @@ private:
             memory_info, reinterpret_cast<float*>(blob.data), blob.total(), m_input_shape.data(), m_input_shape.size());
         STEP_ASSERT(input_tensor.IsTensor(), "Invalid OnnxRuntime tensor");
 
-        {
-            utils::ExecutionTimer<Milliseconds> timer("ORT");
+        //utils::ExecutionTimer<Milliseconds> timer("ORT");
 
-            auto ort_outputs = m_ort_session->Run(Ort::RunOptions(nullptr), &m_input_names[0], &input_tensor, 1,
-                                                  m_output_names.data(), m_output_names.size());
-            const float* out = ort_outputs[0].GetTensorMutableData<float>();
-        }
+        auto ort_outputs = m_ort_session->Run(Ort::RunOptions(nullptr), &m_input_names[0], &input_tensor, 1,
+                                              m_output_names.data(), m_output_names.size());
 
-        return {};
+        NeuralOutput output;
+        output.data_ptr = ort_outputs[0].GetTensorMutableData<float>();
+        return output;
     }
-
-    NeuralOutput process_cuda(cv::Mat& blob) { return {}; }
 
 private:
     size_t m_input_count{0};
@@ -154,6 +150,7 @@ private:
     std::vector<char*> m_input_names;
     std::vector<char*> m_output_names;
     std::vector<int64_t> m_input_shape;
+    std::vector<int64_t> m_output_shape;
 
     std::unique_ptr<Ort::Session> m_ort_session;
     std::unique_ptr<Ort::Env> m_ort_env;

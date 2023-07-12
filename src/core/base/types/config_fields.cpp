@@ -91,6 +91,7 @@ const std::string CFG_FLD::FACE_ENGINE_INIT_SAVE_FRAMES = "save_frames";
 const std::string CFG_FLD::FACE_ENGINE_CONTROLLER = "face_engine_controller";
 
 const std::string CFG_FLD::PERSON_HOLDERS = "person_holders";
+const std::string CFG_FLD::PERSON_DETECTION_RESULT = "person_detection_result";
 
 const std::string CFG_FLD::RESIZER_SETTINGS = "resizer_settings";
 const std::string CFG_FLD::RESIZER_SIZE_MODE = "size_mode";

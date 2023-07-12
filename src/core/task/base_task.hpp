@@ -26,17 +26,18 @@ template <typename TData, typename TReturnData = void, typename TExt = ITaskExte
 class ITask : public IAbstractTask, public TExt
 {
 public:
-    static std::unique_ptr<ITask<TData, TReturnData>> from_abstract(std::unique_ptr<IAbstractTask>&& abstract_task)
+    static std::unique_ptr<ITask<TData, TReturnData, TExt>> from_abstract(
+        std::unique_ptr<IAbstractTask>&& abstract_task)
     {
-        ITask<TData, TReturnData>* p = dynamic_cast<ITask<TData, TReturnData>*>(abstract_task.get());
+        ITask<TData, TReturnData, TExt>* p = dynamic_cast<ITask<TData, TReturnData, TExt>*>(abstract_task.get());
         if (p)
             abstract_task.release();
-        return std::unique_ptr<ITask<TData, TReturnData>>(p);
+        return std::unique_ptr<ITask<TData, TReturnData, TExt>>(p);
     }
 
-    static std::shared_ptr<ITask<TData, TReturnData>> from_abstract(std::shared_ptr<IAbstractTask> abstract_task)
+    static std::shared_ptr<ITask<TData, TReturnData, TExt>> from_abstract(std::shared_ptr<IAbstractTask> abstract_task)
     {
-        auto task_ptr = std::dynamic_pointer_cast<ITask<TData, TReturnData>>(abstract_task);
+        auto task_ptr = std::dynamic_pointer_cast<ITask<TData, TReturnData, TExt>>(abstract_task);
         STEP_ASSERT(task_ptr, "Invalid shared dynamic_pointer_cast from_abstract");
         return task_ptr;
     }

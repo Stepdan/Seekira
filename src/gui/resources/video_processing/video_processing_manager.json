@@ -74,12 +74,22 @@
                             }
                         }
                     }
+                },
+                {
+                    "node": "draw_node",
+                    "settings": {
+                        "task_settings_id": "DrawerNodeSettings"
+                    }
                 }
             ],
             "links": [
                 [
                     "input_node",
                     "person_detection_node"
+                ],
+                [
+                    "person_detection_node",
+                    "draw_node"
                 ]
             ],
             "nodes_old": [

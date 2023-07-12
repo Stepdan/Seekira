@@ -1,6 +1,7 @@
 #include "video_frame_provider_ff.hpp"
 
 #include <core/log/log.hpp>
+#include <core/base/utils/time_utils.hpp>
 
 #include <gui/utils/qimage_utils.hpp>
 #include <gui/utils/log_handler.hpp>
@@ -27,6 +28,7 @@ void VideoFrameProviderFF::process_frame(step::video::FramePtr frame_ptr)
 
 void VideoFrameProviderFF::on_process_frame_slot(const step::video::FramePtr& frame_ptr)
 {
+    //step::utils::ExecutionTimer<Milliseconds> timer("VideoFrameProviderFF::on_process_frame_slot");
     try
     {
         if (!frame_ptr)

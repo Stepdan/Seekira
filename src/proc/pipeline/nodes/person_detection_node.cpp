@@ -40,6 +40,9 @@ public:
     void process(PipelineDataPtr<video::Frame> pipeline_data) override
     {
         auto detect_result = m_person_detector->process(pipeline_data->data);
+
+        pipeline_data->storage.set_attachment(CFG_FLD::PERSON_DETECTION_RESULT,
+                                              std::make_any<decltype(detect_result)>(detect_result));
     }
 
 private:

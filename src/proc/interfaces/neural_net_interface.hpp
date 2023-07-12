@@ -8,11 +8,24 @@
 
 namespace step::proc {
 
-using NeuralOutput = std::vector<float>;
+struct NeuralOutput
+{
+    std::vector<float> data_vec;
+    const float* data_ptr{nullptr};
+};
 
-using INeuralNet = task::ITask<video::Frame&, NeuralOutput>;
+class INeuralNetExt
+{
+public:
+    virtual ~INeuralNetExt() = default;
+
+    virtual std::vector<int64_t> get_input_shape() const = 0;
+    virtual std::vector<int64_t> get_output_shape() const = 0;
+};
+
+using INeuralNet = task::ITask<video::Frame&, NeuralOutput, INeuralNetExt>;
 
 template <typename TSettings>
-using BaseNeuralNet = task::BaseTask<TSettings, video::Frame&, NeuralOutput>;
+using BaseNeuralNet = task::BaseTask<TSettings, video::Frame&, NeuralOutput, INeuralNetExt>;
 
 }  // namespace step::proc
